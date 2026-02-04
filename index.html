@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>לוח פעילויות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Frank+Ruhl+Libre:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --clr-bg: #faf8f5;
+    --clr-surface: #ffffff;
+    --clr-border: #e8e2da;
+    --clr-text: #1a1612;
+    --clr-text-secondary: #6b5e52;
+    --clr-text-tertiary: #9c8f82;
+    --clr-activity: #16a34a;
+    --clr-activity-bg: #dcfce7;
+    --clr-home: #2563eb;
+    --clr-home-bg: #dbeafe;
+    --clr-shabbat: #eee9f7;
+    --clr-shabbat-border: #d4c8e8;
+    --clr-shabbat-text: #5b21b6;
+    --clr-shavuot: #fef3c7;
+    --clr-shavuot-border: #f59e0b;
+    --clr-shavuot-text: #92400e;
+    --radius: 10px;
+    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06);
+    --shadow-md: 0 4px 16px rgba(26,22,18,0.08);
+    --font-body: 'Heebo', sans-serif;
+    --font-display: 'Frank Ruhl Libre', serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.6s ease-out;
+  }
+
+  .header__title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    color: var(--clr-text);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+
+  .header__subtitle {
+    font-weight: 300;
+    font-size: 1.05rem;
+    color: var(--clr-text-secondary);
+    letter-spacing: 0.01em;
+  }
+
+  .header__line {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--clr-activity), var(--clr-home));
+    border-radius: 3px;
+    margin: 1rem auto 0;
+  }
+
+  /* Controls bar */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.6s ease-out 0.15s both;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .filter-group__label {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--clr-text-secondary);
+  }
+
+  .filter-select {
+    appearance: none;
+    -webkit-appearance: none;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--clr-text);
+    background: var(--clr-surface);
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius);
+    padding: 0.6rem 2.5rem 0.6rem 1rem;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b5e52'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.75rem center;
+    min-width: 160px;
+  }
+
+  .filter-select:hover { border-color: #c4b8aa; }
+
+  .filter-select:focus {
+    outline: none;
+    border-color: var(--clr-activity);
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .legend__item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--clr-text-secondary);
+  }
+
+  .legend__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .legend__dot--activity { background: var(--clr-activity); }
+  .legend__dot--home { background: var(--clr-home); }
+  .legend__dot--switch { background: linear-gradient(135deg, var(--clr-activity) 50%, var(--clr-home) 50%); }
+  .legend__dot--shabbat { background: var(--clr-shabbat); border: 1px solid var(--clr-shabbat-border); }
+  .legend__dot--shavuot { background: var(--clr-shavuot); border: 1px solid var(--clr-shavuot-border); }
+
+  /* Calendar wrapper */
+  .calendar-wrap {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    border: 1px solid var(--clr-border);
+    animation: fadeInUp 0.6s ease-out 0.3s both;
+  }
+
+  .cal-headers {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  /* Day headers */
+  .cal-header {
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--clr-text-secondary);
+    background: #f5f1ec;
+    border-bottom: 1.5px solid var(--clr-border);
+    user-select: none;
+  }
+
+  .cal-header--shabbat {
+    color: var(--clr-shabbat-text);
+    background: #ebe4f3;
+  }
+
+  /* Day cell */
+  .cal-cell {
+    min-height: 90px;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--clr-border);
+    border-inline-start: 1px solid var(--clr-border);
+    position: relative;
+    transition: background 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cal-grid > :nth-child(7n + 1) {
+    border-inline-start: none;
+  }
+
+  .cal-cell--empty {
+    background: #fdfcfa;
+  }
+
+  .cal-cell--shabbat {
+    background: var(--clr-shabbat);
+  }
+
+  .cal-cell--shavuot {
+    background: var(--clr-shavuot);
+    box-shadow: inset 0 0 0 1.5px var(--clr-shavuot-border);
+  }
+
+  .cal-cell--shavuot.cal-cell--shabbat {
+    background: linear-gradient(135deg, var(--clr-shavuot) 60%, var(--clr-shabbat) 100%);
+  }
+
+  .cal-cell--status-activity {
+    background: var(--clr-activity-bg);
+  }
+
+  .cal-cell--status-home {
+    background: var(--clr-home-bg);
+  }
+
+  .cal-cell--status-activity .cell-greg {
+    color: #15803d;
+  }
+
+  .cal-cell--status-home .cell-greg {
+    color: #1d4ed8;
+  }
+
+  .cal-cell--status-activity .cell-status-label {
+    color: #15803d;
+    font-weight: 500;
+    font-size: 0.75rem;
+  }
+
+  .cal-cell--status-home .cell-status-label {
+    color: #1d4ed8;
+    font-weight: 500;
+    font-size: 0.75rem;
+  }
+
+  .cal-cell--status-switch-home {
+    background: linear-gradient(135deg, var(--clr-home-bg) 50%, var(--clr-activity-bg) 50%);
+  }
+
+  .cal-cell--status-switch-base {
+    background: linear-gradient(135deg, var(--clr-activity-bg) 50%, var(--clr-home-bg) 50%);
+  }
+
+  .cal-cell--status-switch-home .cell-greg,
+  .cal-cell--status-switch-base .cell-greg {
+    color: var(--clr-text);
+  }
+
+  .cal-cell--status-switch-home .cell-status-label,
+  .cal-cell--status-switch-base .cell-status-label {
+    color: var(--clr-text-secondary);
+    font-weight: 500;
+    font-size: 0.75rem;
+  }
+
+  .cal-cell--shabbat.cal-cell--status-activity {
+    background: linear-gradient(135deg, var(--clr-activity-bg) 70%, var(--clr-shabbat) 100%);
+  }
+
+  .cal-cell--shabbat.cal-cell--status-home {
+    background: linear-gradient(135deg, var(--clr-home-bg) 70%, var(--clr-shabbat) 100%);
+  }
+
+  .cal-cell--shabbat.cal-cell--status-switch-home {
+    background: linear-gradient(135deg, var(--clr-home-bg) 40%, var(--clr-activity-bg) 40%, var(--clr-activity-bg) 60%, var(--clr-shabbat) 100%);
+  }
+
+  .cal-cell--shabbat.cal-cell--status-switch-base {
+    background: linear-gradient(135deg, var(--clr-activity-bg) 40%, var(--clr-home-bg) 40%, var(--clr-home-bg) 60%, var(--clr-shabbat) 100%);
+  }
+
+  .cal-cell:not(.cal-cell--empty):hover {
+    filter: brightness(0.97);
+  }
+
+  /* Month indicator inside cell */
+  .cell-month-tag {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: var(--clr-text-tertiary);
+    margin-bottom: 0.15rem;
+  }
+
+  /* Date info inside cell */
+  .cell-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.25rem;
+  }
+
+  .cell-greg {
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.2;
+    color: var(--clr-text);
+  }
+
+  .cell-holiday {
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: var(--clr-shavuot-text);
+    background: rgba(245,158,11,0.18);
+    padding: 1px 5px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
+  }
+
+  .cell-note {
+    font-size: 0.65rem;
+    color: #92400e;
+    background: #fef9c3;
+    padding: 1px 5px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 0.15rem;
+    line-height: 1.4;
+    border: 1px solid #fde68a;
+  }
+
+  .cell-note::before {
+    content: '📝 ';
+  }
+
+  .cell-special {
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: #7f1d1d;
+    background: rgba(239,68,68,0.12);
+    padding: 1px 5px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 0.2rem;
+    line-height: 1.4;
+  }
+
+  /* Status display */
+  .cell-status {
+    margin-top: auto;
+  }
+
+  .status-summary {
+    font-size: 0.7rem;
+    line-height: 1.5;
+    color: var(--clr-text-secondary);
+  }
+
+  .summary-row {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .summary-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .summary-dot--activity { background: var(--clr-activity); }
+  .summary-dot--home { background: var(--clr-home); }
+  .summary-dot--switch { background: linear-gradient(135deg, var(--clr-activity) 50%, var(--clr-home) 50%); }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--clr-text-secondary);
+    font-size: 1.1rem;
+  }
+
+  .loading__spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--clr-border);
+    border-top-color: var(--clr-activity);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  /* Animations */
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .app { padding: 1rem 0.5rem 3rem; }
+    .controls { flex-direction: column; align-items: stretch; }
+    .legend { justify-content: center; }
+    .filter-group { justify-content: center; }
+    .cal-cell { min-height: 70px; padding: 0.35rem; }
+    .cell-greg { font-size: 0.85rem; }
+    .status-summary { font-size: 0.6rem; }
+  }
+
+  @media (max-width: 480px) {
+    .cal-cell { min-height: 58px; padding: 0.25rem; }
+    .cell-greg { font-size: 0.78rem; }
+    .cal-header { font-size: 0.72rem; padding: 0.5rem 0.25rem; }
+    .cell-holiday { font-size: 0.6rem; }
+  }
+
+  /* Print */
+  @media print {
+    body { background: #fff; }
+    body::before { display: none; }
+    .app { padding: 0; max-width: 100%; }
+    .controls { break-inside: avoid; }
+    .calendar-wrap { box-shadow: none; border: 1px solid #ccc; }
+    .cal-cell { min-height: 60px; }
+    .filter-select { border: 1px solid #999; box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1 class="header__title">מחלקה 1</h1>
+    <p class="header__subtitle">18.6.2026 – 26.4.2026</p>
+    <div class="header__line"></div>
+  </header>
+
+  <div class="controls">
+    <div class="filter-group">
+      <label class="filter-group__label" for="personFilter">הצגה עבור:</label>
+      <select class="filter-select" id="personFilter">
+        <option value="__all__">כולם</option>
+      </select>
+    </div>
+    <div class="legend">
+      <span class="legend__item"><span class="legend__dot legend__dot--activity"></span>במוצב</span>
+      <span class="legend__item"><span class="legend__dot legend__dot--home"></span>בבית</span>
+      <span class="legend__item"><span class="legend__dot legend__dot--switch"></span>מעבר</span>
+      <span class="legend__item"><span class="legend__dot legend__dot--shabbat"></span>שבת</span>
+      <span class="legend__item"><span class="legend__dot legend__dot--shavuot"></span>שבועות</span>
+    </div>
+  </div>
+
+  <div id="calendarContainer">
+    <div class="loading">
+      <div class="loading__spinner"></div>
+      טוען נתונים...
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const holidays = {
+    '2026-05-22': 'שבועות א׳',
+    '2026-05-23': 'שבועות ב׳'
+  };
+
+  const specialDays = {
+    '2026-04-26': 'אל״ת',
+    '2026-04-27': 'אל״ת',
+    '2026-04-28': 'אל״ת',
+    '2026-04-29': 'אל״ת',
+    '2026-04-30': 'תפיסת קו'
+  };
+
+  const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+  const gregMonths = {
+    3: 'אפריל', 4: 'מאי', 5: 'יוני'
+  };
+
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  }
+
+  function parseCSV(text) {
+    text = text.replace(/^\uFEFF/, '');
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+
+    const header = lines[0].split(',').map(h => h.trim());
+    const nameIdx = header.indexOf('name');
+    const dateIdx = header.indexOf('date');
+    const statusIdx = header.indexOf('status');
+    const noteIdx = header.indexOf('note');
+
+    if (nameIdx === -1 || dateIdx === -1 || statusIdx === -1) return [];
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 3) continue;
+      rows.push({
+        name: parts[nameIdx].trim(),
+        date: parts[dateIdx].trim(),
+        status: parts[statusIdx].trim(),
+        note: noteIdx !== -1 && parts[noteIdx] ? parts[noteIdx].trim() : ''
+      });
+    }
+    return rows;
+  }
+
+  function buildDataMap(rows) {
+    const map = {};
+    const notesMap = {}; // notesMap[date][name] = note
+    const names = new Set();
+    rows.forEach(r => {
+      if (!map[r.date]) map[r.date] = {};
+      map[r.date][r.name] = r.status;
+      if (r.note) {
+        if (!notesMap[r.date]) notesMap[r.date] = {};
+        notesMap[r.date][r.name] = r.note;
+      }
+      names.add(r.name);
+    });
+    return { map, notesMap, names: [...names].sort() };
+  }
+
+  function renderCell(day, dataMap, notesMap, selectedPerson) {
+    const key = formatDate(day);
+    const dow = day.getDay();
+    const isShabbat = dow === 6;
+    const holiday = holidays[key] || null;
+
+    let personStatus = null;
+    if (selectedPerson !== '__all__') {
+      const dayData = dataMap[key] || {};
+      personStatus = dayData[selectedPerson] || null;
+    }
+
+    let cellClass = 'cal-cell';
+    if (isShabbat) cellClass += ' cal-cell--shabbat';
+    if (holiday) cellClass += ' cal-cell--shavuot';
+    if (personStatus === 'activity') cellClass += ' cal-cell--status-activity';
+    if (personStatus === 'home') cellClass += ' cal-cell--status-home';
+    if (personStatus === 'switch-home') cellClass += ' cal-cell--status-switch-home';
+    if (personStatus === 'switch-base') cellClass += ' cal-cell--status-switch-base';
+
+    let html = `<div class="${cellClass}">`;
+
+    // Show month name on the 1st of each month
+    if (day.getDate() === 1) {
+      html += `<span class="cell-month-tag">${gregMonths[day.getMonth()]}</span>`;
+    }
+
+    html += '<div class="cell-top">';
+    html += `<span class="cell-greg">${day.getDate()}/${day.getMonth() + 1}</span>`;
+    html += '</div>';
+
+    if (holiday) {
+      html += `<span class="cell-holiday">${holiday}</span>`;
+    }
+
+    const special = specialDays[key];
+    if (special) {
+      html += `<span class="cell-special">${special}</span>`;
+    }
+
+    html += '<div class="cell-status">';
+    if (selectedPerson === '__all__') {
+      const dayData = dataMap[key] || {};
+      let actCount = 0, homeCount = 0, switchCount = 0;
+      Object.values(dayData).forEach(s => {
+        if (s === 'activity') actCount++;
+        else if (s === 'home') homeCount++;
+        else if (s.startsWith('switch')) switchCount++;
+      });
+      if (actCount + homeCount + switchCount > 0) {
+        html += '<div class="status-summary">';
+        if (actCount) html += `<div class="summary-row"><span class="summary-dot summary-dot--activity"></span>${actCount} במוצב</div>`;
+        if (homeCount) html += `<div class="summary-row"><span class="summary-dot summary-dot--home"></span>${homeCount} בבית</div>`;
+        if (switchCount) html += `<div class="summary-row"><span class="summary-dot summary-dot--switch"></span>${switchCount} מעבר</div>`;
+        html += '</div>';
+      }
+    } else if (personStatus) {
+      const label = personStatus === 'activity' ? 'במוצב' : personStatus === 'home' ? 'בבית' : personStatus === 'switch-home' ? 'יוצא הביתה' : 'חוזר למוצב';
+      html += `<span class="cell-status-label">${label}</span>`;
+    }
+    html += '</div>';
+
+    // Notes
+    const dayNotes = notesMap[key] || {};
+    if (selectedPerson !== '__all__' && dayNotes[selectedPerson]) {
+      html += `<span class="cell-note">${dayNotes[selectedPerson]}</span>`;
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function renderCalendar(dataMap, notesMap, names, selectedPerson) {
+    const container = document.getElementById('calendarContainer');
+
+    // Generate all days in range
+    const allDays = [];
+    const d = new Date(2026, 3, 26);
+    const end = new Date(2026, 5, 18);
+    while (d <= end) {
+      allDays.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+
+    let html = '<div class="calendar-wrap">';
+
+    // Headers
+    html += '<div class="cal-headers">';
+    dayNames.forEach((name, i) => {
+      html += `<div class="cal-header${i === 6 ? ' cal-header--shabbat' : ''}">${name}</div>`;
+    });
+    html += '</div>';
+
+    // Single continuous grid
+    html += '<div class="cal-grid">';
+
+    // Pad start (Apr 26, 2026 is Sunday = 0, no padding needed)
+    const firstDow = allDays[0].getDay();
+    for (let i = 0; i < firstDow; i++) {
+      html += '<div class="cal-cell cal-cell--empty"></div>';
+    }
+
+    // All day cells in one continuous flow
+    allDays.forEach(day => {
+      html += renderCell(day, dataMap, notesMap, selectedPerson);
+    });
+
+    // Pad end (Jun 18 is Thursday = 4, need 2 empty cells for Fri+Sat)
+    const lastDow = allDays[allDays.length - 1].getDay();
+    for (let i = lastDow + 1; i < 7; i++) {
+      html += '<div class="cal-cell cal-cell--empty"></div>';
+    }
+
+    html += '</div></div>';
+    container.innerHTML = html;
+  }
+
+  // Fallback data
+  function generateFallbackData() {
+    const names = ['גיל זאבי','אבירן גרין','לרה','מיה ידידה','עמית וייס','שרון כהן','אלון גלפרין','כרמל אלימלך','יואב אשד','שני לאונוב','אליזבת','שי יפרח','שנהב'];
+    const rows = [];
+    const d = new Date(2026, 3, 26);
+    const end = new Date(2026, 5, 18);
+    let seed = 42;
+    function pseudoRandom() {
+      seed = (seed * 16807 + 0) % 2147483647;
+      return seed / 2147483647;
+    }
+    while (d <= end) {
+      const key = formatDate(d);
+      names.forEach(name => {
+        const r = pseudoRandom();
+        rows.push({ name, date: key, status: r > 0.6 ? 'activity' : r > 0.15 ? 'home' : 'switch' });
+      });
+      d.setDate(d.getDate() + 1);
+    }
+    return rows;
+  }
+
+  async function init() {
+    let rows;
+    try {
+      const resp = await fetch('data.csv');
+      if (!resp.ok) throw new Error('fetch failed');
+      const text = await resp.text();
+      rows = parseCSV(text);
+      if (rows.length === 0) throw new Error('empty CSV');
+    } catch (e) {
+      console.warn('CSV fetch failed, using fallback data:', e);
+      rows = generateFallbackData();
+    }
+
+    const { map, notesMap, names } = buildDataMap(rows);
+
+    const select = document.getElementById('personFilter');
+    const commander = 'גיל זאבי';
+    const sortedNames = [commander, ...names.filter(n => n !== commander)];
+    sortedNames.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name === commander ? '⭐ ' + name : name;
+      select.appendChild(opt);
+    });
+
+    renderCalendar(map, notesMap, names, '__all__');
+
+    select.addEventListener('change', () => {
+      renderCalendar(map, notesMap, names, select.value);
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
