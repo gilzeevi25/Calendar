@@ -16,7 +16,11 @@ jobs:
 
       - name: Download Google Sheets CSV
         run: |
-          curl -L -o data.csv "https://docs.google.com/spreadsheets/d/${{ secrets.GOOGLE_SHEET_ID }}/export?format=csv"
+          curl -L -o data.csv "https://docs.google.com/spreadsheets/d/e/${{ secrets.GOOGLE_SHEET_PUBID }}/pub?output=csv"
+
+      - name: Validate CSV
+        run: |
+          head -1 data.csv | grep -q "name,date,status" || { echo "ERROR: downloaded file is not valid CSV"; exit 1; }
 
       - name: Commit and push if changed
         run: |
