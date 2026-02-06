@@ -709,15 +709,25 @@
 
   async function init() {
     let rows;
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRh9ERHvLzkE2yu1cWs7_zMpYo17Hok-w7Eb3m3IfJFxh_Nk-UQJ31CUDz2B-yV5GeDIhb5bUx5RcyJ/pub?output=csv';
     try {
-      const resp = await fetch('data.csv');
+      const resp = await fetch(SHEET_URL);
       if (!resp.ok) throw new Error('fetch failed');
       const text = await resp.text();
       rows = parseCSV(text);
       if (rows.length === 0) throw new Error('empty CSV');
     } catch (e) {
-      console.warn('CSV fetch failed, using fallback data:', e);
-      rows = generateFallbackData();
+      console.warn('Google Sheets fetch failed, trying local backup:', e);
+      try {
+        const resp = await fetch('data.csv');
+        if (!resp.ok) throw new Error('local fetch failed');
+        const text = await resp.text();
+        rows = parseCSV(text);
+        if (rows.length === 0) throw new Error('empty local CSV');
+      } catch (e2) {
+        console.warn('Local CSV also failed, using fallback data:', e2);
+        rows = generateFallbackData();
+      }
     }
 
     const { map, notesMap, names } = buildDataMap(rows);
