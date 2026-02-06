@@ -13,7 +13,7 @@ jobs:
 
       - name: Download Google Sheets CSV
         run: |
-          curl -L -o data.csv 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRh9ERHvLzkE2yu1cWs7_zMpYo17Hok-w7Eb3m3IfJFxh_Nk-UQJ31CUDz2B-yV5GeDIhb5bUx5RcyJ/pub?output=csv'
+          curl -L -o data.csv "https://docs.google.com/spreadsheets/d/${{ secrets.GOOGLE_SHEET_ID }}/export?format=csv"
 
       - name: Commit and push if changed
         run: |
