@@ -453,6 +453,148 @@
     .cell-holiday { font-size: 0.6rem; }
   }
 
+  /* Day detail modal */
+  .day-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,22,18,0.45);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+    padding: 1rem;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .day-modal {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(26,22,18,0.2);
+    max-width: 400px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: fadeInUp 0.25s ease-out;
+  }
+
+  .day-modal__header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--clr-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .day-modal__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--clr-text);
+  }
+
+  .day-modal__close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--clr-text-tertiary);
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .day-modal__close:hover {
+    background: #f0ece7;
+    color: var(--clr-text);
+  }
+
+  .day-modal__body {
+    padding: 1rem 1.5rem 1.5rem;
+  }
+
+  .day-modal__group {
+    margin-bottom: 1rem;
+  }
+
+  .day-modal__group:last-child {
+    margin-bottom: 0;
+  }
+
+  .day-modal__group-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .day-modal__group-title--activity {
+    color: #15803d;
+  }
+
+  .day-modal__group-title--home {
+    color: #1d4ed8;
+  }
+
+  .day-modal__group-title--switch {
+    color: var(--clr-text-secondary);
+  }
+
+  .day-modal__list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .day-modal__person {
+    font-size: 0.9rem;
+    color: var(--clr-text);
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .day-modal__person--activity {
+    background: var(--clr-activity-bg);
+  }
+
+  .day-modal__person--home {
+    background: var(--clr-home-bg);
+  }
+
+  .day-modal__person--switch {
+    background: linear-gradient(135deg, #f0fdf4 50%, #eff6ff 50%);
+  }
+
+  .day-modal__person-note {
+    font-size: 0.7rem;
+    color: #92400e;
+    background: #fef9c3;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid #fde68a;
+  }
+
+  .cal-cell--clickable {
+    cursor: pointer;
+  }
+
+  .cal-cell--clickable:hover {
+    outline: 2px solid var(--clr-activity);
+    outline-offset: -2px;
+    z-index: 1;
+  }
+
   /* Print */
   @media print {
     body { background: #fff; }
@@ -495,6 +637,8 @@
       טוען נתונים...
     </div>
   </div>
+
+  <div id="dayModal"></div>
 </div>
 
 <script>
@@ -588,7 +732,9 @@
     if (personStatus === 'switch-home') cellClass += ' cal-cell--status-switch-home';
     if (personStatus === 'switch-base') cellClass += ' cal-cell--status-switch-base';
 
-    let html = `<div class="${cellClass}">`;
+    if (selectedPerson === '__all__') cellClass += ' cal-cell--clickable';
+
+    let html = `<div class="${cellClass}" data-date="${key}">`;
 
     // Show month name on the 1st of each month
     if (day.getDate() === 1) {
@@ -683,6 +829,81 @@
 
     html += '</div></div>';
     container.innerHTML = html;
+
+    // Add click handlers for day cells in "__all__" mode
+    if (selectedPerson === '__all__') {
+      container.querySelectorAll('.cal-cell--clickable').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const dateKey = cell.getAttribute('data-date');
+          showDayModal(dateKey, dataMap, notesMap);
+        });
+      });
+    }
+  }
+
+  function showDayModal(dateKey, dataMap, notesMap) {
+    const dayData = dataMap[dateKey] || {};
+    const dayNotes = notesMap[dateKey] || {};
+    const modalEl = document.getElementById('dayModal');
+
+    // Parse date for display
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dayName = dayNames[dateObj.getDay()];
+    const dateLabel = `יום ${dayName}, ${d}/${m}`;
+
+    // Group people by status
+    const atBase = [];
+    const atHome = [];
+    const switching = [];
+    Object.entries(dayData).forEach(([name, status]) => {
+      const note = dayNotes[name] || '';
+      if (status === 'activity') atBase.push({ name, note, sub: '' });
+      else if (status === 'home') atHome.push({ name, note, sub: '' });
+      else if (status === 'switch-home') switching.push({ name, note, sub: 'יוצא הביתה' });
+      else if (status === 'switch-base') switching.push({ name, note, sub: 'חוזר למוצב' });
+    });
+
+    // Sort each group alphabetically
+    const sortFn = (a, b) => a.name.localeCompare(b.name, 'he');
+    atBase.sort(sortFn);
+    atHome.sort(sortFn);
+    switching.sort(sortFn);
+
+    function renderGroup(title, titleClass, people, personClass) {
+      if (people.length === 0) return '';
+      let h = `<div class="day-modal__group">`;
+      h += `<div class="day-modal__group-title ${titleClass}">${title} (${people.length})</div>`;
+      h += `<ul class="day-modal__list">`;
+      people.forEach(p => {
+        h += `<li class="day-modal__person ${personClass}">`;
+        h += `<span>${p.name}${p.sub ? ' — ' + p.sub : ''}</span>`;
+        if (p.note) h += `<span class="day-modal__person-note">${p.note}</span>`;
+        h += `</li>`;
+      });
+      h += `</ul></div>`;
+      return h;
+    }
+
+    let html = `<div class="day-modal-overlay" id="dayModalOverlay">`;
+    html += `<div class="day-modal">`;
+    html += `<div class="day-modal__header">`;
+    html += `<span class="day-modal__title">${dateLabel}</span>`;
+    html += `<button class="day-modal__close" id="dayModalClose">&times;</button>`;
+    html += `</div>`;
+    html += `<div class="day-modal__body">`;
+    html += renderGroup('במוצב', 'day-modal__group-title--activity', atBase, 'day-modal__person--activity');
+    html += renderGroup('בבית', 'day-modal__group-title--home', atHome, 'day-modal__person--home');
+    html += renderGroup('מעבר', 'day-modal__group-title--switch', switching, 'day-modal__person--switch');
+    html += `</div></div></div>`;
+
+    modalEl.innerHTML = html;
+
+    // Close handlers
+    document.getElementById('dayModalClose').addEventListener('click', () => { modalEl.innerHTML = ''; });
+    document.getElementById('dayModalOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) modalEl.innerHTML = '';
+    });
   }
 
   // Fallback data
