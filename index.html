@@ -853,6 +853,7 @@
     transition: all 0.2s;
     box-shadow: var(--shadow-sm);
     white-space: nowrap;
+    touch-action: manipulation;
   }
 
   .toolbar__btn:hover {
@@ -914,6 +915,7 @@
     border: none;
     cursor: pointer;
     transition: all 0.2s;
+    touch-action: manipulation;
   }
 
   .save-bar__btn--save {
@@ -1100,6 +1102,7 @@
     text-align: right;
     font-family: var(--font-body);
     color: var(--clr-text);
+    touch-action: manipulation;
   }
 
   .status-picker__option:hover { background: #f5f1ec; }
@@ -1126,6 +1129,7 @@
 
   .cal-cell--editable {
     cursor: pointer;
+    touch-action: manipulation;
   }
 
   /* Add People modal */
@@ -1206,6 +1210,7 @@
     border: none;
     cursor: pointer;
     transition: all 0.2s;
+    touch-action: manipulation;
   }
 
   .add-people-modal__btn--add {
@@ -1659,9 +1664,11 @@
     modalEl.innerHTML = html;
 
     document.getElementById('dayModalClose').addEventListener('click', () => { modalEl.innerHTML = ''; });
-    document.getElementById('dayModalOverlay').addEventListener('click', (e) => {
+    function dismissDayModal(e) {
       if (e.target === e.currentTarget) modalEl.innerHTML = '';
-    });
+    }
+    document.getElementById('dayModalOverlay').addEventListener('click', dismissDayModal);
+    document.getElementById('dayModalOverlay').addEventListener('touchend', dismissDayModal);
   }
 
   // ---- Note Mode ----
@@ -1744,9 +1751,11 @@
       });
     }
 
-    document.getElementById('notePopupOverlay').addEventListener('click', (e) => {
+    function dismissNoteOverlay(e) {
       if (e.target === e.currentTarget) popup.innerHTML = '';
-    });
+    }
+    document.getElementById('notePopupOverlay').addEventListener('click', dismissNoteOverlay);
+    document.getElementById('notePopupOverlay').addEventListener('touchend', dismissNoteOverlay);
   }
 
   // ---- Edit Mode: Status Picker ----
@@ -1774,11 +1783,14 @@
       const btn = document.createElement('button');
       btn.className = 'status-picker__option' + (currentStatus === opt.value ? ' status-picker__option--active' : '');
       btn.innerHTML = '<span class="status-picker__dot" style="' + opt.style + '"></span>' + opt.label;
-      btn.addEventListener('click', (e) => {
+      function handlePickerSelect(e) {
         e.stopPropagation();
+        e.preventDefault();
         stageEdit(dateKey, opt.value);
         removeStatusPicker();
-      });
+      }
+      btn.addEventListener('click', handlePickerSelect);
+      btn.addEventListener('touchend', handlePickerSelect);
       picker.appendChild(btn);
     });
 
@@ -1787,6 +1799,7 @@
 
     setTimeout(() => {
       document.addEventListener('click', closePickerOnOutsideClick);
+      document.addEventListener('touchend', closePickerOnOutsideTouch);
     }, 10);
   }
 
@@ -1797,10 +1810,22 @@
     }
   }
 
+  function closePickerOnOutsideTouch(e) {
+    const picker = document.getElementById('statusPicker');
+    if (!picker) return;
+    const touch = e.changedTouches && e.changedTouches[0];
+    if (!touch) return;
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (el && !picker.contains(el)) {
+      removeStatusPicker();
+    }
+  }
+
   function removeStatusPicker() {
     const existing = document.getElementById('statusPicker');
     if (existing) existing.remove();
     document.removeEventListener('click', closePickerOnOutsideClick);
+    document.removeEventListener('touchend', closePickerOnOutsideTouch);
   }
 
   function stageEdit(dateKey, newStatus) {
@@ -1930,6 +1955,9 @@
     updateSaveDiscardBar();
   }
 
+  let touchDragMoved = false;
+  let touchStartCell = null;
+
   function onTouchStart(e) {
     if (currentMode !== 'edit') return;
     const touch = e.touches[0];
@@ -1938,6 +1966,8 @@
     const cell = el.closest('.cal-cell[data-date]');
     if (cell && !cell.classList.contains('cal-cell--empty') && !el.closest('.status-picker')) {
       e.preventDefault();
+      touchDragMoved = false;
+      touchStartCell = cell;
       onDragStart({
         target: cell,
         clientX: touch.clientX,
@@ -1951,10 +1981,23 @@
     if (!isDragging) return;
     e.preventDefault();
     const touch = e.touches[0];
+    const movedCell = getCellFromEvent({ clientX: touch.clientX, clientY: touch.clientY });
+    if (movedCell && movedCell !== touchStartCell) {
+      touchDragMoved = true;
+    }
     onDragMove({ clientX: touch.clientX, clientY: touch.clientY });
   }
 
   function onTouchEnd() {
+    // If this was a single tap (no drag movement), show the status picker
+    if (isDragging && !touchDragMoved && touchStartCell && currentMode === 'edit') {
+      const dateKey = touchStartCell.getAttribute('data-date');
+      onDragEnd();
+      showStatusPicker(touchStartCell, dateKey);
+      touchStartCell = null;
+      return;
+    }
+    touchStartCell = null;
     onDragEnd();
   }
 
@@ -2069,13 +2112,36 @@
     html += '</div></div></div>';
 
     modal.innerHTML = html;
-    document.getElementById('addPeopleInput').focus();
+    // Delay focus to avoid iOS keyboard issues on modal open
+    setTimeout(() => {
+      const inp = document.getElementById('addPeopleInput');
+      if (inp) inp.focus();
+    }, 100);
 
-    document.getElementById('addPeopleSubmit').addEventListener('click', handleAddPeople);
-    document.getElementById('addPeopleCancel').addEventListener('click', () => { modal.innerHTML = ''; });
-    document.getElementById('addPeopleOverlay').addEventListener('click', (e) => {
+    let modalTouchTime = 0;
+    function isModalTouchDuplicate(e) {
+      if (e.type === 'touchend') { modalTouchTime = Date.now(); return false; }
+      return (e.type === 'click' && Date.now() - modalTouchTime < 500);
+    }
+    function onSubmit(e) {
+      if (isModalTouchDuplicate(e)) return;
+      e.preventDefault();
+      handleAddPeople();
+    }
+    function onCancel(e) {
+      if (isModalTouchDuplicate(e)) return;
+      e.preventDefault();
+      modal.innerHTML = '';
+    }
+    document.getElementById('addPeopleSubmit').addEventListener('click', onSubmit);
+    document.getElementById('addPeopleSubmit').addEventListener('touchend', onSubmit);
+    document.getElementById('addPeopleCancel').addEventListener('click', onCancel);
+    document.getElementById('addPeopleCancel').addEventListener('touchend', onCancel);
+    function dismissOverlay(e) {
       if (e.target === e.currentTarget) modal.innerHTML = '';
-    });
+    }
+    document.getElementById('addPeopleOverlay').addEventListener('click', dismissOverlay);
+    document.getElementById('addPeopleOverlay').addEventListener('touchend', dismissOverlay);
   }
 
   async function handleAddPeople() {
@@ -2150,15 +2216,49 @@
       removeStatusPicker();
     }
 
-    btnNote.addEventListener('click', () => setMode(currentMode === 'note' ? null : 'note'));
-    btnEdit.addEventListener('click', () => setMode(currentMode === 'edit' ? null : 'edit'));
-    btnCancel.addEventListener('click', () => {
+    // Guard against touch + click double-firing on mobile
+    let lastTouchTime = 0;
+    function isTouchDuplicate(e) {
+      if (e.type === 'touchend') {
+        lastTouchTime = Date.now();
+        return false;
+      }
+      // Skip click if a recent touchend already handled it
+      return (e.type === 'click' && Date.now() - lastTouchTime < 500);
+    }
+
+    function handleNoteToggle(e) {
+      if (isTouchDuplicate(e)) return;
+      e.preventDefault();
+      setMode(currentMode === 'note' ? null : 'note');
+    }
+    function handleEditToggle(e) {
+      if (isTouchDuplicate(e)) return;
+      e.preventDefault();
+      setMode(currentMode === 'edit' ? null : 'edit');
+    }
+    function handleCancel(e) {
+      if (isTouchDuplicate(e)) return;
+      e.preventDefault();
       setMode(null);
       if (Object.keys(pendingEdits).length > 0) {
         discardAllEdits();
       }
-    });
-    btnAddPeople.addEventListener('click', showAddPeopleModal);
+    }
+    function handleAddPeopleOpen(e) {
+      if (isTouchDuplicate(e)) return;
+      e.preventDefault();
+      showAddPeopleModal();
+    }
+
+    btnNote.addEventListener('click', handleNoteToggle);
+    btnNote.addEventListener('touchend', handleNoteToggle);
+    btnEdit.addEventListener('click', handleEditToggle);
+    btnEdit.addEventListener('touchend', handleEditToggle);
+    btnCancel.addEventListener('click', handleCancel);
+    btnCancel.addEventListener('touchend', handleCancel);
+    btnAddPeople.addEventListener('click', handleAddPeopleOpen);
+    btnAddPeople.addEventListener('touchend', handleAddPeopleOpen);
 
     return { updateToolbarVisibility, setMode };
   }
