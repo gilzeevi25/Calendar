@@ -18,6 +18,8 @@ function doPost(e) {
       return handleUpdateCells(payload);
     } else if (action === 'addPeople') {
       return handleAddPeople(payload);
+    } else if (action === 'getData') {
+      return handleGetData();
     } else {
       return jsonResponse({ success: false, error: 'Unknown action: ' + action });
     }
@@ -93,6 +95,25 @@ function formatDate(d) {
   var mm = String(d.getMonth() + 1).padStart(2, '0');
   var dd = String(d.getDate()).padStart(2, '0');
   return yy + '-' + mm + '-' + dd;
+}
+
+function handleGetData() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var rows = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = {};
+    for (var j = 0; j < headers.length; j++) {
+      var val = data[i][j];
+      if (val instanceof Date) {
+        val = formatDate(val);
+      }
+      row[String(headers[j]).trim()] = String(val).trim();
+    }
+    rows.push(row);
+  }
+  return jsonResponse({ success: true, rows: rows });
 }
 
 function handleAddPeople(payload) {

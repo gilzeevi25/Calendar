@@ -1336,7 +1336,7 @@
   };
 
   // ---- Editing state ----
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_IgoGYewhbFZJKVaRjHNd2wZdkLxlg2S06CVjLD3qwnQIqXXiI_0x5udcWFeHRV_nUw/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymUNBu8Du3YCjdL4Z4B_gB2EoUAcpJnmc8xstmHWBeatbm-xhoTN9bCYSkGrmySBub8A/exec';
   const DATE_START = '2026-04-26';
   const DATE_END = '2026-06-18';
 
@@ -2288,23 +2288,38 @@
   async function init() {
     let rows;
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRh9ERHvLzkE2yu1cWs7_zMpYo17Hok-w7Eb3m3IfJFxh_Nk-UQJ31CUDz2B-yV5GeDIhb5bUx5RcyJ/pub?output=csv';
+
+    // Try Apps Script API first (always fresh data)
     try {
-      const resp = await fetch(SHEET_URL);
-      if (!resp.ok) throw new Error('fetch failed');
-      const text = await resp.text();
-      rows = parseCSV(text);
-      if (rows.length === 0) throw new Error('empty CSV');
+      const resp = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'getData' })
+      });
+      const result = await resp.json();
+      if (!result.success || !result.rows || result.rows.length === 0) throw new Error('empty response');
+      rows = result.rows;
     } catch (e) {
-      console.warn('Google Sheets fetch failed, trying local backup:', e);
+      console.warn('Apps Script getData failed, trying published CSV:', e);
+      // Fallback to published CSV
       try {
-        const resp = await fetch('data.csv');
-        if (!resp.ok) throw new Error('local fetch failed');
+        const resp = await fetch(SHEET_URL);
+        if (!resp.ok) throw new Error('fetch failed');
         const text = await resp.text();
         rows = parseCSV(text);
-        if (rows.length === 0) throw new Error('empty local CSV');
+        if (rows.length === 0) throw new Error('empty CSV');
       } catch (e2) {
-        console.warn('Local CSV also failed, using fallback data:', e2);
-        rows = generateFallbackData();
+        console.warn('Published CSV failed, trying local backup:', e2);
+        try {
+          const resp = await fetch('data.csv');
+          if (!resp.ok) throw new Error('local fetch failed');
+          const text = await resp.text();
+          rows = parseCSV(text);
+          if (rows.length === 0) throw new Error('empty local CSV');
+        } catch (e3) {
+          console.warn('Local CSV also failed, using fallback data:', e3);
+          rows = generateFallbackData();
+        }
       }
     }
 
