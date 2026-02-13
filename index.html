@@ -1075,7 +1075,7 @@
 
   /* Status picker */
   .status-picker {
-    position: absolute;
+    position: fixed;
     z-index: 200;
     background: var(--clr-surface);
     border-radius: var(--radius);
@@ -1794,8 +1794,11 @@
       picker.appendChild(btn);
     });
 
-    cellElement.style.position = 'relative';
-    cellElement.appendChild(picker);
+    const rect = cellElement.getBoundingClientRect();
+    picker.style.position = 'fixed';
+    picker.style.top = (rect.bottom + 4) + 'px';
+    picker.style.right = (window.innerWidth - rect.right) + 'px';
+    document.body.appendChild(picker);
 
     setTimeout(() => {
       document.addEventListener('click', closePickerOnOutsideClick);
