@@ -1391,7 +1391,8 @@
 
   // ---- Apps Script API ----
 
-  async function callAppsScript(payload) {
+  async function callAppsScript(payload, retries) {
+    if (retries === undefined) retries = 2;
     if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
       showToast('יש להגדיר את כתובת Apps Script', 'error', 4000);
       throw new Error('Apps Script URL not configured');
@@ -1400,13 +1401,37 @@
       const resp = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        redirect: 'follow'
       });
-      const result = await resp.json();
-      if (!result.success) throw new Error(result.error || 'Unknown error');
+
+      if (!resp.ok) {
+        throw new Error('שגיאת שרת (קוד ' + resp.status + ')');
+      }
+
+      const text = await resp.text();
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch (parseErr) {
+        // Response is not JSON (could be HTML error/login page from Google)
+        throw new Error('תשובה לא תקינה מהשרת — ייתכן שצריך לפרוס מחדש את הסקריפט');
+      }
+
+      if (!result.success) throw new Error(result.error || 'שגיאה לא ידועה בשרת');
       return result;
     } catch (err) {
-      showToast('שגיאה: ' + err.message, 'error', 5000);
+      // Detect network / CORS errors (TypeError: Failed to fetch)
+      const isNetworkError = err instanceof TypeError || err.message === 'Failed to fetch';
+      if (isNetworkError && retries > 0) {
+        // Retry after a short delay for transient network issues
+        await new Promise(function(r) { setTimeout(r, 1500); });
+        return callAppsScript(payload, retries - 1);
+      }
+      const msg = isNetworkError
+        ? 'בעיית תקשורת — בדוק חיבור לאינטרנט ונסה שוב'
+        : err.message;
+      showToast('שגיאה: ' + msg, 'error', 5000);
       throw err;
     }
   }
@@ -2192,6 +2217,8 @@
     } catch (err) {
       btn.disabled = false;
       btn.textContent = 'הוסף';
+      warning.textContent = 'שגיאה בהוספת אנשים — נסה שוב';
+      warning.style.display = 'block';
     }
   }
 
