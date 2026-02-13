@@ -466,6 +466,11 @@
     .cal-cell { min-height: 70px; padding: 0.35rem; }
     .cell-greg { font-size: 0.85rem; }
     .status-summary { font-size: 0.6rem; }
+    .toolbar { justify-content: center; }
+    .save-bar { justify-content: center; font-size: 0.8rem; }
+    .save-bar__btn { font-size: 0.75rem; padding: 0.35rem 0.6rem; }
+    .status-picker { min-width: 120px; }
+    .note-popup, .add-people-modal { max-width: 95vw; }
   }
 
   @media (max-width: 480px) {
@@ -473,6 +478,7 @@
     .cell-greg { font-size: 0.78rem; }
     .cal-header { font-size: 0.72rem; padding: 0.5rem 0.25rem; }
     .cell-holiday { font-size: 0.6rem; }
+    .toolbar__btn { font-size: 0.78rem; padding: 0.4rem 0.75rem; }
   }
 
   /* Day detail modal */
@@ -820,6 +826,403 @@
     opacity: 1;
   }
 
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar__modes {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .toolbar__btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+  }
+
+  .toolbar__btn:hover {
+    border-color: #c4b8aa;
+    background: #f5f1ec;
+  }
+
+  .toolbar__btn--active {
+    border-color: var(--clr-activity);
+    background: var(--clr-activity-bg);
+    color: #15803d;
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+
+  .toolbar__btn--cancel {
+    border-color: #ef4444;
+    color: #dc2626;
+  }
+
+  .toolbar__btn--cancel:hover {
+    background: #fef2f2;
+  }
+
+  .toolbar__btn--add-people {
+    border-color: var(--clr-home);
+    color: var(--clr-home);
+  }
+
+  .toolbar__btn--add-people:hover {
+    background: var(--clr-home-bg);
+  }
+
+  /* Save/discard bar */
+  .save-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #fef9c3;
+    border: 1.5px solid #fde68a;
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+    animation: fadeInUp 0.2s ease-out;
+    margin-bottom: 1rem;
+  }
+
+  .save-bar__count {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #92400e;
+  }
+
+  .save-bar__btn {
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .save-bar__btn--save {
+    background: var(--clr-activity);
+    color: #fff;
+  }
+
+  .save-bar__btn--save:hover { background: #15803d; }
+
+  .save-bar__btn--discard {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .save-bar__btn--discard:hover { background: #fecaca; }
+
+  .save-bar__btn--undo {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+
+  .save-bar__btn--undo:hover { background: #c7d2fe; }
+
+  /* Toast */
+  .toast-container {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: var(--clr-text);
+    color: #fff;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 8px 32px rgba(26,22,18,0.25);
+    animation: toastIn 0.3s ease-out;
+    pointer-events: auto;
+    text-align: center;
+    max-width: 90vw;
+  }
+
+  .toast--success { background: #15803d; }
+  .toast--error { background: #dc2626; }
+  .toast--info { background: #2563eb; }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-12px); }
+  }
+
+  /* Note popup */
+  .note-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,22,18,0.45);
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+    padding: 1rem;
+  }
+
+  .note-popup {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(26,22,18,0.2);
+    max-width: 360px;
+    width: 100%;
+    animation: fadeInUp 0.25s ease-out;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .note-popup__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--clr-text);
+  }
+
+  .note-popup__input {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    direction: rtl;
+    resize: vertical;
+    min-height: 60px;
+    transition: border-color 0.2s;
+  }
+
+  .note-popup__input:focus {
+    outline: none;
+    border-color: var(--clr-activity);
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+
+  .note-popup__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: flex-start;
+  }
+
+  .note-popup__btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .note-popup__btn--save {
+    background: var(--clr-activity);
+    color: #fff;
+  }
+
+  .note-popup__btn--save:hover { background: #15803d; }
+
+  .note-popup__btn--cancel {
+    background: #f5f1ec;
+    color: var(--clr-text-secondary);
+    border: 1px solid var(--clr-border);
+  }
+
+  .note-popup__btn--cancel:hover { background: #ede8e1; }
+
+  .note-popup__btn--delete {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    margin-inline-start: auto;
+  }
+
+  .note-popup__btn--delete:hover { background: #fee2e2; }
+
+  /* Status picker */
+  .status-picker {
+    position: absolute;
+    z-index: 200;
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(26,22,18,0.18);
+    border: 1px solid var(--clr-border);
+    padding: 0.5rem;
+    min-width: 140px;
+    animation: fadeInUp 0.15s ease-out;
+  }
+
+  .status-picker__option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: right;
+    font-family: var(--font-body);
+    color: var(--clr-text);
+  }
+
+  .status-picker__option:hover { background: #f5f1ec; }
+
+  .status-picker__option--active { background: var(--clr-activity-bg); }
+
+  .status-picker__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .cal-cell--pending {
+    outline: 2px dashed var(--clr-activity);
+    outline-offset: -2px;
+  }
+
+  .cal-cell--drag-highlight {
+    outline: 2px solid #f59e0b;
+    outline-offset: -2px;
+    filter: brightness(0.95);
+  }
+
+  .cal-cell--editable {
+    cursor: pointer;
+  }
+
+  /* Add People modal */
+  .add-people-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,22,18,0.45);
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+    padding: 1rem;
+  }
+
+  .add-people-modal {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(26,22,18,0.2);
+    max-width: 400px;
+    width: 100%;
+    animation: fadeInUp 0.25s ease-out;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .add-people-modal__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: var(--clr-text);
+  }
+
+  .add-people-modal__desc {
+    font-size: 0.85rem;
+    color: var(--clr-text-secondary);
+    margin-bottom: 0.75rem;
+  }
+
+  .add-people-modal__input {
+    width: 100%;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    direction: rtl;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+
+  .add-people-modal__input:focus {
+    outline: none;
+    border-color: var(--clr-home);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  }
+
+  .add-people-modal__warning {
+    font-size: 0.8rem;
+    color: #dc2626;
+    margin-top: 0.5rem;
+  }
+
+  .add-people-modal__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: flex-start;
+  }
+
+  .add-people-modal__btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .add-people-modal__btn--add {
+    background: var(--clr-home);
+    color: #fff;
+  }
+
+  .add-people-modal__btn--add:hover { background: #1d4ed8; }
+
+  .add-people-modal__btn--cancel {
+    background: #f5f1ec;
+    color: var(--clr-text-secondary);
+    border: 1px solid var(--clr-border);
+  }
+
+  .add-people-modal__btn--cancel:hover { background: #ede8e1; }
+
   /* Print */
   @media print {
     body { background: #fff; }
@@ -830,6 +1233,7 @@
     .cal-cell { min-height: 60px; }
     .filter-select { border: 1px solid #999; box-shadow: none; }
     .examples-fab, .examples-overlay, .examples-panel { display: none; }
+    .toolbar, .save-bar, .toast-container, #notePopup, #addPeopleModal { display: none; }
   }
 </style>
 </head>
@@ -852,6 +1256,14 @@
         <option value="__all__">כולם</option>
       </select>
     </div>
+    <div class="toolbar" id="toolbar">
+      <div class="toolbar__modes" id="toolbarModes" style="display:none;">
+        <button class="toolbar__btn" id="btnNote">📝 הערה</button>
+        <button class="toolbar__btn" id="btnEdit">✏️ עריכה</button>
+        <button class="toolbar__btn toolbar__btn--cancel" id="btnCancel" style="display:none;">❌ ביטול</button>
+      </div>
+      <button class="toolbar__btn toolbar__btn--add-people" id="btnAddPeople">➕ הוסף אנשים</button>
+    </div>
     <div class="legend">
       <span class="legend__item"><span class="legend__dot legend__dot--activity"></span>במוצב</span>
       <span class="legend__item"><span class="legend__dot legend__dot--home"></span>בבית</span>
@@ -859,6 +1271,13 @@
       <span class="legend__item"><span class="legend__dot legend__dot--shabbat"></span>שבת</span>
       <span class="legend__item"><span class="legend__dot legend__dot--shavuot"></span>שבועות</span>
     </div>
+  </div>
+
+  <div class="save-bar" id="saveBar" style="display:none;">
+    <span class="save-bar__count" id="saveBarCount"></span>
+    <button class="save-bar__btn save-bar__btn--save" id="btnSaveAll">💾 שמור שינויים</button>
+    <button class="save-bar__btn save-bar__btn--discard" id="btnDiscardAll">🗑️ בטל הכל</button>
+    <button class="save-bar__btn save-bar__btn--undo" id="btnUndo">↩️ בטל אחרון</button>
   </div>
 
   <div id="calendarContainer">
@@ -869,7 +1288,11 @@
   </div>
 
   <div id="dayModal"></div>
+  <div id="notePopup"></div>
+  <div id="addPeopleModal"></div>
 </div>
+
+<div class="toast-container" id="toastContainer"></div>
 
 <!-- Examples popup -->
 <button class="examples-fab" id="examplesFab" title="דוגמאות לפקודות" aria-label="דוגמאות לפקודות">
@@ -907,12 +1330,83 @@
     3: 'אפריל', 4: 'מאי', 5: 'יוני'
   };
 
+  // ---- Editing state ----
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-yyvEn8y-SP18lgvd0hmMdoZJqH-m7yR-tcVyR6RqAaGsfd8e4HrZSR0y07-RZAICmQ/exec';
+  const DATE_START = '2026-04-26';
+  const DATE_END = '2026-06-18';
+
+  let currentMode = null;       // null | 'note' | 'edit'
+  let pendingEdits = {};        // "name|YYYY-MM-DD" -> new status
+  let undoStack = [];           // { type, key, oldValue }
+  let isDragging = false;
+  let dragStatus = null;
+  let draggedCells = [];
+  let currentDataMap = null;
+  let currentNotesMap = null;
+  let currentNames = null;
+  let currentSelectedPerson = '__all__';
+
+  // ---- Utilities ----
+
   function formatDate(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${dd}`;
   }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function statusLabel(s) {
+    if (s === 'activity') return 'במוצב';
+    if (s === 'home') return 'בבית';
+    if (s === 'switch-home') return 'יוצא הביתה';
+    return 'חוזר למוצב';
+  }
+
+  // ---- Toast ----
+
+  function showToast(message, type, duration) {
+    type = type || 'info';
+    duration = duration || 3000;
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast--' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.animation = 'toastOut 0.3s ease-in forwards';
+      toast.addEventListener('animationend', () => toast.remove());
+    }, duration);
+  }
+
+  // ---- Apps Script API ----
+
+  async function callAppsScript(payload) {
+    if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
+      showToast('יש להגדיר את כתובת Apps Script', 'error', 4000);
+      throw new Error('Apps Script URL not configured');
+    }
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      const result = await resp.json();
+      if (!result.success) throw new Error(result.error || 'Unknown error');
+      return result;
+    } catch (err) {
+      showToast('שגיאה: ' + err.message, 'error', 5000);
+      throw err;
+    }
+  }
+
+  // ---- CSV Parsing ----
 
   function parseCSV(text) {
     text = text.replace(/^\uFEFF/, '');
@@ -943,7 +1437,7 @@
 
   function buildDataMap(rows) {
     const map = {};
-    const notesMap = {}; // notesMap[date][name] = note
+    const notesMap = {};
     const names = new Set();
     rows.forEach(r => {
       if (!map[r.date]) map[r.date] = {};
@@ -957,6 +1451,8 @@
     return { map, notesMap, names: [...names].sort() };
   }
 
+  // ---- Rendering ----
+
   function renderCell(day, dataMap, notesMap, selectedPerson) {
     const key = formatDate(day);
     const dow = day.getDay();
@@ -967,6 +1463,11 @@
     if (selectedPerson !== '__all__') {
       const dayData = dataMap[key] || {};
       personStatus = dayData[selectedPerson] || null;
+      // Check pending edits for override
+      const pendingKey = selectedPerson + '|' + key;
+      if (pendingEdits[pendingKey]) {
+        personStatus = pendingEdits[pendingKey];
+      }
     }
 
     let cellClass = 'cal-cell';
@@ -978,6 +1479,12 @@
     if (personStatus === 'switch-base') cellClass += ' cal-cell--status-switch-base';
 
     if (selectedPerson === '__all__') cellClass += ' cal-cell--clickable';
+    if (selectedPerson !== '__all__' && currentMode) cellClass += ' cal-cell--editable';
+
+    // Mark pending cells
+    if (selectedPerson !== '__all__' && pendingEdits[selectedPerson + '|' + key]) {
+      cellClass += ' cal-cell--pending';
+    }
 
     let html = `<div class="${cellClass}" data-date="${key}">`;
 
@@ -1016,15 +1523,14 @@
         html += '</div>';
       }
     } else if (personStatus) {
-      const label = personStatus === 'activity' ? 'במוצב' : personStatus === 'home' ? 'בבית' : personStatus === 'switch-home' ? 'יוצא הביתה' : 'חוזר למוצב';
-      html += `<span class="cell-status-label">${label}</span>`;
+      html += `<span class="cell-status-label">${statusLabel(personStatus)}</span>`;
     }
     html += '</div>';
 
     // Notes
     const dayNotes = notesMap[key] || {};
     if (selectedPerson !== '__all__' && dayNotes[selectedPerson]) {
-      html += `<span class="cell-note">${dayNotes[selectedPerson]}</span>`;
+      html += `<span class="cell-note">${escapeHtml(dayNotes[selectedPerson])}</span>`;
     }
 
     html += '</div>';
@@ -1034,7 +1540,6 @@
   function renderCalendar(dataMap, notesMap, names, selectedPerson) {
     const container = document.getElementById('calendarContainer');
 
-    // Generate all days in range
     const allDays = [];
     const d = new Date(2026, 3, 26);
     const end = new Date(2026, 5, 18);
@@ -1045,28 +1550,23 @@
 
     let html = '<div class="calendar-wrap">';
 
-    // Headers
     html += '<div class="cal-headers">';
     dayNames.forEach((name, i) => {
       html += `<div class="cal-header${i === 6 ? ' cal-header--shabbat' : ''}">${name}</div>`;
     });
     html += '</div>';
 
-    // Single continuous grid
     html += '<div class="cal-grid">';
 
-    // Pad start (Apr 26, 2026 is Sunday = 0, no padding needed)
     const firstDow = allDays[0].getDay();
     for (let i = 0; i < firstDow; i++) {
       html += '<div class="cal-cell cal-cell--empty"></div>';
     }
 
-    // All day cells in one continuous flow
     allDays.forEach(day => {
       html += renderCell(day, dataMap, notesMap, selectedPerson);
     });
 
-    // Pad end (Jun 18 is Thursday = 4, need 2 empty cells for Fri+Sat)
     const lastDow = allDays[allDays.length - 1].getDay();
     for (let i = lastDow + 1; i < 7; i++) {
       html += '<div class="cal-cell cal-cell--empty"></div>';
@@ -1075,7 +1575,7 @@
     html += '</div></div>';
     container.innerHTML = html;
 
-    // Add click handlers for day cells in "__all__" mode
+    // Attach click handlers
     if (selectedPerson === '__all__') {
       container.querySelectorAll('.cal-cell--clickable').forEach(cell => {
         cell.addEventListener('click', () => {
@@ -1083,21 +1583,36 @@
           showDayModal(dateKey, dataMap, notesMap);
         });
       });
+    } else {
+      // Individual person — mode-aware clicks
+      container.querySelectorAll('.cal-cell[data-date]').forEach(cell => {
+        if (cell.classList.contains('cal-cell--empty')) return;
+        cell.addEventListener('click', (e) => {
+          if (isDragging && draggedCells.length > 1) return;
+          if (e.target.closest('.status-picker')) return;
+          const dateKey = cell.getAttribute('data-date');
+          if (currentMode === 'note') {
+            showNotePopup(dateKey);
+          } else if (currentMode === 'edit') {
+            showStatusPicker(cell, dateKey);
+          }
+        });
+      });
     }
   }
+
+  // ---- Day Detail Modal (Everyone view) ----
 
   function showDayModal(dateKey, dataMap, notesMap) {
     const dayData = dataMap[dateKey] || {};
     const dayNotes = notesMap[dateKey] || {};
     const modalEl = document.getElementById('dayModal');
 
-    // Parse date for display
     const [y, m, d] = dateKey.split('-').map(Number);
     const dateObj = new Date(y, m - 1, d);
     const dayName = dayNames[dateObj.getDay()];
     const dateLabel = `יום ${dayName}, ${d}/${m}`;
 
-    // Group people by status
     const atBase = [];
     const atHome = [];
     const switching = [];
@@ -1109,7 +1624,6 @@
       else if (status === 'switch-base') switching.push({ name, note, sub: 'חוזר למוצב' });
     });
 
-    // Sort each group alphabetically
     const sortFn = (a, b) => a.name.localeCompare(b.name, 'he');
     atBase.sort(sortFn);
     atHome.sort(sortFn);
@@ -1123,7 +1637,7 @@
       people.forEach(p => {
         h += `<li class="day-modal__person ${personClass}">`;
         h += `<span>${p.name}${p.sub ? ' — ' + p.sub : ''}</span>`;
-        if (p.note) h += `<span class="day-modal__person-note">${p.note}</span>`;
+        if (p.note) h += `<span class="day-modal__person-note">${escapeHtml(p.note)}</span>`;
         h += `</li>`;
       });
       h += `</ul></div>`;
@@ -1144,14 +1658,513 @@
 
     modalEl.innerHTML = html;
 
-    // Close handlers
     document.getElementById('dayModalClose').addEventListener('click', () => { modalEl.innerHTML = ''; });
     document.getElementById('dayModalOverlay').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) modalEl.innerHTML = '';
     });
   }
 
-  // Fallback data
+  // ---- Note Mode ----
+
+  function showNotePopup(dateKey) {
+    const person = currentSelectedPerson;
+    if (person === '__all__') return;
+
+    const existingNote = (currentNotesMap[dateKey] && currentNotesMap[dateKey][person]) || '';
+    const currentNote = existingNote;
+
+    const [y, m, d] = dateKey.split('-').map(Number);
+    const dateDisplay = d + '/' + m;
+
+    const popup = document.getElementById('notePopup');
+    let html = '<div class="note-popup-overlay" id="notePopupOverlay">';
+    html += '<div class="note-popup">';
+    html += '<div class="note-popup__title">הערה ל' + escapeHtml(person) + ' — ' + dateDisplay + '</div>';
+    html += '<textarea class="note-popup__input" id="noteInput" placeholder="הקלד הערה...">' + escapeHtml(currentNote) + '</textarea>';
+    html += '<div class="note-popup__actions">';
+    html += '<button class="note-popup__btn note-popup__btn--save" id="noteSave">שמור</button>';
+    html += '<button class="note-popup__btn note-popup__btn--cancel" id="noteCancel">ביטול</button>';
+    if (currentNote) {
+      html += '<button class="note-popup__btn note-popup__btn--delete" id="noteDelete">מחק</button>';
+    }
+    html += '</div></div></div>';
+
+    popup.innerHTML = html;
+    document.getElementById('noteInput').focus();
+
+    document.getElementById('noteSave').addEventListener('click', async () => {
+      const newNote = document.getElementById('noteInput').value.trim();
+      const btn = document.getElementById('noteSave');
+      btn.disabled = true;
+      btn.textContent = 'שומר...';
+      try {
+        await callAppsScript({
+          action: 'updateCells',
+          edits: [],
+          notes: [{ name: person, date: dateKey, note: newNote }]
+        });
+        if (!currentNotesMap[dateKey]) currentNotesMap[dateKey] = {};
+        if (newNote) {
+          currentNotesMap[dateKey][person] = newNote;
+        } else {
+          delete currentNotesMap[dateKey][person];
+        }
+        popup.innerHTML = '';
+        showToast('ההערה נשמרה בהצלחה', 'success');
+        renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'שמור';
+      }
+    });
+
+    document.getElementById('noteCancel').addEventListener('click', () => {
+      popup.innerHTML = '';
+    });
+
+    const deleteBtn = document.getElementById('noteDelete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', async () => {
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = 'מוחק...';
+        try {
+          await callAppsScript({
+            action: 'updateCells',
+            edits: [],
+            notes: [{ name: person, date: dateKey, note: '' }]
+          });
+          if (currentNotesMap[dateKey]) delete currentNotesMap[dateKey][person];
+          popup.innerHTML = '';
+          showToast('ההערה נמחקה', 'success');
+          renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+        } catch (err) {
+          deleteBtn.disabled = false;
+          deleteBtn.textContent = 'מחק';
+        }
+      });
+    }
+
+    document.getElementById('notePopupOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) popup.innerHTML = '';
+    });
+  }
+
+  // ---- Edit Mode: Status Picker ----
+
+  function showStatusPicker(cellElement, dateKey) {
+    removeStatusPicker();
+
+    const person = currentSelectedPerson;
+    const pendingKey = person + '|' + dateKey;
+    const currentStatus = pendingEdits[pendingKey] ||
+      (currentDataMap[dateKey] && currentDataMap[dateKey][person]) || null;
+
+    const options = [
+      { value: 'activity', label: 'במוצב', style: 'background:var(--clr-activity)' },
+      { value: 'home', label: 'בבית', style: 'background:var(--clr-home)' },
+      { value: 'switch-base', label: 'חוזר למוצב', style: 'background:linear-gradient(135deg,var(--clr-activity) 50%,var(--clr-home) 50%)' },
+      { value: 'switch-home', label: 'יוצא הביתה', style: 'background:linear-gradient(135deg,var(--clr-home) 50%,var(--clr-activity) 50%)' }
+    ];
+
+    const picker = document.createElement('div');
+    picker.className = 'status-picker';
+    picker.id = 'statusPicker';
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'status-picker__option' + (currentStatus === opt.value ? ' status-picker__option--active' : '');
+      btn.innerHTML = '<span class="status-picker__dot" style="' + opt.style + '"></span>' + opt.label;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        stageEdit(dateKey, opt.value);
+        removeStatusPicker();
+      });
+      picker.appendChild(btn);
+    });
+
+    cellElement.style.position = 'relative';
+    cellElement.appendChild(picker);
+
+    setTimeout(() => {
+      document.addEventListener('click', closePickerOnOutsideClick);
+    }, 10);
+  }
+
+  function closePickerOnOutsideClick(e) {
+    const picker = document.getElementById('statusPicker');
+    if (picker && !picker.contains(e.target)) {
+      removeStatusPicker();
+    }
+  }
+
+  function removeStatusPicker() {
+    const existing = document.getElementById('statusPicker');
+    if (existing) existing.remove();
+    document.removeEventListener('click', closePickerOnOutsideClick);
+  }
+
+  function stageEdit(dateKey, newStatus) {
+    const person = currentSelectedPerson;
+    const pendingKey = person + '|' + dateKey;
+    const origStatus = (currentDataMap[dateKey] && currentDataMap[dateKey][person]) || null;
+    const prevPending = pendingEdits[pendingKey];
+
+    undoStack.push({
+      type: 'edit',
+      key: pendingKey,
+      oldValue: prevPending !== undefined ? prevPending : origStatus
+    });
+
+    // If setting back to original, remove from pending
+    if (newStatus === origStatus) {
+      delete pendingEdits[pendingKey];
+    } else {
+      pendingEdits[pendingKey] = newStatus;
+    }
+
+    updateCellVisual(dateKey, newStatus, newStatus !== origStatus);
+    updateSaveDiscardBar();
+  }
+
+  function updateCellVisual(dateKey, newStatus, isPending) {
+    const cell = document.querySelector('.cal-cell[data-date="' + dateKey + '"]');
+    if (!cell) return;
+
+    cell.classList.remove('cal-cell--status-activity', 'cal-cell--status-home',
+      'cal-cell--status-switch-home', 'cal-cell--status-switch-base');
+
+    if (newStatus) {
+      cell.classList.add('cal-cell--status-' + newStatus);
+    }
+
+    if (isPending) {
+      cell.classList.add('cal-cell--pending');
+    } else {
+      cell.classList.remove('cal-cell--pending');
+    }
+
+    const statusDiv = cell.querySelector('.cell-status');
+    if (statusDiv && newStatus) {
+      statusDiv.innerHTML = '<span class="cell-status-label">' + statusLabel(newStatus) + '</span>';
+    }
+  }
+
+  // ---- Drag-to-Fill ----
+
+  function setupDragHandlers() {
+    const container = document.getElementById('calendarContainer');
+
+    container.addEventListener('mousedown', onDragStart);
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
+
+    container.addEventListener('touchstart', onTouchStart, { passive: false });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+  }
+
+  function getCellFromEvent(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    if (!el) return null;
+    const cell = el.closest('.cal-cell[data-date]');
+    if (!cell || cell.classList.contains('cal-cell--empty')) return null;
+    return cell;
+  }
+
+  function getGridRow(dateKey) {
+    const startDate = new Date(2026, 3, 26);
+    const d = new Date(dateKey);
+    const dayOffset = Math.round((d - startDate) / 86400000);
+    return Math.floor((dayOffset + startDate.getDay()) / 7);
+  }
+
+  let dragStartRow = null;
+
+  function onDragStart(e) {
+    if (currentMode !== 'edit') return;
+    const cell = e.target.closest('.cal-cell[data-date]');
+    if (!cell || cell.classList.contains('cal-cell--empty')) return;
+    if (e.target.closest('.status-picker')) return;
+
+    const dateKey = cell.getAttribute('data-date');
+    const person = currentSelectedPerson;
+    const pendingKey = person + '|' + dateKey;
+
+    dragStatus = pendingEdits[pendingKey] ||
+      (currentDataMap[dateKey] && currentDataMap[dateKey][person]) || 'activity';
+
+    isDragging = true;
+    dragStartRow = getGridRow(dateKey);
+    draggedCells = [dateKey];
+
+    cell.classList.add('cal-cell--drag-highlight');
+    e.preventDefault();
+  }
+
+  function onDragMove(e) {
+    if (!isDragging || currentMode !== 'edit') return;
+
+    const cell = getCellFromEvent(e);
+    if (!cell) return;
+
+    const dateKey = cell.getAttribute('data-date');
+    if (draggedCells.includes(dateKey)) return;
+
+    if (getGridRow(dateKey) === dragStartRow) {
+      draggedCells.push(dateKey);
+      stageEdit(dateKey, dragStatus);
+      cell.classList.add('cal-cell--drag-highlight');
+    }
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    dragStartRow = null;
+
+    document.querySelectorAll('.cal-cell--drag-highlight').forEach(c => {
+      c.classList.remove('cal-cell--drag-highlight');
+    });
+
+    draggedCells = [];
+    updateSaveDiscardBar();
+  }
+
+  function onTouchStart(e) {
+    if (currentMode !== 'edit') return;
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!el) return;
+    const cell = el.closest('.cal-cell[data-date]');
+    if (cell && !cell.classList.contains('cal-cell--empty') && !el.closest('.status-picker')) {
+      e.preventDefault();
+      onDragStart({
+        target: cell,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        preventDefault: function() {}
+      });
+    }
+  }
+
+  function onTouchMove(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    onDragMove({ clientX: touch.clientX, clientY: touch.clientY });
+  }
+
+  function onTouchEnd() {
+    onDragEnd();
+  }
+
+  // ---- Save / Discard Bar ----
+
+  function updateSaveDiscardBar() {
+    const count = Object.keys(pendingEdits).length;
+    const bar = document.getElementById('saveBar');
+    const counter = document.getElementById('saveBarCount');
+
+    if (count === 0) {
+      bar.style.display = 'none';
+      return;
+    }
+
+    bar.style.display = 'flex';
+    counter.textContent = count + ' שינויים ממתינים';
+  }
+
+  async function saveAllEdits() {
+    const edits = [];
+    Object.entries(pendingEdits).forEach(([key, status]) => {
+      const sep = key.indexOf('|');
+      const name = key.substring(0, sep);
+      const date = key.substring(sep + 1);
+      edits.push({ name, date, status });
+    });
+
+    if (edits.length === 0) {
+      showToast('אין שינויים לשמירה', 'info');
+      return;
+    }
+
+    const btn = document.getElementById('btnSaveAll');
+    btn.disabled = true;
+    btn.textContent = 'שומר...';
+
+    try {
+      await callAppsScript({
+        action: 'updateCells',
+        edits: edits,
+        notes: []
+      });
+
+      edits.forEach(edit => {
+        if (!currentDataMap[edit.date]) currentDataMap[edit.date] = {};
+        currentDataMap[edit.date][edit.name] = edit.status;
+      });
+
+      pendingEdits = {};
+      undoStack = [];
+
+      showToast('נשמרו ' + edits.length + ' שינויים בהצלחה', 'success');
+      renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+      document.getElementById('saveBar').style.display = 'none';
+    } catch (err) {
+      // Error toast shown by callAppsScript
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 שמור שינויים';
+    }
+  }
+
+  function discardAllEdits() {
+    pendingEdits = {};
+    undoStack = [];
+    renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+    document.getElementById('saveBar').style.display = 'none';
+    showToast('כל השינויים בוטלו', 'info');
+  }
+
+  function undoLastEdit() {
+    if (undoStack.length === 0) {
+      showToast('אין מה לבטל', 'info');
+      return;
+    }
+
+    const last = undoStack.pop();
+    if (last.type === 'edit') {
+      const sep = last.key.indexOf('|');
+      const name = last.key.substring(0, sep);
+      const dateKey = last.key.substring(sep + 1);
+      const origStatus = (currentDataMap[dateKey] && currentDataMap[dateKey][name]) || null;
+
+      if (last.oldValue === origStatus || last.oldValue === null) {
+        delete pendingEdits[last.key];
+      } else {
+        pendingEdits[last.key] = last.oldValue;
+      }
+
+      const currentStatus = pendingEdits[last.key] || origStatus;
+      updateCellVisual(dateKey, currentStatus, !!pendingEdits[last.key]);
+    }
+
+    updateSaveDiscardBar();
+  }
+
+  // ---- Add People Modal ----
+
+  function showAddPeopleModal() {
+    const modal = document.getElementById('addPeopleModal');
+
+    let html = '<div class="add-people-overlay" id="addPeopleOverlay">';
+    html += '<div class="add-people-modal">';
+    html += '<div class="add-people-modal__title">הוספת אנשים</div>';
+    html += '<div class="add-people-modal__desc">הכנס שמות, מופרדים בפסיק או שורה חדשה</div>';
+    html += '<textarea class="add-people-modal__input" id="addPeopleInput" placeholder="שם ראשון, שם שני&#10;שם שלישי"></textarea>';
+    html += '<div class="add-people-modal__warning" id="addPeopleWarning" style="display:none;"></div>';
+    html += '<div class="add-people-modal__actions">';
+    html += '<button class="add-people-modal__btn add-people-modal__btn--add" id="addPeopleSubmit">הוסף</button>';
+    html += '<button class="add-people-modal__btn add-people-modal__btn--cancel" id="addPeopleCancel">ביטול</button>';
+    html += '</div></div></div>';
+
+    modal.innerHTML = html;
+    document.getElementById('addPeopleInput').focus();
+
+    document.getElementById('addPeopleSubmit').addEventListener('click', handleAddPeople);
+    document.getElementById('addPeopleCancel').addEventListener('click', () => { modal.innerHTML = ''; });
+    document.getElementById('addPeopleOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) modal.innerHTML = '';
+    });
+  }
+
+  async function handleAddPeople() {
+    const input = document.getElementById('addPeopleInput').value;
+    const warning = document.getElementById('addPeopleWarning');
+
+    const names = input
+      .split(/[,\n]/)
+      .map(n => n.trim())
+      .filter(n => n.length > 0);
+
+    if (names.length === 0) {
+      warning.textContent = 'יש להזין לפחות שם אחד';
+      warning.style.display = 'block';
+      return;
+    }
+
+    const duplicates = names.filter(n => currentNames.includes(n));
+    const newNames = names.filter(n => !currentNames.includes(n));
+
+    if (newNames.length === 0) {
+      warning.textContent = 'כל השמות שהוזנו כבר קיימים במערכת';
+      warning.style.display = 'block';
+      return;
+    }
+
+    if (duplicates.length > 0) {
+      warning.textContent = 'שמות שכבר קיימים (ידלגו): ' + duplicates.join(', ');
+      warning.style.display = 'block';
+    }
+
+    const btn = document.getElementById('addPeopleSubmit');
+    btn.disabled = true;
+    btn.textContent = 'מוסיף...';
+
+    try {
+      await callAppsScript({
+        action: 'addPeople',
+        names: newNames,
+        dateRange: { start: DATE_START, end: DATE_END },
+        defaultStatus: 'activity'
+      });
+
+      document.getElementById('addPeopleModal').innerHTML = '';
+      showToast('נוספו ' + newNames.length + ' אנשים בהצלחה. טוען מחדש...', 'success', 3000);
+
+      setTimeout(() => location.reload(), 2000);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'הוסף';
+    }
+  }
+
+  // ---- Toolbar Setup ----
+
+  function setupToolbar() {
+    const modes = document.getElementById('toolbarModes');
+    const btnNote = document.getElementById('btnNote');
+    const btnEdit = document.getElementById('btnEdit');
+    const btnCancel = document.getElementById('btnCancel');
+    const btnAddPeople = document.getElementById('btnAddPeople');
+
+    function updateToolbarVisibility() {
+      modes.style.display = currentSelectedPerson === '__all__' ? 'none' : 'flex';
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      btnNote.classList.toggle('toolbar__btn--active', mode === 'note');
+      btnEdit.classList.toggle('toolbar__btn--active', mode === 'edit');
+      btnCancel.style.display = mode ? '' : 'none';
+      removeStatusPicker();
+    }
+
+    btnNote.addEventListener('click', () => setMode(currentMode === 'note' ? null : 'note'));
+    btnEdit.addEventListener('click', () => setMode(currentMode === 'edit' ? null : 'edit'));
+    btnCancel.addEventListener('click', () => {
+      setMode(null);
+      if (Object.keys(pendingEdits).length > 0) {
+        discardAllEdits();
+      }
+    });
+    btnAddPeople.addEventListener('click', showAddPeopleModal);
+
+    return { updateToolbarVisibility, setMode };
+  }
+
+  // ---- Fallback data ----
+
   function generateFallbackData() {
     const names = ['גיל זאבי','אבירן גרין','לרה','מיה ידידה','עמית וייס','שרון כהן','אלון גלפרין','כרמל אלימלך','יואב אשד','שני לאונוב','אליזבת','שי יפרח','שנהב'];
     const rows = [];
@@ -1172,6 +2185,8 @@
     }
     return rows;
   }
+
+  // ---- Init ----
 
   async function init() {
     let rows;
@@ -1198,6 +2213,11 @@
 
     const { map, notesMap, names } = buildDataMap(rows);
 
+    // Store global refs
+    currentDataMap = map;
+    currentNotesMap = notesMap;
+    currentNames = names;
+
     const select = document.getElementById('personFilter');
     const commander = 'גיל זאבי';
     const sortedNames = [commander, ...names.filter(n => n !== commander)];
@@ -1210,8 +2230,44 @@
 
     renderCalendar(map, notesMap, names, '__all__');
 
+    // Setup toolbar
+    const toolbarCtrl = setupToolbar();
+    toolbarCtrl.updateToolbarVisibility();
+
+    // Setup drag handlers
+    setupDragHandlers();
+
+    // Setup save/discard buttons
+    document.getElementById('btnSaveAll').addEventListener('click', saveAllEdits);
+    document.getElementById('btnDiscardAll').addEventListener('click', discardAllEdits);
+    document.getElementById('btnUndo').addEventListener('click', undoLastEdit);
+
+    // Dropdown change handler
     select.addEventListener('change', () => {
+      currentSelectedPerson = select.value;
+      currentMode = null;
+      pendingEdits = {};
+      undoStack = [];
       renderCalendar(map, notesMap, names, select.value);
+      toolbarCtrl.updateToolbarVisibility();
+      toolbarCtrl.setMode(null);
+      document.getElementById('saveBar').style.display = 'none';
+    });
+
+    // Undo keyboard shortcut
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && currentMode === 'edit') {
+        e.preventDefault();
+        undoLastEdit();
+      }
+    });
+
+    // Warn before leaving with unsaved edits
+    window.addEventListener('beforeunload', (e) => {
+      if (Object.keys(pendingEdits).length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
     });
   }
 
