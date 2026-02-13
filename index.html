@@ -2036,7 +2036,7 @@
     btn.textContent = 'שומר...';
 
     try {
-      await callAppsScript({
+      const result = await callAppsScript({
         action: 'updateCells',
         edits: edits,
         notes: []
@@ -2050,7 +2050,11 @@
       pendingEdits = {};
       undoStack = [];
 
-      showToast('נשמרו ' + edits.length + ' שינויים בהצלחה', 'success');
+      if (result.skipped > 0) {
+        showToast('נשמרו ' + result.updated + ' שינויים, ' + result.skipped + ' לא נמצאו', 'warning', 5000);
+      } else {
+        showToast('נשמרו ' + result.updated + ' שינויים בהצלחה', 'success');
+      }
       renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
       document.getElementById('saveBar').style.display = 'none';
     } catch (err) {

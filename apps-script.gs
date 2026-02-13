@@ -44,10 +44,7 @@ function handleUpdateCells(payload) {
     var dateVal = data[i][dateCol];
     // Handle Date objects from Sheets
     if (dateVal instanceof Date) {
-      var yy = dateVal.getFullYear();
-      var mm = String(dateVal.getMonth() + 1).padStart(2, '0');
-      var dd = String(dateVal.getDate()).padStart(2, '0');
-      dateVal = yy + '-' + mm + '-' + dd;
+      dateVal = formatDate(dateVal);
     }
     var key = String(data[i][nameCol]).trim() + '|' + String(dateVal).trim();
     rowMap[key] = i + 1;
@@ -57,6 +54,7 @@ function handleUpdateCells(payload) {
   var notes = payload.notes || [];
   var editCount = 0;
   var noteCount = 0;
+  var missingEdits = [];
 
   edits.forEach(function(edit) {
     var key = edit.name + '|' + edit.date;
@@ -64,6 +62,8 @@ function handleUpdateCells(payload) {
     if (row) {
       sheet.getRange(row, statusCol + 1).setValue(edit.status);
       editCount++;
+    } else {
+      missingEdits.push(key);
     }
   });
 
@@ -76,7 +76,23 @@ function handleUpdateCells(payload) {
     }
   });
 
-  return jsonResponse({ success: true, updated: editCount, noted: noteCount });
+  if (edits.length > 0 && editCount === 0) {
+    return jsonResponse({ success: false, error: 'No matching rows found for any edit. Keys: ' + missingEdits.slice(0, 3).join(', ') });
+  }
+
+  return jsonResponse({ success: true, updated: editCount, noted: noteCount, skipped: missingEdits.length });
+}
+
+function parseDateLocal(dateStr) {
+  var parts = String(dateStr).split('-');
+  return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+}
+
+function formatDate(d) {
+  var yy = d.getFullYear();
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  var dd = String(d.getDate()).padStart(2, '0');
+  return yy + '-' + mm + '-' + dd;
 }
 
 function handleAddPeople(payload) {
@@ -84,8 +100,9 @@ function handleAddPeople(payload) {
   var data = sheet.getDataRange().getValues();
 
   var names = payload.names || [];
-  var startDate = new Date(payload.dateRange.start);
-  var endDate = new Date(payload.dateRange.end);
+  var defaultStatus = payload.defaultStatus || 'activity';
+  var startDate = parseDateLocal(payload.dateRange.start);
+  var endDate = parseDateLocal(payload.dateRange.end);
 
   // Collect existing names
   var existingNames = {};
@@ -102,12 +119,9 @@ function handleAddPeople(payload) {
       skipped.push(name);
       return;
     }
-    var d = new Date(startDate);
+    var d = new Date(startDate.getTime());
     while (d <= endDate) {
-      var yy = d.getFullYear();
-      var mm = String(d.getMonth() + 1).padStart(2, '0');
-      var dd = String(d.getDate()).padStart(2, '0');
-      newRows.push([name, yy + '-' + mm + '-' + dd, 'activity', '']);
+      newRows.push([name, formatDate(d), defaultStatus, '']);
       d.setDate(d.getDate() + 1);
     }
   });
