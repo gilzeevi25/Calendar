@@ -30,25 +30,50 @@ function doPost(e) {
   }
 }
 
+// Normalize any date value (Date object, number, or string) to "YYYY-MM-DD"
+function normalizeDate(val) {
+  if (val instanceof Date) return formatDate(val);
+  var s = String(val).trim();
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Try DD/MM/YYYY or D/M/YYYY (common in Hebrew locale sheets)
+  var slashParts = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (slashParts) {
+    return slashParts[3] + '-' + String(parseInt(slashParts[2])).padStart(2, '0') + '-' + String(parseInt(slashParts[1])).padStart(2, '0');
+  }
+  // Try parsing as generic date string
+  var d = new Date(s);
+  if (!isNaN(d.getTime()) && d.getFullYear() > 2000) return formatDate(d);
+  return s;
+}
+
+// Find column index by header name (trimmed, case-insensitive)
+function findCol(headers, name) {
+  for (var i = 0; i < headers.length; i++) {
+    if (String(headers[i]).trim().toLowerCase() === name.toLowerCase()) return i;
+  }
+  return -1;
+}
+
 function handleUpdateCells(payload) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
 
-  var nameCol = headers.indexOf('name');
-  var dateCol = headers.indexOf('date');
-  var statusCol = headers.indexOf('status');
-  var noteCol = headers.indexOf('note');
+  var nameCol = findCol(headers, 'name');
+  var dateCol = findCol(headers, 'date');
+  var statusCol = findCol(headers, 'status');
+  var noteCol = findCol(headers, 'note');
 
-  // Build row lookup: "name|date" -> 1-based sheet row
+  if (nameCol === -1 || dateCol === -1 || statusCol === -1) {
+    return jsonResponse({ success: false, error: 'Missing required columns. Found headers: ' + headers.join(', ') });
+  }
+
+  // Build row lookup: "name|YYYY-MM-DD" -> 1-based sheet row
   var rowMap = {};
   for (var i = 1; i < data.length; i++) {
-    var dateVal = data[i][dateCol];
-    // Handle Date objects from Sheets
-    if (dateVal instanceof Date) {
-      dateVal = formatDate(dateVal);
-    }
-    var key = String(data[i][nameCol]).trim() + '|' + String(dateVal).trim();
+    var dateVal = normalizeDate(data[i][dateCol]);
+    var key = String(data[i][nameCol]).trim() + '|' + dateVal;
     rowMap[key] = i + 1;
   }
 
@@ -59,7 +84,8 @@ function handleUpdateCells(payload) {
   var missingEdits = [];
 
   edits.forEach(function(edit) {
-    var key = edit.name + '|' + edit.date;
+    var editDate = normalizeDate(edit.date);
+    var key = String(edit.name).trim() + '|' + editDate;
     var row = rowMap[key];
     if (row) {
       sheet.getRange(row, statusCol + 1).setValue(edit.status);
@@ -70,7 +96,8 @@ function handleUpdateCells(payload) {
   });
 
   notes.forEach(function(n) {
-    var key = n.name + '|' + n.date;
+    var noteDate = normalizeDate(n.date);
+    var key = String(n.name).trim() + '|' + noteDate;
     var row = rowMap[key];
     if (row && noteCol !== -1) {
       sheet.getRange(row, noteCol + 1).setValue(n.note);
@@ -79,7 +106,13 @@ function handleUpdateCells(payload) {
   });
 
   if (edits.length > 0 && editCount === 0) {
-    return jsonResponse({ success: false, error: 'No matching rows found for any edit. Keys: ' + missingEdits.slice(0, 3).join(', ') });
+    // Include debug info: show a few rowMap keys for comparison
+    var sampleKeys = Object.keys(rowMap).slice(0, 5);
+    return jsonResponse({
+      success: false,
+      error: 'No matching rows found for any edit. Keys: ' + missingEdits.slice(0, 3).join(', ') +
+             ' | Sample sheet keys: ' + sampleKeys.join(', ')
+    });
   }
 
   return jsonResponse({ success: true, updated: editCount, noted: noteCount, skipped: missingEdits.length });
@@ -101,12 +134,17 @@ function handleGetData() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
   var data = sheet.getDataRange().getValues();
   var headers = data[0];
+
+  var dateCol = findCol(headers, 'date');
+
   var rows = [];
   for (var i = 1; i < data.length; i++) {
     var row = {};
     for (var j = 0; j < headers.length; j++) {
       var val = data[i][j];
-      if (val instanceof Date) {
+      if (j === dateCol) {
+        val = normalizeDate(val);
+      } else if (val instanceof Date) {
         val = formatDate(val);
       }
       row[String(headers[j]).trim()] = String(val).trim();
@@ -142,7 +180,8 @@ function handleAddPeople(payload) {
     }
     var d = new Date(startDate.getTime());
     while (d <= endDate) {
-      newRows.push([name, formatDate(d), defaultStatus, '']);
+      // Write Date objects (not strings) so Sheets stores them consistently
+      newRows.push([name, new Date(d.getFullYear(), d.getMonth(), d.getDate()), defaultStatus, '']);
       d.setDate(d.getDate() + 1);
     }
   });
