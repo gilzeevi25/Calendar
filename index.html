@@ -1285,7 +1285,7 @@
     <button class="save-bar__btn save-bar__btn--undo" id="btnUndo">↩️ בטל אחרון</button>
   </div>
 
-  <div id="calendarContainer">
+  <div id="calendarContainer" style="padding-bottom:120px;">
     <div class="loading">
       <div class="loading__spinner"></div>
       טוען נתונים...
@@ -1899,14 +1899,6 @@
     return cell;
   }
 
-  function getGridRow(dateKey) {
-    const startDate = new Date(2026, 3, 26);
-    const d = new Date(dateKey);
-    const dayOffset = Math.round((d - startDate) / 86400000);
-    return Math.floor((dayOffset + startDate.getDay()) / 7);
-  }
-
-  let dragStartRow = null;
 
   function onDragStart(e) {
     if (currentMode !== 'edit') return;
@@ -1922,7 +1914,6 @@
       (currentDataMap[dateKey] && currentDataMap[dateKey][person]) || 'activity';
 
     isDragging = true;
-    dragStartRow = getGridRow(dateKey);
     draggedCells = [dateKey];
 
     cell.classList.add('cal-cell--drag-highlight');
@@ -1938,17 +1929,14 @@
     const dateKey = cell.getAttribute('data-date');
     if (draggedCells.includes(dateKey)) return;
 
-    if (getGridRow(dateKey) === dragStartRow) {
-      draggedCells.push(dateKey);
-      stageEdit(dateKey, dragStatus);
-      cell.classList.add('cal-cell--drag-highlight');
-    }
+    draggedCells.push(dateKey);
+    stageEdit(dateKey, dragStatus);
+    cell.classList.add('cal-cell--drag-highlight');
   }
 
   function onDragEnd() {
     if (!isDragging) return;
     isDragging = false;
-    dragStartRow = null;
 
     document.querySelectorAll('.cal-cell--drag-highlight').forEach(c => {
       c.classList.remove('cal-cell--drag-highlight');
