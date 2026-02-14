@@ -298,6 +298,65 @@
     box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
   }
 
+  /* Person Search */
+  .filter-group__search-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    position: relative;
+  }
+  .person-search {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.45rem 2rem 0.45rem 0.75rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius);
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    direction: rtl;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  .person-search:focus {
+    border-color: var(--clr-activity);
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+  .person-search::placeholder { color: var(--clr-text-tertiary); }
+  .person-search-icon {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.55rem;
+    width: 14px;
+    height: 14px;
+    color: var(--clr-text-tertiary);
+    pointer-events: none;
+  }
+  .person-search-clear {
+    position: absolute;
+    top: 0.35rem;
+    left: 0.35rem;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: var(--clr-border);
+    color: var(--clr-text-secondary);
+    border-radius: 50%;
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .person-search-clear--visible { display: flex; }
+  .person-search-clear:hover { background: var(--clr-text-tertiary); color: var(--clr-surface); }
+
+  [data-theme="dark"] .person-search { background: #1a1714; border-color: var(--clr-border); color: var(--clr-text); }
+  [data-theme="dark"] .person-search-clear { background: var(--clr-border); color: var(--clr-text-secondary); }
+  [data-theme="dark"] .person-search-clear:hover { background: var(--clr-text-tertiary); color: var(--clr-surface); }
+
   /* Legend */
   .legend {
     display: flex;
@@ -455,6 +514,44 @@
   .person-stats__sep {
     color: var(--clr-border);
   }
+
+  /* Week Jump Bar */
+  .week-jump-bar {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .week-jump-bar::-webkit-scrollbar { display: none; }
+
+  .week-pill {
+    flex-shrink: 0;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.78rem;
+    font-family: var(--font-body);
+    font-weight: 500;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 16px;
+    background: var(--clr-bg);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    white-space: nowrap;
+  }
+  .week-pill:hover { border-color: #c4b8aa; background: #f5f1ec; color: var(--clr-text); }
+  .week-pill--active { border-color: var(--clr-activity); background: var(--clr-activity-bg); color: var(--clr-activity); font-weight: 700; }
+  .week-pill--has-today { border-color: #f59e0b; background: #fef3c7; color: #92400e; }
+
+  [data-theme="dark"] .week-jump-bar { background: var(--clr-surface); border-color: var(--clr-border); }
+  [data-theme="dark"] .week-pill { background: #1e1b16; border-color: var(--clr-border); color: var(--clr-text-secondary); }
+  [data-theme="dark"] .week-pill:hover { border-color: #5a5040; background: #332e27; color: var(--clr-text); }
+  [data-theme="dark"] .week-pill--active { border-color: var(--clr-activity); background: #1a2e1a; color: #4ade80; }
+  [data-theme="dark"] .week-pill--has-today { border-color: #a07208; background: #332a12; color: #f0c050; }
 
   @media (max-width: 480px) {
     .stats-bar { font-size: 0.78rem; gap: 0.5rem; padding: 0.5rem 0.75rem; }
@@ -1568,6 +1665,15 @@
     touch-action: manipulation;
   }
 
+  .cal-cell--focused {
+    outline: 2.5px solid #8b5cf6;
+    outline-offset: -2px;
+    z-index: 2;
+  }
+  [data-theme="dark"] .cal-cell--focused {
+    outline-color: #a78bfa;
+  }
+
   /* Add People modal */
   .add-people-overlay {
     position: fixed;
@@ -2164,7 +2270,7 @@
     .cal-cell { min-height: 60px; }
     .filter-select { border: 1px solid #999; box-shadow: none; }
     .examples-fab, .examples-overlay, .examples-panel { display: none; }
-    .toolbar, .save-bar, .toast-container, #notePopup, #addPeopleModal, #fairnessModal, #rotationModal, .view-toggle, .timeline-tooltip { display: none; }
+    .toolbar, .save-bar, .toast-container, #notePopup, #addPeopleModal, #fairnessModal, #rotationModal, .view-toggle, .timeline-tooltip, .week-jump-bar, .person-search { display: none; }
   }
 </style>
 </head>
@@ -2192,9 +2298,16 @@
       <button class="filter-nav-btn" id="btnPrevPerson" title="הקודם" style="display:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
-      <select class="filter-select" id="personFilter">
-        <option value="__all__">כולם</option>
-      </select>
+      <div class="filter-group__search-wrap">
+        <div style="position:relative;">
+          <svg class="person-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="person-search" id="personSearch" placeholder="חיפוש שם..." autocomplete="off">
+          <button class="person-search-clear" id="personSearchClear" type="button">&times;</button>
+        </div>
+        <select class="filter-select" id="personFilter">
+          <option value="__all__">כולם</option>
+        </select>
+      </div>
       <button class="filter-nav-btn" id="btnNextPerson" title="הבא" style="display:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -2224,6 +2337,7 @@
 
   <div class="stats-bar" id="statsBar" style="display:none;" title="לחץ לגלול להיום"></div>
   <div class="person-stats" id="personStats" style="display:none;"></div>
+  <div class="week-jump-bar" id="weekJumpBar" style="display:none;"></div>
 
   <div class="save-bar" id="saveBar" style="display:none;">
     <span class="save-bar__count" id="saveBarCount"></span>
@@ -2953,6 +3067,146 @@
     if (existing) existing.remove();
     document.removeEventListener('click', closePickerOnOutsideClick);
     document.removeEventListener('touchend', closePickerOnOutsideTouch);
+  }
+
+  // ---- Week Jump Bar ----
+
+  function renderWeekJumpBar() {
+    const bar = document.getElementById('weekJumpBar');
+    if (currentView === 'timeline') {
+      bar.style.display = 'none';
+      return;
+    }
+
+    const start = new Date(2026, 3, 26); // Apr 26
+    const end = new Date(2026, 5, 18);   // Jun 18
+    const weeks = [];
+    const d = new Date(start);
+
+    while (d <= end) {
+      const weekStart = new Date(d);
+      const weekEnd = new Date(d);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      if (weekEnd > end) weekEnd.setTime(end.getTime());
+      weeks.push({ start: new Date(weekStart), end: new Date(weekEnd) });
+      d.setDate(d.getDate() + 7);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let html = '';
+    weeks.forEach((w, i) => {
+      const label = w.start.getDate() + '/' + (w.start.getMonth() + 1) + '–' + w.end.getDate() + '/' + (w.end.getMonth() + 1);
+      const hasToday = today >= w.start && today <= w.end;
+      const cls = 'week-pill' + (hasToday ? ' week-pill--has-today' : '');
+      const startKey = formatDate(w.start);
+      html += '<button class="' + cls + '" data-week-start="' + startKey + '" data-week-idx="' + i + '">' + label + '</button>';
+    });
+
+    bar.innerHTML = html;
+    bar.style.display = 'flex';
+
+    bar.addEventListener('click', function(e) {
+      const pill = e.target.closest('.week-pill');
+      if (!pill) return;
+      const startKey = pill.getAttribute('data-week-start');
+      const cell = document.querySelector('.cal-cell[data-date="' + startKey + '"]');
+      if (cell) cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      bar.querySelectorAll('.week-pill').forEach(p => p.classList.remove('week-pill--active'));
+      pill.classList.add('week-pill--active');
+    });
+  }
+
+  // ---- Keyboard Cell Navigation ----
+
+  let focusedDateKey = null;
+
+  function setFocusedCell(dateKey) {
+    const oldCell = document.querySelector('.cal-cell--focused');
+    if (oldCell) oldCell.classList.remove('cal-cell--focused');
+    focusedDateKey = dateKey;
+    if (!dateKey) return;
+    const cell = document.querySelector('.cal-cell[data-date="' + dateKey + '"]');
+    if (cell) {
+      cell.classList.add('cal-cell--focused');
+      cell.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function navigateCell(deltaDays) {
+    if (!focusedDateKey) {
+      // Start from today or first day
+      const todayCell = document.querySelector('.cal-cell--today');
+      if (todayCell) {
+        setFocusedCell(todayCell.getAttribute('data-date'));
+      } else {
+        setFocusedCell(DATE_START);
+      }
+      return;
+    }
+
+    const [y, m, d] = focusedDateKey.split('-').map(Number);
+    const current = new Date(y, m - 1, d);
+    current.setDate(current.getDate() + deltaDays);
+    const targetKey = formatDate(current);
+
+    // Check bounds
+    if (targetKey < DATE_START || targetKey > DATE_END) return;
+
+    setFocusedCell(targetKey);
+  }
+
+  function activateFocusedCell() {
+    if (!focusedDateKey) return;
+    const cell = document.querySelector('.cal-cell[data-date="' + focusedDateKey + '"]');
+    if (!cell) return;
+
+    if (currentSelectedPerson === '__all__') {
+      showDayModal(focusedDateKey, currentDataMap, currentNotesMap);
+    } else if (currentMode === 'note') {
+      showNotePopup(focusedDateKey);
+    } else if (currentMode === 'edit') {
+      showStatusPicker(cell, focusedDateKey);
+    }
+  }
+
+  // ---- Person Search ----
+
+  let allPersonOptions = []; // snapshot of {value, text} after population
+
+  function capturePersonOptions() {
+    const select = document.getElementById('personFilter');
+    allPersonOptions = [];
+    for (let i = 0; i < select.options.length; i++) {
+      allPersonOptions.push({ value: select.options[i].value, text: select.options[i].textContent });
+    }
+  }
+
+  function filterPersons(query) {
+    const select = document.getElementById('personFilter');
+    const currentVal = select.value;
+    const q = query.trim().toLowerCase();
+
+    // Clear all options
+    while (select.options.length > 0) select.remove(0);
+
+    allPersonOptions.forEach(opt => {
+      if (opt.value === '__all__' || q === '' ||
+          opt.value.toLowerCase().includes(q) ||
+          opt.text.toLowerCase().includes(q)) {
+        const o = document.createElement('option');
+        o.value = opt.value;
+        o.textContent = opt.text;
+        select.appendChild(o);
+      }
+    });
+
+    // Restore selection if still visible
+    const stillHas = Array.from(select.options).some(o => o.value === currentVal);
+    if (stillHas) {
+      select.value = currentVal;
+    }
   }
 
   function stageEdit(dateKey, newStatus) {
@@ -3847,6 +4101,11 @@
       renderTimeline(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
     } else {
       renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+      // Re-apply keyboard focus after re-render
+      if (focusedDateKey) {
+        const cell = document.querySelector('.cal-cell[data-date="' + focusedDateKey + '"]');
+        if (cell) cell.classList.add('cal-cell--focused');
+      }
     }
   }
 
@@ -3855,7 +4114,10 @@
     currentView = newView;
     document.getElementById('btnCalView').classList.toggle('view-toggle__btn--active', newView === 'calendar');
     document.getElementById('btnTimelineView').classList.toggle('view-toggle__btn--active', newView === 'timeline');
-    fadeSwapCalendar(() => { renderCurrentView(); });
+    fadeSwapCalendar(() => {
+      renderCurrentView();
+      renderWeekJumpBar();
+    });
   }
 
   // ---- Fallback data ----
@@ -3961,6 +4223,8 @@
     renderCalendar(map, notesMap, names, '__all__');
     updateStatsBar(map);
     updatePersonStats(map, '__all__');
+    renderWeekJumpBar();
+    capturePersonOptions();
 
     // Today button + auto-scroll
     function scrollToToday() {
@@ -4025,6 +4289,7 @@
       currentMode = null;
       pendingEdits = {};
       undoStack = [];
+      focusedDateKey = null;
       toolbarCtrl.setMode(null);
       document.getElementById('saveBar').style.display = 'none';
       // Timeline and summary only available for everyone view
@@ -4049,16 +4314,96 @@
         }
         updatePersonStats(map, select.value);
         updateNavButtons();
+        renderWeekJumpBar();
       });
     });
 
     // Sticky header shadow — observer is auto-attached inside renderCalendar()
 
-    // Undo keyboard shortcut
+    // Person search input
+    const personSearchInput = document.getElementById('personSearch');
+    const personSearchClear = document.getElementById('personSearchClear');
+
+    personSearchInput.addEventListener('input', () => {
+      const q = personSearchInput.value;
+      filterPersons(q);
+      personSearchClear.classList.toggle('person-search-clear--visible', q.length > 0);
+    });
+
+    personSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        // Select first non-__all__ match, or __all__ if nothing else
+        const firstOpt = select.options.length > 1 ? select.options[1] : select.options[0];
+        if (firstOpt) {
+          select.value = firstOpt.value;
+          select.dispatchEvent(new Event('change'));
+        }
+        personSearchInput.value = '';
+        personSearchClear.classList.remove('person-search-clear--visible');
+        filterPersons('');
+        personSearchInput.blur();
+      } else if (e.key === 'Escape') {
+        personSearchInput.value = '';
+        personSearchClear.classList.remove('person-search-clear--visible');
+        filterPersons('');
+        personSearchInput.blur();
+      }
+    });
+
+    personSearchClear.addEventListener('click', () => {
+      personSearchInput.value = '';
+      personSearchClear.classList.remove('person-search-clear--visible');
+      filterPersons('');
+      personSearchInput.focus();
+    });
+
+    // Undo keyboard shortcut + cell navigation
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && currentMode === 'edit') {
         e.preventDefault();
         undoLastEdit();
+        return;
+      }
+
+      // Skip keyboard nav if focus is in input/textarea/select or a modal is open
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (document.querySelector('.day-modal-overlay, .add-people-overlay, .fairness-overlay, .rotation-overlay')) return;
+      if (currentView === 'timeline') return;
+
+      // Arrow key cell navigation (RTL-aware)
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateCell(-1); // RTL: right = previous day
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateCell(1);  // RTL: left = next day
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        navigateCell(-7);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        navigateCell(7);
+      } else if (e.key === 'Enter' && focusedDateKey) {
+        e.preventDefault();
+        activateFocusedCell();
+      } else if (e.key === 'Escape') {
+        if (focusedDateKey) {
+          e.preventDefault();
+          setFocusedCell(null);
+        }
+      }
+
+      // Quick-select status 1-4 when status picker is open
+      const picker = document.getElementById('statusPicker');
+      if (picker && e.key >= '1' && e.key <= '4') {
+        e.preventDefault();
+        const statusMap = { '1': 'activity', '2': 'home', '3': 'switch-base', '4': 'switch-home' };
+        if (focusedDateKey) {
+          stageEdit(focusedDateKey, statusMap[e.key]);
+          removeStatusPicker();
+        }
       }
     });
 
