@@ -32,6 +32,62 @@
     --font-display: 'Frank Ruhl Libre', serif;
   }
 
+  [data-theme="dark"] {
+    --clr-bg: #1a1714;
+    --clr-surface: #242019;
+    --clr-border: #3d362c;
+    --clr-text: #e8e2da;
+    --clr-text-secondary: #a89e92;
+    --clr-text-tertiary: #7a7068;
+    --clr-activity-bg: #1a2e1a;
+    --clr-home-bg: #1a2340;
+    --clr-shabbat: #2a2540;
+    --clr-shabbat-border: #4a3d6e;
+    --clr-shabbat-text: #c4a8f0;
+    --clr-shavuot: #332a12;
+    --clr-shavuot-border: #a07208;
+    --clr-shavuot-text: #f0c050;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  [data-theme="dark"] body::before { opacity: 0.04; }
+
+  [data-theme="dark"] .cal-header { background: #2a2520; }
+  [data-theme="dark"] .cal-header--shabbat { background: #2d2842; color: var(--clr-shabbat-text); }
+  [data-theme="dark"] .cal-cell--empty { background: #1e1b16; }
+  [data-theme="dark"] .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23a89e92'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); }
+  [data-theme="dark"] .cal-cell--status-activity .cell-greg { color: #4ade80; }
+  [data-theme="dark"] .cal-cell--status-home .cell-greg { color: #60a5fa; }
+  [data-theme="dark"] .cal-cell--status-activity .cell-status-label { color: #4ade80; }
+  [data-theme="dark"] .cal-cell--status-home .cell-status-label { color: #60a5fa; }
+  [data-theme="dark"] .day-modal__close:hover { background: #3d362c; }
+  [data-theme="dark"] .day-modal__person--activity { background: #1a2e1a; }
+  [data-theme="dark"] .day-modal__person--home { background: #1a2340; }
+  [data-theme="dark"] .day-modal__person--switch { background: linear-gradient(135deg, #1a2e1a 50%, #1a2340 50%); }
+  [data-theme="dark"] .toolbar__btn { background: #2a2520; border-color: #3d362c; color: #a89e92; }
+  [data-theme="dark"] .toolbar__btn:hover { border-color: #5a5040; background: #332e27; }
+  [data-theme="dark"] .toolbar__btn--active { background: #1a2e1a; border-color: var(--clr-activity); color: #4ade80; }
+  [data-theme="dark"] .save-bar { background: #332a12; border-color: #5a4810; color: #e8e2da; }
+  [data-theme="dark"] .filter-nav-btn { background: #2a2520; border-color: #3d362c; color: #a89e92; }
+  [data-theme="dark"] .filter-nav-btn:hover { background: #332e27; border-color: #5a5040; }
+  [data-theme="dark"] .note-popup { background: var(--clr-surface); }
+  [data-theme="dark"] .note-popup__input { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+  [data-theme="dark"] .cell-note { background: #332a12; border-color: #5a4810; color: #f0c050; }
+  [data-theme="dark"] .cell-holiday { background: rgba(160,114,8,0.25); color: #f0c050; }
+  [data-theme="dark"] .cell-special { background: rgba(239,68,68,0.2); color: #fca5a5; }
+  [data-theme="dark"] .example-item__row { background: #2a2520; border-color: #3d362c; }
+  [data-theme="dark"] .examples-panel__close:hover { background: #3d362c; }
+  [data-theme="dark"] .stats-bar__chip--activity { background: #1a2e1a; color: #4ade80; }
+  [data-theme="dark"] .stats-bar__chip--home { background: #1a2340; color: #60a5fa; }
+  [data-theme="dark"] .stats-bar__chip--switch { background: #2a2540; color: #a89e92; }
+  [data-theme="dark"] .skeleton-header { background: #2a2520; }
+  [data-theme="dark"] .skeleton-header__bar { background: #3d362c; }
+  [data-theme="dark"] .skeleton-cell__date { background: #3d362c; }
+  [data-theme="dark"] .skeleton-cell__line { background: #332e27; }
+  [data-theme="dark"] .add-people-modal { background: var(--clr-surface); }
+  [data-theme="dark"] .add-people-modal__input { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
@@ -90,6 +146,53 @@
     border-radius: 3px;
     margin: 1rem auto 0;
   }
+
+  /* Data freshness badge */
+  .freshness-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 400;
+    padding: 0.2rem 0.65rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .freshness-badge:hover {
+    opacity: 0.8;
+  }
+
+  .freshness-badge__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .freshness-badge--live {
+    background: rgba(22,163,74,0.1);
+    color: #15803d;
+  }
+  .freshness-badge--live .freshness-badge__dot { background: #16a34a; }
+
+  .freshness-badge--cached {
+    background: rgba(234,179,8,0.12);
+    color: #a16207;
+  }
+  .freshness-badge--cached .freshness-badge__dot { background: #eab308; }
+
+  .freshness-badge--fallback {
+    background: rgba(239,68,68,0.1);
+    color: #dc2626;
+  }
+  .freshness-badge--fallback .freshness-badge__dot { background: #ef4444; }
+
+  [data-theme="dark"] .freshness-badge--live { background: rgba(74,222,128,0.1); color: #4ade80; }
+  [data-theme="dark"] .freshness-badge--cached { background: rgba(234,179,8,0.1); color: #fbbf24; }
+  [data-theme="dark"] .freshness-badge--fallback { background: rgba(248,113,113,0.1); color: #f87171; }
 
   .header__sheet-link {
     display: inline-flex;
@@ -156,6 +259,37 @@
     min-width: 160px;
   }
 
+  .filter-nav-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    touch-action: manipulation;
+    flex-shrink: 0;
+  }
+
+  .filter-nav-btn:hover {
+    border-color: #c4b8aa;
+    background: #f5f1ec;
+    color: var(--clr-text);
+  }
+
+  .filter-nav-btn:active {
+    background: #ede8e1;
+  }
+
+  .filter-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
   .filter-select:hover { border-color: #c4b8aa; }
 
   .filter-select:focus {
@@ -194,6 +328,149 @@
   .legend__dot--shabbat { background: var(--clr-shabbat); border: 1px solid var(--clr-shabbat-border); }
   .legend__dot--shavuot { background: var(--clr-shavuot); border: 1px solid var(--clr-shavuot-border); }
 
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.6rem 1rem;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.88rem;
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    animation: fadeInUp 0.6s ease-out 0.22s both;
+    flex-wrap: wrap;
+  }
+
+  .stats-bar:hover {
+    border-color: #d97706;
+  }
+
+  .stats-bar__title {
+    font-weight: 700;
+    color: var(--clr-text);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .stats-bar__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.82rem;
+  }
+
+  .stats-bar__chip--activity {
+    background: var(--clr-activity-bg);
+    color: #15803d;
+  }
+
+  .stats-bar__chip--home {
+    background: var(--clr-home-bg);
+    color: #1d4ed8;
+  }
+
+  .stats-bar__chip--switch {
+    background: #f3f0ff;
+    color: var(--clr-text-secondary);
+  }
+
+  .stats-bar__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .stats-bar__dot--activity { background: var(--clr-activity); }
+  .stats-bar__dot--home { background: var(--clr-home); }
+  .stats-bar__dot--switch { background: linear-gradient(135deg, var(--clr-activity) 50%, var(--clr-home) 50%); }
+
+  /* Person stats bar */
+  .person-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.6rem 1rem;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.85rem;
+    color: var(--clr-text-secondary);
+    animation: fadeInUp 0.4s ease-out both;
+    flex-wrap: wrap;
+  }
+
+  .person-stats__name {
+    font-weight: 700;
+    color: var(--clr-text);
+    margin-inline-end: 0.25rem;
+  }
+
+  .person-stats__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 500;
+  }
+
+  .person-stats__item--activity { color: #15803d; }
+  .person-stats__item--home { color: #1d4ed8; }
+  .person-stats__item--switch { color: var(--clr-text-secondary); }
+
+  [data-theme="dark"] .person-stats__item--activity { color: #4ade80; }
+  [data-theme="dark"] .person-stats__item--home { color: #60a5fa; }
+
+  .person-stats__bar {
+    flex: 1;
+    min-width: 80px;
+    max-width: 200px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--clr-border);
+    overflow: hidden;
+    display: flex;
+  }
+
+  .person-stats__bar-seg {
+    height: 100%;
+    transition: width 0.3s ease-out;
+  }
+
+  .person-stats__bar-seg--activity { background: var(--clr-activity); }
+  .person-stats__bar-seg--home { background: var(--clr-home); }
+  .person-stats__bar-seg--switch { background: #9ca3af; }
+
+  .person-stats__sep {
+    color: var(--clr-border);
+  }
+
+  @media (max-width: 480px) {
+    .stats-bar { font-size: 0.78rem; gap: 0.5rem; padding: 0.5rem 0.75rem; }
+    .stats-bar__chip { font-size: 0.72rem; padding: 0.15rem 0.4rem; }
+    .person-stats { font-size: 0.78rem; gap: 0.5rem; padding: 0.5rem 0.75rem; }
+  }
+
+  /* Calendar container transition */
+  #calendarContainer {
+    transition: opacity 0.15s ease-out;
+  }
+
+  #calendarContainer.fading {
+    opacity: 0;
+  }
+
   /* Calendar wrapper */
   .calendar-wrap {
     background: var(--clr-surface);
@@ -212,6 +489,13 @@
   .cal-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+  }
+
+  .cal-headers {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    transition: box-shadow 0.2s;
   }
 
   /* Day headers */
@@ -328,8 +612,95 @@
     background: linear-gradient(135deg, var(--clr-activity-bg) 40%, var(--clr-home-bg) 40%, var(--clr-home-bg) 60%, var(--clr-shabbat) 100%);
   }
 
+  .cal-cell--today {
+    outline: 2.5px solid #d97706;
+    outline-offset: -2.5px;
+    z-index: 2;
+  }
+
+  .cal-cell--today .cell-greg {
+    background: #d97706;
+    color: #fff;
+    border-radius: 5px;
+    padding: 0 5px;
+    display: inline-block;
+  }
+
   .cal-cell:not(.cal-cell--empty):hover {
     filter: brightness(0.97);
+  }
+
+  /* Today floating button */
+  .today-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 999;
+    height: 40px;
+    border-radius: 20px;
+    border: none;
+    background: #d97706;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(217,119,6,0.35);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    touch-action: manipulation;
+  }
+
+  .today-fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(217,119,6,0.45);
+  }
+
+  .today-fab:active {
+    transform: scale(0.96);
+  }
+
+  /* Dark mode toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 999;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    box-shadow: var(--shadow-sm);
+    touch-action: manipulation;
+  }
+
+  .theme-toggle:hover {
+    border-color: #c4b8aa;
+    transform: scale(1.08);
+  }
+
+  .theme-toggle:active {
+    transform: scale(0.95);
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s;
+  }
+
+  [data-theme="dark"] .theme-toggle svg {
+    transform: rotate(180deg);
   }
 
   /* Month indicator inside cell */
@@ -424,22 +795,87 @@
   .summary-dot--home { background: var(--clr-home); }
   .summary-dot--switch { background: linear-gradient(135deg, var(--clr-activity) 50%, var(--clr-home) 50%); }
 
-  /* Loading */
+  /* Loading skeleton */
   .loading {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 1rem 0 2rem;
     color: var(--clr-text-secondary);
-    font-size: 1.1rem;
+    font-size: 0.9rem;
   }
 
-  .loading__spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--clr-border);
-    border-top-color: var(--clr-activity);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 1rem;
+  .loading__text {
+    margin-top: 0.75rem;
+    font-weight: 400;
+  }
+
+  .skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--clr-surface);
+  }
+
+  .skeleton-header {
+    padding: 0.75rem 0.5rem;
+    background: #f5f1ec;
+    border-bottom: 1.5px solid var(--clr-border);
+  }
+
+  .skeleton-header__bar {
+    height: 12px;
+    width: 60%;
+    margin: 0 auto;
+    background: #e8e2da;
+    border-radius: 4px;
+  }
+
+  .skeleton-cell {
+    min-height: 80px;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--clr-border);
+    border-inline-start: 1px solid var(--clr-border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton-cell:nth-child(7n + 1) {
+    border-inline-start: none;
+  }
+
+  .skeleton-cell__date {
+    height: 14px;
+    width: 30px;
+    background: #ede8e1;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+
+  .skeleton-cell__line {
+    height: 9px;
+    width: 70%;
+    background: #f0ece7;
+    border-radius: 3px;
+    margin-bottom: 0.3rem;
+  }
+
+  .skeleton-cell__line:last-child {
+    width: 45%;
+  }
+
+  .skeleton-cell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
   }
 
   /* Animations */
@@ -1228,6 +1664,496 @@
 
   .add-people-modal__btn--cancel:hover { background: #ede8e1; }
 
+  /* Fairness Dashboard */
+  .fairness-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,22,18,0.45);
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+    padding: 1rem;
+  }
+
+  .fairness-modal {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(26,22,18,0.2);
+    max-width: 620px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: fadeInUp 0.25s ease-out;
+  }
+
+  .fairness-modal__header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--clr-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    background: var(--clr-surface);
+    z-index: 1;
+  }
+
+  .fairness-modal__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--clr-text);
+  }
+
+  .fairness-modal__close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--clr-text-tertiary);
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .fairness-modal__close:hover { background: #f0ece7; color: var(--clr-text); }
+
+  .fairness-modal__body { padding: 1rem 1.5rem 1.5rem; }
+
+  .fairness-modal__table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .fairness-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  .fairness-table th {
+    text-align: right;
+    font-weight: 700;
+    color: var(--clr-text-secondary);
+    padding: 0.5rem 0.5rem;
+    border-bottom: 2px solid var(--clr-border);
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+
+  .fairness-table td {
+    padding: 0.45rem 0.5rem;
+    border-bottom: 1px solid var(--clr-border);
+    vertical-align: middle;
+  }
+
+  .fairness-table__row--commander { background: rgba(217,119,6,0.08); }
+
+  .fairness-table__name { font-weight: 500; color: var(--clr-text); }
+  .fairness-table__name--commander { font-weight: 700; }
+  .fairness-table__name--commander::before { content: '⭐ '; }
+
+  .fairness-table__bar-cell { width: 100px; }
+
+  .fairness-table__bar {
+    height: 7px;
+    border-radius: 4px;
+    background: var(--clr-border);
+    overflow: hidden;
+    display: flex;
+  }
+
+  .fairness-table__bar-seg { height: 100%; }
+  .fairness-table__bar-seg--activity { background: var(--clr-activity); }
+  .fairness-table__bar-seg--home { background: var(--clr-home); }
+  .fairness-table__bar-seg--switch { background: #9ca3af; }
+
+  .fairness-table__pct { font-weight: 600; text-align: center; width: 50px; }
+  .fairness-table__pct--high { color: var(--clr-home); }
+  .fairness-table__pct--low { color: var(--clr-activity); }
+
+  .fairness-avg {
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    background: rgba(37,99,235,0.06);
+    border: 1px solid rgba(37,99,235,0.15);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--clr-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fairness-avg__value { font-weight: 700; color: var(--clr-home); }
+
+  [data-theme="dark"] .fairness-modal__close:hover { background: #3d362c; }
+  [data-theme="dark"] .fairness-table__row--commander { background: rgba(217,119,6,0.12); }
+  [data-theme="dark"] .fairness-table__pct--high { color: #60a5fa; }
+  [data-theme="dark"] .fairness-table__pct--low { color: #4ade80; }
+  [data-theme="dark"] .fairness-avg { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.2); }
+  [data-theme="dark"] .fairness-avg__value { color: #60a5fa; }
+
+  .toolbar__btn--fairness { border-color: #d97706; color: #92400e; }
+  .toolbar__btn--fairness:hover { background: #fef3c7; }
+  [data-theme="dark"] .toolbar__btn--fairness { border-color: #a07208; color: #f0c050; }
+  [data-theme="dark"] .toolbar__btn--fairness:hover { background: #332a12; }
+
+  /* Rotation Pattern Generator */
+  .rotation-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,22,18,0.45);
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+    padding: 1rem;
+  }
+
+  .rotation-modal {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(26,22,18,0.2);
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: fadeInUp 0.25s ease-out;
+  }
+
+  .rotation-modal__header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--clr-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .rotation-modal__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--clr-text);
+  }
+
+  .rotation-modal__close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--clr-text-tertiary);
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .rotation-modal__close:hover { background: #f0ece7; color: var(--clr-text); }
+
+  .rotation-modal__body { padding: 1rem 1.5rem 1.5rem; }
+
+  .rotation-form { display: flex; flex-direction: column; gap: 1rem; }
+
+  .rotation-form__field { display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .rotation-form__label { font-weight: 600; font-size: 0.85rem; color: var(--clr-text); }
+  .rotation-form__hint { font-size: 0.72rem; color: var(--clr-text-tertiary); }
+
+  .rotation-form__input {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    direction: rtl;
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    transition: border-color 0.2s;
+  }
+
+  .rotation-form__input:focus {
+    outline: none;
+    border-color: var(--clr-activity);
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+
+  .rotation-form__input[type="number"] { width: 80px; text-align: center; }
+  .rotation-form__input[type="date"] { direction: ltr; }
+
+  .rotation-form__row { display: flex; gap: 1rem; align-items: flex-end; }
+
+  .rotation-form__actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+
+  .rotation-form__btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    touch-action: manipulation;
+  }
+
+  .rotation-form__btn--preview { background: var(--clr-home); color: #fff; }
+  .rotation-form__btn--preview:hover { background: #1d4ed8; }
+  .rotation-form__btn--apply { background: var(--clr-activity); color: #fff; }
+  .rotation-form__btn--apply:hover { background: #15803d; }
+  .rotation-form__btn--cancel { background: #f5f1ec; color: var(--clr-text-secondary); border: 1px solid var(--clr-border); }
+  .rotation-form__btn--cancel:hover { background: #ede8e1; }
+  .rotation-form__btn:disabled { opacity: 0.5; cursor: default; }
+
+  .rotation-preview { margin-top: 1rem; border: 1px solid var(--clr-border); border-radius: 8px; overflow: hidden; }
+
+  .rotation-preview__header {
+    padding: 0.5rem 0.75rem;
+    background: #f5f1ec;
+    border-bottom: 1px solid var(--clr-border);
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--clr-text-secondary);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .rotation-preview__count { font-weight: 500; color: var(--clr-text-tertiary); }
+
+  .rotation-preview__list { max-height: 200px; overflow-y: auto; padding: 0.25rem; }
+
+  .rotation-preview__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+  }
+
+  .rotation-preview__item:nth-child(even) { background: rgba(0,0,0,0.02); }
+
+  .rotation-preview__item-date { font-weight: 500; color: var(--clr-text); min-width: 42px; }
+
+  .rotation-preview__item-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .rotation-preview__item-dot--activity { background: var(--clr-activity); }
+  .rotation-preview__item-dot--home { background: var(--clr-home); }
+  .rotation-preview__item-dot--switch { background: linear-gradient(135deg, var(--clr-activity) 50%, var(--clr-home) 50%); }
+
+  .rotation-preview__item-label { color: var(--clr-text-secondary); }
+
+  .toolbar__btn--rotation { border-color: #8b5cf6; color: #6d28d9; }
+  .toolbar__btn--rotation:hover { background: #f3f0ff; }
+  [data-theme="dark"] .toolbar__btn--rotation { border-color: #7c3aed; color: #a78bfa; }
+  [data-theme="dark"] .toolbar__btn--rotation:hover { background: #2a2540; }
+
+  [data-theme="dark"] .rotation-modal__close:hover { background: #3d362c; }
+  [data-theme="dark"] .rotation-form__input { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+  [data-theme="dark"] .rotation-form__btn--cancel { background: #2a2520; border-color: #3d362c; }
+  [data-theme="dark"] .rotation-preview__header { background: #2a2520; }
+  [data-theme="dark"] .rotation-preview__item:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+  /* Timeline / Gantt View */
+  .view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .view-toggle__btn {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.5rem 0.85rem;
+    border: none;
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+
+  .view-toggle__btn:last-child { border-inline-start: 1px solid var(--clr-border); }
+  .view-toggle__btn:hover { background: #f5f1ec; }
+
+  .view-toggle__btn--active {
+    background: var(--clr-activity-bg);
+    color: #15803d;
+    font-weight: 600;
+  }
+
+  [data-theme="dark"] .view-toggle { border-color: #3d362c; }
+  [data-theme="dark"] .view-toggle__btn { background: #2a2520; color: #a89e92; }
+  [data-theme="dark"] .view-toggle__btn:last-child { border-color: #3d362c; }
+  [data-theme="dark"] .view-toggle__btn:hover { background: #332e27; }
+  [data-theme="dark"] .view-toggle__btn--active { background: #1a2e1a; color: #4ade80; }
+
+  .timeline-wrap {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--clr-border);
+    overflow: hidden;
+    animation: fadeInUp 0.4s ease-out both;
+  }
+
+  .timeline-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .timeline-grid { display: grid; min-width: max-content; }
+
+  .timeline-corner {
+    position: sticky;
+    right: 0;
+    z-index: 12;
+    background: var(--clr-surface);
+    border-bottom: 2px solid var(--clr-border);
+    border-inline-start: 2px solid var(--clr-border);
+    padding: 0.4rem 0.6rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--clr-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+  }
+
+  .timeline-date-header {
+    border-bottom: 2px solid var(--clr-border);
+    border-inline-start: 1px solid var(--clr-border);
+    padding: 0.2rem 0;
+    text-align: center;
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: var(--clr-text-secondary);
+    min-width: 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+    user-select: none;
+  }
+
+  .timeline-date-header--shabbat { background: var(--clr-shabbat); color: var(--clr-shabbat-text); }
+  .timeline-date-header--shavuot { background: var(--clr-shavuot); color: var(--clr-shavuot-text); }
+  .timeline-date-header--today { background: #d97706; color: #fff; font-weight: 700; }
+
+  .timeline-date-header__day { font-size: 0.68rem; font-weight: 700; }
+  .timeline-date-header__dow { font-size: 0.52rem; opacity: 0.7; }
+
+  .timeline-name {
+    position: sticky;
+    right: 0;
+    z-index: 11;
+    background: var(--clr-surface);
+    border-bottom: 1px solid var(--clr-border);
+    border-inline-start: 2px solid var(--clr-border);
+    padding: 0.2rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--clr-text);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    min-width: 90px;
+    min-height: 28px;
+  }
+
+  .timeline-name--commander { font-weight: 700; }
+  .timeline-name--commander::before { content: '⭐ '; font-size: 0.65rem; }
+
+  .timeline-cell {
+    border-bottom: 1px solid var(--clr-border);
+    border-inline-start: 1px solid rgba(0,0,0,0.04);
+    min-width: 22px;
+    min-height: 28px;
+    cursor: pointer;
+    transition: filter 0.15s;
+    position: relative;
+  }
+
+  .timeline-cell:hover { filter: brightness(0.9); z-index: 1; }
+
+  .timeline-cell--activity { background: var(--clr-activity-bg); }
+  .timeline-cell--home { background: var(--clr-home-bg); }
+  .timeline-cell--switch-home { background: linear-gradient(135deg, var(--clr-home-bg) 50%, var(--clr-activity-bg) 50%); }
+  .timeline-cell--switch-base { background: linear-gradient(135deg, var(--clr-activity-bg) 50%, var(--clr-home-bg) 50%); }
+  .timeline-cell--shabbat { background: var(--clr-shabbat); }
+
+  .timeline-cell__dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 2px;
+  }
+
+  .timeline-cell__dot--activity { background: var(--clr-activity); }
+  .timeline-cell__dot--home { background: var(--clr-home); }
+  .timeline-cell__dot--switch { background: linear-gradient(135deg, var(--clr-activity) 50%, var(--clr-home) 50%); }
+
+  .timeline-cell--today { box-shadow: inset 0 0 0 1.5px #d97706; }
+  .timeline-cell--pending { outline: 1.5px dashed var(--clr-activity); outline-offset: -1.5px; }
+
+
+  .timeline-tooltip {
+    position: fixed;
+    z-index: 300;
+    background: var(--clr-text);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  [data-theme="dark"] .timeline-corner { background: #242019; }
+  [data-theme="dark"] .timeline-name { background: #242019; }
+  [data-theme="dark"] .timeline-cell { border-inline-start-color: rgba(255,255,255,0.04); }
+  [data-theme="dark"] .timeline-date-header--shabbat { background: #2d2842; }
+  [data-theme="dark"] .timeline-date-header--shavuot { background: #332a12; }
+
+  @media (max-width: 768px) {
+    .timeline-name, .timeline-corner { min-width: 75px; font-size: 0.7rem; }
+    .timeline-cell { min-width: 18px; }
+    .timeline-date-header { min-width: 18px; font-size: 0.55rem; }
+    .view-toggle__btn { font-size: 0.75rem; padding: 0.4rem 0.65rem; }
+  }
+
+  @media (max-width: 480px) {
+    .fairness-modal { max-width: 98vw; }
+    .fairness-table { font-size: 0.72rem; }
+    .fairness-table th, .fairness-table td { padding: 0.3rem 0.35rem; }
+    .fairness-table__bar-cell { width: 70px; }
+    .rotation-modal { max-width: 95vw; }
+    .rotation-form__row { flex-direction: column; gap: 0.75rem; }
+    .timeline-name, .timeline-corner { min-width: 60px; font-size: 0.62rem; }
+    .timeline-cell { min-width: 15px; min-height: 22px; }
+    .timeline-date-header { min-width: 15px; }
+  }
+
   /* Print */
   @media print {
     body { background: #fff; }
@@ -1238,16 +2164,22 @@
     .cal-cell { min-height: 60px; }
     .filter-select { border: 1px solid #999; box-shadow: none; }
     .examples-fab, .examples-overlay, .examples-panel { display: none; }
-    .toolbar, .save-bar, .toast-container, #notePopup, #addPeopleModal { display: none; }
+    .toolbar, .save-bar, .toast-container, #notePopup, #addPeopleModal, #fairnessModal, #rotationModal, .view-toggle, .timeline-tooltip { display: none; }
   }
 </style>
 </head>
 <body>
+<button class="theme-toggle" id="themeToggle" title="מצב כהה/בהיר" aria-label="החלף ערכת נושא">
+  <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+</button>
 <div class="app">
   <header class="header">
     <h1 class="header__title">מחלקה 1</h1>
     <p class="header__subtitle">18.6.2026 – 26.4.2026</p>
     <div class="header__line"></div>
+    <div class="freshness-badge" id="freshnessBadge" style="display:none;" title="לחץ לרענן"></div>
     <a class="header__sheet-link" href="https://docs.google.com/spreadsheets/d/1AL55-KKFtd2jM2pAGwqZoacYm-kIcqFx-K-DOht-COA/edit" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       פתח גיליון נתונים
@@ -1257,17 +2189,29 @@
   <div class="controls">
     <div class="filter-group">
       <label class="filter-group__label" for="personFilter">הצגה עבור:</label>
+      <button class="filter-nav-btn" id="btnPrevPerson" title="הקודם" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
       <select class="filter-select" id="personFilter">
         <option value="__all__">כולם</option>
       </select>
+      <button class="filter-nav-btn" id="btnNextPerson" title="הבא" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+    <div class="view-toggle" id="viewToggle">
+      <button class="view-toggle__btn view-toggle__btn--active" id="btnCalView">📅 לוח</button>
+      <button class="view-toggle__btn" id="btnTimelineView">📊 ציר זמן</button>
     </div>
     <div class="toolbar" id="toolbar">
       <div class="toolbar__modes" id="toolbarModes" style="display:none;">
         <button class="toolbar__btn" id="btnNote">📝 הערה</button>
         <button class="toolbar__btn" id="btnEdit">✏️ עריכה</button>
+        <button class="toolbar__btn toolbar__btn--rotation" id="btnRotation">🔄 תבנית</button>
         <button class="toolbar__btn toolbar__btn--cancel" id="btnCancel" style="display:none;">❌ ביטול</button>
       </div>
       <button class="toolbar__btn toolbar__btn--add-people" id="btnAddPeople">➕ הוסף אנשים</button>
+      <button class="toolbar__btn toolbar__btn--fairness" id="btnFairness">📊 סיכום</button>
     </div>
     <div class="legend">
       <span class="legend__item"><span class="legend__dot legend__dot--activity"></span>במוצב</span>
@@ -1278,6 +2222,9 @@
     </div>
   </div>
 
+  <div class="stats-bar" id="statsBar" style="display:none;" title="לחץ לגלול להיום"></div>
+  <div class="person-stats" id="personStats" style="display:none;"></div>
+
   <div class="save-bar" id="saveBar" style="display:none;">
     <span class="save-bar__count" id="saveBarCount"></span>
     <button class="save-bar__btn save-bar__btn--save" id="btnSaveAll">💾 שמור שינויים</button>
@@ -1287,17 +2234,46 @@
 
   <div id="calendarContainer" style="padding-bottom:120px;">
     <div class="loading">
-      <div class="loading__spinner"></div>
-      טוען נתונים...
+      <div class="skeleton-grid">
+        <div class="skeleton-header"><div class="skeleton-header__bar"></div></div>
+        <div class="skeleton-header"><div class="skeleton-header__bar"></div></div>
+        <div class="skeleton-header"><div class="skeleton-header__bar"></div></div>
+        <div class="skeleton-header"><div class="skeleton-header__bar"></div></div>
+        <div class="skeleton-header"><div class="skeleton-header__bar"></div></div>
+        <div class="skeleton-header"><div class="skeleton-header__bar"></div></div>
+        <div class="skeleton-header"><div class="skeleton-header__bar"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div></div>
+        <div class="skeleton-cell"><div class="skeleton-cell__date"></div><div class="skeleton-cell__line"></div></div>
+      </div>
+      <div class="loading__text">טוען נתונים...</div>
     </div>
   </div>
 
   <div id="dayModal"></div>
   <div id="notePopup"></div>
   <div id="addPeopleModal"></div>
+  <div id="fairnessModal"></div>
+  <div id="rotationModal"></div>
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+
+<button class="today-fab" id="todayFab" title="גלול להיום" style="display:none;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="2" fill="currentColor" stroke="none"/></svg>
+  היום
+</button>
 
 <!-- Examples popup -->
 <button class="examples-fab" id="examplesFab" title="דוגמאות לפקודות" aria-label="דוגמאות לפקודות">
@@ -1315,6 +2291,30 @@
 </div>
 
 <script>
+// Theme toggle (runs immediately)
+(function() {
+  const moonSvg = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  const sunSvg = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+
+  function applyTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    var icon = document.getElementById('themeIcon');
+    if (icon) icon.innerHTML = dark ? moonSvg : sunSvg;
+  }
+
+  // Initialize from localStorage or system preference
+  var stored = localStorage.getItem('theme');
+  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var isDark = stored ? stored === 'dark' : prefersDark;
+  applyTheme(isDark);
+
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    isDark = !isDark;
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    applyTheme(isDark);
+  });
+})();
+
 (function() {
   const holidays = {
     '2026-05-22': 'שבועות א׳',
@@ -1350,6 +2350,7 @@
   let currentNotesMap = null;
   let currentNames = null;
   let currentSelectedPerson = '__all__';
+  let currentView = 'calendar'; // 'calendar' | 'timeline'
 
   // ---- Utilities ----
 
@@ -1458,11 +2459,14 @@
 
   // ---- Rendering ----
 
+  const todayKey = formatDate(new Date());
+
   function renderCell(day, dataMap, notesMap, selectedPerson) {
     const key = formatDate(day);
     const dow = day.getDay();
     const isShabbat = dow === 6;
     const holiday = holidays[key] || null;
+    const isToday = key === todayKey;
 
     let personStatus = null;
     if (selectedPerson !== '__all__') {
@@ -1476,6 +2480,7 @@
     }
 
     let cellClass = 'cal-cell';
+    if (isToday) cellClass += ' cal-cell--today';
     if (isShabbat) cellClass += ' cal-cell--shabbat';
     if (holiday) cellClass += ' cal-cell--shavuot';
     if (personStatus === 'activity') cellClass += ' cal-cell--status-activity';
@@ -1604,6 +2609,125 @@
         });
       });
     }
+
+    // Re-attach sticky header shadow observer after innerHTML rebuild
+    attachStickyHeaderObserver();
+  }
+
+  // ---- Sticky Header Observer ----
+
+  let _stickyObserver = null;
+  function attachStickyHeaderObserver() {
+    if (_stickyObserver) _stickyObserver.disconnect();
+    const calHeaders = document.querySelector('.cal-headers');
+    if (!calHeaders) return;
+    _stickyObserver = new IntersectionObserver(
+      ([entry]) => {
+        calHeaders.style.boxShadow = entry.intersectionRatio < 1
+          ? '0 3px 8px rgba(26,22,18,0.1)'
+          : 'none';
+      },
+      { threshold: [1], rootMargin: '-1px 0px 0px 0px' }
+    );
+    _stickyObserver.observe(calHeaders);
+  }
+
+  // ---- Crossfade Transition ----
+
+  let _fadeTimer = null;
+  function fadeSwapCalendar(renderFn) {
+    const container = document.getElementById('calendarContainer');
+    if (_fadeTimer) {
+      clearTimeout(_fadeTimer);
+      _fadeTimer = null;
+    }
+    container.classList.add('fading');
+    _fadeTimer = setTimeout(() => {
+      _fadeTimer = null;
+      renderFn();
+      container.classList.remove('fading');
+    }, 150);
+  }
+
+  // ---- Stats Bar ----
+
+  function updateStatsBar(dataMap) {
+    const bar = document.getElementById('statsBar');
+    const dayData = dataMap[todayKey] || {};
+    const total = Object.keys(dayData).length;
+
+    if (total === 0) {
+      bar.style.display = 'none';
+      return;
+    }
+
+    let actCount = 0, homeCount = 0, switchCount = 0;
+    Object.values(dayData).forEach(s => {
+      if (s === 'activity') actCount++;
+      else if (s === 'home') homeCount++;
+      else if (s && s.startsWith('switch')) switchCount++;
+    });
+
+    const [, m, d] = todayKey.split('-').map(Number);
+    let html = '<span class="stats-bar__title">';
+    html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+    html += 'היום ' + d + '/' + m + ':</span>';
+
+    if (actCount) html += '<span class="stats-bar__chip stats-bar__chip--activity"><span class="stats-bar__dot stats-bar__dot--activity"></span>' + actCount + ' במוצב</span>';
+    if (homeCount) html += '<span class="stats-bar__chip stats-bar__chip--home"><span class="stats-bar__dot stats-bar__dot--home"></span>' + homeCount + ' בבית</span>';
+    if (switchCount) html += '<span class="stats-bar__chip stats-bar__chip--switch"><span class="stats-bar__dot stats-bar__dot--switch"></span>' + switchCount + ' מעבר</span>';
+
+    bar.innerHTML = html;
+    bar.style.display = 'flex';
+    bar.onclick = function() {
+      const todayCell = document.querySelector('.cal-cell--today');
+      if (todayCell) todayCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+  }
+
+  // ---- Person Stats ----
+
+  function updatePersonStats(dataMap, person) {
+    const el = document.getElementById('personStats');
+    if (person === '__all__') {
+      el.style.display = 'none';
+      return;
+    }
+
+    let actCount = 0, homeCount = 0, switchCount = 0;
+    Object.keys(dataMap).forEach(dateKey => {
+      const status = dataMap[dateKey] && dataMap[dateKey][person];
+      if (status === 'activity') actCount++;
+      else if (status === 'home') homeCount++;
+      else if (status && status.startsWith('switch')) switchCount++;
+    });
+
+    const total = actCount + homeCount + switchCount;
+    if (total === 0) {
+      el.style.display = 'none';
+      return;
+    }
+
+    const actPct = (actCount / total * 100).toFixed(1);
+    const homePct = (homeCount / total * 100).toFixed(1);
+    const switchPct = (switchCount / total * 100).toFixed(1);
+
+    let html = '<span class="person-stats__name">' + escapeHtml(person) + ':</span>';
+    html += '<span class="person-stats__item person-stats__item--activity">' + actCount + ' במוצב</span>';
+    html += '<span class="person-stats__sep">|</span>';
+    html += '<span class="person-stats__item person-stats__item--home">' + homeCount + ' בבית</span>';
+    if (switchCount > 0) {
+      html += '<span class="person-stats__sep">|</span>';
+      html += '<span class="person-stats__item person-stats__item--switch">' + switchCount + ' מעבר</span>';
+    }
+    html += '<div class="person-stats__bar">';
+    html += '<div class="person-stats__bar-seg person-stats__bar-seg--activity" style="width:' + actPct + '%"></div>';
+    html += '<div class="person-stats__bar-seg person-stats__bar-seg--home" style="width:' + homePct + '%"></div>';
+    html += '<div class="person-stats__bar-seg person-stats__bar-seg--switch" style="width:' + switchPct + '%"></div>';
+    html += '</div>';
+
+    el.innerHTML = html;
+    el.style.display = 'flex';
   }
 
   // ---- Day Detail Modal (Everyone view) ----
@@ -1718,7 +2842,7 @@
         }
         popup.innerHTML = '';
         showToast('ההערה נשמרה בהצלחה', 'success');
-        renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+        renderCurrentView();
       } catch (err) {
         btn.disabled = false;
         btn.textContent = 'שמור';
@@ -1743,7 +2867,7 @@
           if (currentNotesMap[dateKey]) delete currentNotesMap[dateKey][person];
           popup.innerHTML = '';
           showToast('ההערה נמחקה', 'success');
-          renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+          renderCurrentView();
         } catch (err) {
           deleteBtn.disabled = false;
           deleteBtn.textContent = 'מחק';
@@ -1894,7 +3018,7 @@
   function getCellFromEvent(e) {
     const el = document.elementFromPoint(e.clientX, e.clientY);
     if (!el) return null;
-    const cell = el.closest('.cal-cell[data-date]');
+    const cell = el.closest('.cal-cell[data-date], .timeline-cell[data-date]');
     if (!cell || cell.classList.contains('cal-cell--empty')) return null;
     return cell;
   }
@@ -1902,7 +3026,7 @@
 
   function onDragStart(e) {
     if (currentMode !== 'edit') return;
-    const cell = e.target.closest('.cal-cell[data-date]');
+    const cell = e.target.closest('.cal-cell[data-date], .timeline-cell[data-date]');
     if (!cell || cell.classList.contains('cal-cell--empty')) return;
     if (e.target.closest('.status-picker')) return;
 
@@ -2055,7 +3179,7 @@
       } else {
         showToast('נשמרו ' + result.updated + ' שינויים בהצלחה', 'success');
       }
-      renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+      renderCurrentView();
       // Hide save bar only if no skipped edits remain
       if (Object.keys(pendingEdits).length === 0) {
         document.getElementById('saveBar').style.display = 'none';
@@ -2070,10 +3194,40 @@
     }
   }
 
+  let discardConfirmTimer = null;
+  let discardConfirmActive = false;
+
   function discardAllEdits() {
+    const btn = document.getElementById('btnDiscardAll');
+
+    if (!discardConfirmActive) {
+      // First click: enter confirm state
+      discardConfirmActive = true;
+      btn.textContent = '⚠️ בטוח?';
+      btn.style.background = '#dc2626';
+      btn.style.color = '#fff';
+      btn.style.borderColor = '#dc2626';
+      discardConfirmTimer = setTimeout(() => {
+        discardConfirmActive = false;
+        btn.textContent = '🗑️ בטל הכל';
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 3000);
+      return;
+    }
+
+    // Second click: actually discard
+    clearTimeout(discardConfirmTimer);
+    discardConfirmActive = false;
+    btn.textContent = '🗑️ בטל הכל';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+
     pendingEdits = {};
     undoStack = [];
-    renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+    renderCurrentView();
     document.getElementById('saveBar').style.display = 'none';
     showToast('כל השינויים בוטלו', 'info');
   }
@@ -2271,7 +3425,437 @@
     btnAddPeople.addEventListener('click', handleAddPeopleOpen);
     btnAddPeople.addEventListener('touchend', handleAddPeopleOpen);
 
+    // Rotation pattern button
+    const btnRotation = document.getElementById('btnRotation');
+    function handleRotation(e) {
+      if (isTouchDuplicate(e)) return;
+      e.preventDefault();
+      showRotationModal();
+    }
+    btnRotation.addEventListener('click', handleRotation);
+    btnRotation.addEventListener('touchend', handleRotation);
+
+    // Fairness dashboard button
+    const btnFairness = document.getElementById('btnFairness');
+    function handleFairness(e) {
+      if (isTouchDuplicate(e)) return;
+      e.preventDefault();
+      showFairnessDashboard();
+    }
+    btnFairness.addEventListener('click', handleFairness);
+    btnFairness.addEventListener('touchend', handleFairness);
+
     return { updateToolbarVisibility, setMode };
+  }
+
+  // ---- Fairness Dashboard ----
+
+  function computeFairnessData(dataMap, names) {
+    const commander = 'גיל זאבי';
+    const results = [];
+    names.forEach(name => {
+      let homeDays = 0, baseDays = 0, switchDays = 0;
+      Object.keys(dataMap).forEach(dateKey => {
+        const status = dataMap[dateKey] && dataMap[dateKey][name];
+        if (status === 'home') homeDays++;
+        else if (status === 'activity') baseDays++;
+        else if (status && status.startsWith('switch')) switchDays++;
+      });
+      const totalDays = homeDays + baseDays + switchDays;
+      const homePct = totalDays > 0 ? (homeDays / totalDays * 100) : 0;
+      results.push({ name, homeDays, baseDays, switchDays, totalDays, homePct, isCommander: name === commander });
+    });
+    results.sort((a, b) => b.homeDays - a.homeDays);
+    return results;
+  }
+
+  function showFairnessDashboard() {
+    const data = computeFairnessData(currentDataMap, currentNames);
+    const modalEl = document.getElementById('fairnessModal');
+    const avgHomePct = data.length > 0
+      ? (data.reduce((sum, d) => sum + d.homePct, 0) / data.length).toFixed(1)
+      : 0;
+
+    let html = '<div class="fairness-overlay" id="fairnessOverlay">';
+    html += '<div class="fairness-modal">';
+    html += '<div class="fairness-modal__header">';
+    html += '<span class="fairness-modal__title">סיכום הוגנות</span>';
+    html += '<button class="fairness-modal__close" id="fairnessClose">&times;</button>';
+    html += '</div>';
+    html += '<div class="fairness-modal__body">';
+    html += '<div class="fairness-modal__table-wrap">';
+    html += '<table class="fairness-table"><thead><tr>';
+    html += '<th>#</th><th>שם</th><th>בבית</th><th>במוצב</th><th>מעבר</th><th>סה"כ</th><th>התפלגות</th><th>% בבית</th>';
+    html += '</tr></thead><tbody>';
+
+    data.forEach((row, idx) => {
+      const rowClass = row.isCommander ? ' class="fairness-table__row--commander"' : '';
+      const nameClass = row.isCommander ? ' fairness-table__name--commander' : '';
+      const actPct = row.totalDays > 0 ? (row.baseDays / row.totalDays * 100).toFixed(1) : 0;
+      const homePctBar = row.totalDays > 0 ? (row.homeDays / row.totalDays * 100).toFixed(1) : 0;
+      const switchPctBar = row.totalDays > 0 ? (row.switchDays / row.totalDays * 100).toFixed(1) : 0;
+      const pctClass = row.homePct >= parseFloat(avgHomePct) ? 'fairness-table__pct--high' : 'fairness-table__pct--low';
+
+      html += '<tr' + rowClass + '>';
+      html += '<td style="text-align:center;color:var(--clr-text-tertiary);width:28px">' + (idx + 1) + '</td>';
+      html += '<td class="fairness-table__name' + nameClass + '">' + escapeHtml(row.name) + '</td>';
+      html += '<td>' + row.homeDays + '</td>';
+      html += '<td>' + row.baseDays + '</td>';
+      html += '<td>' + row.switchDays + '</td>';
+      html += '<td>' + row.totalDays + '</td>';
+      html += '<td class="fairness-table__bar-cell"><div class="fairness-table__bar">';
+      html += '<div class="fairness-table__bar-seg fairness-table__bar-seg--activity" style="width:' + actPct + '%"></div>';
+      html += '<div class="fairness-table__bar-seg fairness-table__bar-seg--home" style="width:' + homePctBar + '%"></div>';
+      html += '<div class="fairness-table__bar-seg fairness-table__bar-seg--switch" style="width:' + switchPctBar + '%"></div>';
+      html += '</div></td>';
+      html += '<td class="fairness-table__pct ' + pctClass + '">' + row.homePct.toFixed(1) + '%</td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    html += '<div class="fairness-avg"><span>ממוצע % בבית:</span><span class="fairness-avg__value">' + avgHomePct + '%</span></div>';
+    html += '</div></div></div>';
+
+    modalEl.innerHTML = html;
+
+    document.getElementById('fairnessClose').addEventListener('click', () => { modalEl.innerHTML = ''; });
+    document.getElementById('fairnessOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) modalEl.innerHTML = '';
+    });
+  }
+
+  // ---- Rotation Pattern Generator ----
+
+  function generateRotationPattern(baseDays, homeDays, startDate, endDate) {
+    const edits = [];
+    const start = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
+
+    let phase = 'base'; // 'base' or 'home'
+    let baseRemaining = baseDays;
+    let homeRemaining = homeDays;
+    let returningFromHome = false;
+
+    const d = new Date(start);
+    while (d <= end) {
+      const dateKey = formatDate(d);
+      const dow = d.getDay(); // 0=Sun, 6=Sat
+      let status;
+
+      if (phase === 'base') {
+        baseRemaining--;
+        if (baseRemaining === 0) {
+          status = 'switch-home';
+          phase = 'home';
+          homeRemaining = homeDays;
+        } else if (returningFromHome) {
+          status = 'switch-base';
+          returningFromHome = false;
+        } else {
+          status = 'activity';
+        }
+      } else {
+        // phase === 'home'
+        status = 'home';
+        // Count toward home days: Sat doesn't count (free with Fri)
+        if (dow !== 6) {
+          homeRemaining--;
+        }
+        // Transition back to base if home days used up (but not on Friday — Sat still included)
+        if (homeRemaining <= 0 && dow !== 5) {
+          phase = 'base';
+          baseRemaining = baseDays;
+          returningFromHome = true;
+        }
+      }
+
+      edits.push({ date: dateKey, status: status });
+      d.setDate(d.getDate() + 1);
+    }
+    return edits;
+  }
+
+  function showRotationModal() {
+    const person = currentSelectedPerson;
+    if (person === '__all__') return;
+
+    const modalEl = document.getElementById('rotationModal');
+    let html = '<div class="rotation-overlay" id="rotationOverlay">';
+    html += '<div class="rotation-modal">';
+    html += '<div class="rotation-modal__header">';
+    html += '<span class="rotation-modal__title">תבנית מחזורית — ' + escapeHtml(person) + '</span>';
+    html += '<button class="rotation-modal__close" id="rotationClose">&times;</button>';
+    html += '</div>';
+    html += '<div class="rotation-modal__body"><div class="rotation-form">';
+
+    html += '<div class="rotation-form__row">';
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">ימי מוצב</label>';
+    html += '<input class="rotation-form__input" type="number" id="rotBaseDays" min="1" max="60" value="10">';
+    html += '</div>';
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">ימי בית</label>';
+    html += '<input class="rotation-form__input" type="number" id="rotHomeDays" min="1" max="30" value="4">';
+    html += '<span class="rotation-form__hint">שישי-שבת = יום אחד</span>';
+    html += '</div></div>';
+
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">תאריך התחלה</label>';
+    html += '<input class="rotation-form__input" type="date" id="rotStartDate" min="' + DATE_START + '" max="' + DATE_END + '" value="' + DATE_START + '">';
+    html += '</div>';
+
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">תאריך סיום</label>';
+    html += '<input class="rotation-form__input" type="date" id="rotEndDate" min="' + DATE_START + '" max="' + DATE_END + '" value="' + DATE_END + '">';
+    html += '</div>';
+
+    html += '<div id="rotationPreview" style="display:none;"></div>';
+
+    html += '<div class="rotation-form__actions">';
+    html += '<button class="rotation-form__btn rotation-form__btn--preview" id="rotPreview">תצוגה מקדימה</button>';
+    html += '<button class="rotation-form__btn rotation-form__btn--apply" id="rotApply" disabled>החל על הלוח</button>';
+    html += '<button class="rotation-form__btn rotation-form__btn--cancel" id="rotCancel">ביטול</button>';
+    html += '</div>';
+
+    html += '</div></div></div></div>';
+    modalEl.innerHTML = html;
+
+    let previewEdits = null;
+
+    document.getElementById('rotPreview').addEventListener('click', () => {
+      const bd = parseInt(document.getElementById('rotBaseDays').value, 10);
+      const hd = parseInt(document.getElementById('rotHomeDays').value, 10);
+      const sd = document.getElementById('rotStartDate').value;
+      const ed = document.getElementById('rotEndDate').value || DATE_END;
+
+      if (!bd || bd < 1 || !hd || hd < 1) {
+        showToast('יש להזין מספר ימים תקין', 'error');
+        return;
+      }
+      if (sd > ed) {
+        showToast('תאריך התחלה חייב להיות לפני תאריך סיום', 'error');
+        return;
+      }
+
+      previewEdits = generateRotationPattern(bd, hd, sd, ed);
+      renderRotationPreview(previewEdits);
+      document.getElementById('rotApply').disabled = false;
+    });
+
+    document.getElementById('rotApply').addEventListener('click', () => {
+      if (!previewEdits || previewEdits.length === 0) return;
+      previewEdits.forEach(edit => { stageEdit(edit.date, edit.status); });
+      modalEl.innerHTML = '';
+      showToast(previewEdits.length + ' שינויים הוחלו (טרם נשמרו)', 'success');
+      renderCurrentView();
+      updateSaveDiscardBar();
+    });
+
+    document.getElementById('rotCancel').addEventListener('click', () => { modalEl.innerHTML = ''; });
+    document.getElementById('rotationClose').addEventListener('click', () => { modalEl.innerHTML = ''; });
+    document.getElementById('rotationOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) modalEl.innerHTML = '';
+    });
+  }
+
+  function renderRotationPreview(edits) {
+    const previewEl = document.getElementById('rotationPreview');
+    if (!edits || edits.length === 0) {
+      previewEl.style.display = 'none';
+      return;
+    }
+
+    let html = '<div class="rotation-preview">';
+    html += '<div class="rotation-preview__header"><span>תצוגה מקדימה</span>';
+    html += '<span class="rotation-preview__count">' + edits.length + ' ימים</span></div>';
+    html += '<div class="rotation-preview__list">';
+
+    edits.forEach(edit => {
+      const [y, m, d] = edit.date.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      const dayName = dayNames[dateObj.getDay()];
+      const dotClass = edit.status.startsWith('switch')
+        ? 'rotation-preview__item-dot--switch'
+        : 'rotation-preview__item-dot--' + edit.status;
+
+      html += '<div class="rotation-preview__item">';
+      html += '<span class="rotation-preview__item-date">' + d + '/' + m + '</span>';
+      html += '<span class="rotation-preview__item-dot ' + dotClass + '"></span>';
+      html += '<span class="rotation-preview__item-label">' + dayName + ' — ' + statusLabel(edit.status) + '</span>';
+      html += '</div>';
+    });
+
+    html += '</div></div>';
+    previewEl.innerHTML = html;
+    previewEl.style.display = '';
+  }
+
+  // ---- Timeline / Gantt View ----
+
+  const dowAbbr = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+
+  function renderTimeline(dataMap, notesMap, names, selectedPerson) {
+    const container = document.getElementById('calendarContainer');
+    const commander = 'גיל זאבי';
+
+    const allDays = [];
+    const d = new Date(2026, 3, 26);
+    const end = new Date(2026, 5, 18);
+    while (d <= end) { allDays.push(new Date(d)); d.setDate(d.getDate() + 1); }
+
+    const displayNames = [commander, ...names.filter(n => n !== commander)];
+
+    const colDef = 'minmax(90px, auto) repeat(' + allDays.length + ', auto)';
+
+    let html = '<div class="timeline-wrap">';
+    html += '<div class="timeline-scroll">';
+    html += '<div class="timeline-grid" style="grid-template-columns: ' + colDef + ';">';
+
+    // Header row: corner first (RTL = right side), then dates
+    html += '<div class="timeline-corner">שם</div>';
+
+    allDays.forEach(day => {
+      const key = formatDate(day);
+      const dow = day.getDay();
+      const isShabbat = dow === 6;
+      const holiday = holidays[key] || null;
+      const isToday = key === todayKey;
+
+      let hdrClass = 'timeline-date-header';
+      if (isToday) hdrClass += ' timeline-date-header--today';
+      else if (holiday) hdrClass += ' timeline-date-header--shavuot';
+      else if (isShabbat) hdrClass += ' timeline-date-header--shabbat';
+
+      html += '<div class="' + hdrClass + '">';
+      html += '<span class="timeline-date-header__day">' + day.getDate() + '</span>';
+      html += '<span class="timeline-date-header__dow">' + dowAbbr[dow] + '</span>';
+      html += '</div>';
+    });
+
+    // Data rows: name first (RTL = right side), then day cells
+    displayNames.forEach(name => {
+      const isCmd = name === commander;
+      html += '<div class="timeline-name' + (isCmd ? ' timeline-name--commander' : '') + '">' + escapeHtml(name) + '</div>';
+
+      allDays.forEach(day => {
+        const key = formatDate(day);
+        const dow = day.getDay();
+        const isShabbat = dow === 6;
+        const isToday = key === todayKey;
+
+        const dayData = dataMap[key] || {};
+        let status = dayData[name] || null;
+        const pendingKey = name + '|' + key;
+        if (pendingEdits[pendingKey]) status = pendingEdits[pendingKey];
+
+        let cellClass = 'timeline-cell';
+        if (status === 'activity') cellClass += ' timeline-cell--activity';
+        else if (status === 'home') cellClass += ' timeline-cell--home';
+        else if (status === 'switch-home') cellClass += ' timeline-cell--switch-home';
+        else if (status === 'switch-base') cellClass += ' timeline-cell--switch-base';
+        else if (isShabbat) cellClass += ' timeline-cell--shabbat';
+
+        if (isToday) cellClass += ' timeline-cell--today';
+        if (pendingEdits[pendingKey]) cellClass += ' timeline-cell--pending';
+
+        const dotClass = status && status.startsWith('switch')
+          ? 'timeline-cell__dot--switch'
+          : (status ? 'timeline-cell__dot--' + status : '');
+
+        html += '<div class="' + cellClass + '" data-date="' + key + '" data-person="' + escapeHtml(name) + '">';
+        if (status && dotClass) html += '<span class="timeline-cell__dot ' + dotClass + '"></span>';
+        html += '</div>';
+      });
+    });
+
+    html += '</div></div></div>';
+    container.innerHTML = html;
+
+    // Tooltips
+    setupTimelineTooltips(container);
+
+    // Click handlers
+    container.querySelectorAll('.timeline-cell[data-date]').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const dateKey = cell.getAttribute('data-date');
+        showDayModal(dateKey, dataMap, notesMap);
+      });
+    });
+
+    // Auto-scroll to today
+    const todayHeader = container.querySelector('.timeline-date-header--today');
+    if (todayHeader) {
+      setTimeout(() => {
+        todayHeader.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, 300);
+    }
+  }
+
+  let _timelineTooltip = null;
+
+  function setupTimelineTooltips(container) {
+    function showTip(e) {
+      const cell = e.target.closest('.timeline-cell[data-date]');
+      if (!cell) { hideTip(); return; }
+
+      const dateKey = cell.getAttribute('data-date');
+      const person = cell.getAttribute('data-person');
+      const [y, m, d] = dateKey.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      const dayName = dayNames[dateObj.getDay()];
+
+      let status = (currentDataMap[dateKey] && currentDataMap[dateKey][person]) || null;
+      const pendingKey = person + '|' + dateKey;
+      if (pendingEdits[pendingKey]) status = pendingEdits[pendingKey];
+      const statusText = status ? statusLabel(status) : 'ללא סטטוס';
+
+      if (!_timelineTooltip) {
+        _timelineTooltip = document.createElement('div');
+        _timelineTooltip.className = 'timeline-tooltip';
+        document.body.appendChild(_timelineTooltip);
+      }
+
+      _timelineTooltip.textContent = dayName + ' ' + d + '/' + m + ' — ' + person + ': ' + statusText;
+      _timelineTooltip.style.display = '';
+      positionTip(e);
+    }
+
+    function positionTip(e) {
+      if (!_timelineTooltip || _timelineTooltip.style.display === 'none') return;
+      let x = e.clientX + 12;
+      let y = e.clientY - 32;
+      _timelineTooltip.style.left = x + 'px';
+      _timelineTooltip.style.top = y + 'px';
+      const rect = _timelineTooltip.getBoundingClientRect();
+      if (rect.right > window.innerWidth) _timelineTooltip.style.left = (e.clientX - rect.width - 10) + 'px';
+      if (rect.top < 0) _timelineTooltip.style.top = (e.clientY + 18) + 'px';
+    }
+
+    function hideTip() {
+      if (_timelineTooltip) _timelineTooltip.style.display = 'none';
+    }
+
+    container.addEventListener('mouseover', showTip);
+    container.addEventListener('mousemove', positionTip);
+    container.addEventListener('mouseout', (e) => {
+      if (!e.target.closest('.timeline-cell')) hideTip();
+    });
+  }
+
+  function renderCurrentView() {
+    if (currentView === 'timeline') {
+      renderTimeline(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+    } else {
+      renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
+    }
+  }
+
+  function switchView(newView) {
+    if (currentView === newView) return;
+    currentView = newView;
+    document.getElementById('btnCalView').classList.toggle('view-toggle__btn--active', newView === 'calendar');
+    document.getElementById('btnTimelineView').classList.toggle('view-toggle__btn--active', newView === 'timeline');
+    fadeSwapCalendar(() => { renderCurrentView(); });
   }
 
   // ---- Fallback data ----
@@ -2299,8 +3883,22 @@
 
   // ---- Init ----
 
+  function updateFreshnessBadge(source) {
+    const badge = document.getElementById('freshnessBadge');
+    const labels = {
+      live: 'נתונים מעודכנים',
+      cached: 'נתונים מקובץ CSV',
+      fallback: 'נתוני דוגמה (לא מקוון)'
+    };
+    badge.className = 'freshness-badge freshness-badge--' + source;
+    badge.innerHTML = '<span class="freshness-badge__dot"></span>' + labels[source];
+    badge.style.display = 'inline-flex';
+    badge.onclick = function() { location.reload(); };
+  }
+
   async function init() {
     let rows;
+    let dataSource = 'fallback';
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRh9ERHvLzkE2yu1cWs7_zMpYo17Hok-w7Eb3m3IfJFxh_Nk-UQJ31CUDz2B-yV5GeDIhb5bUx5RcyJ/pub?output=csv';
 
     // Try Apps Script API first (always fresh data)
@@ -2313,6 +3911,7 @@
       const result = await resp.json();
       if (!result.success || !result.rows || result.rows.length === 0) throw new Error('empty response');
       rows = result.rows;
+      dataSource = 'live';
     } catch (e) {
       console.warn('Apps Script getData failed, trying published CSV:', e);
       // Fallback to published CSV
@@ -2322,6 +3921,7 @@
         const text = await resp.text();
         rows = parseCSV(text);
         if (rows.length === 0) throw new Error('empty CSV');
+        dataSource = 'cached';
       } catch (e2) {
         console.warn('Published CSV failed, trying local backup:', e2);
         try {
@@ -2330,12 +3930,16 @@
           const text = await resp.text();
           rows = parseCSV(text);
           if (rows.length === 0) throw new Error('empty local CSV');
+          dataSource = 'cached';
         } catch (e3) {
           console.warn('Local CSV also failed, using fallback data:', e3);
           rows = generateFallbackData();
+          dataSource = 'fallback';
         }
       }
     }
+
+    updateFreshnessBadge(dataSource);
 
     const { map, notesMap, names } = buildDataMap(rows);
 
@@ -2355,6 +3959,24 @@
     });
 
     renderCalendar(map, notesMap, names, '__all__');
+    updateStatsBar(map);
+    updatePersonStats(map, '__all__');
+
+    // Today button + auto-scroll
+    function scrollToToday() {
+      const todayCell = document.querySelector('.cal-cell--today');
+      if (todayCell) {
+        todayCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    const todayFab = document.getElementById('todayFab');
+    if (document.querySelector('.cal-cell--today')) {
+      todayFab.style.display = 'flex';
+      todayFab.addEventListener('click', scrollToToday);
+      // Auto-scroll on first load
+      setTimeout(scrollToToday, 400);
+    }
 
     // Setup toolbar
     const toolbarCtrl = setupToolbar();
@@ -2362,6 +3984,35 @@
 
     // Setup drag handlers
     setupDragHandlers();
+
+    // Person quick-switch arrows
+    const btnPrev = document.getElementById('btnPrevPerson');
+    const btnNext = document.getElementById('btnNextPerson');
+
+    function updateNavButtons() {
+      const isAll = select.value === '__all__';
+      btnPrev.style.display = isAll ? 'none' : '';
+      btnNext.style.display = isAll ? 'none' : '';
+      if (!isAll) {
+        btnPrev.disabled = select.selectedIndex <= 1; // index 0 is __all__
+        btnNext.disabled = select.selectedIndex >= select.options.length - 1;
+      }
+    }
+
+    function switchPerson(delta) {
+      const newIdx = select.selectedIndex + delta;
+      if (newIdx < 0 || newIdx >= select.options.length) return;
+      select.selectedIndex = newIdx;
+      select.dispatchEvent(new Event('change'));
+    }
+
+    btnPrev.addEventListener('click', () => switchPerson(-1));
+    btnNext.addEventListener('click', () => switchPerson(1));
+    updateNavButtons();
+
+    // View toggle
+    document.getElementById('btnCalView').addEventListener('click', () => switchView('calendar'));
+    document.getElementById('btnTimelineView').addEventListener('click', () => switchView('timeline'));
 
     // Setup save/discard buttons
     document.getElementById('btnSaveAll').addEventListener('click', saveAllEdits);
@@ -2374,11 +4025,31 @@
       currentMode = null;
       pendingEdits = {};
       undoStack = [];
-      renderCalendar(map, notesMap, names, select.value);
-      toolbarCtrl.updateToolbarVisibility();
       toolbarCtrl.setMode(null);
       document.getElementById('saveBar').style.display = 'none';
+      // Timeline only available for everyone view
+      const viewToggle = document.getElementById('viewToggle');
+      if (select.value !== '__all__') {
+        if (currentView === 'timeline') switchView('calendar');
+        viewToggle.style.display = 'none';
+      } else {
+        viewToggle.style.display = '';
+      }
+      fadeSwapCalendar(() => {
+        renderCurrentView();
+        toolbarCtrl.updateToolbarVisibility();
+        // Show stats bar only in "Everyone" view
+        if (select.value === '__all__') {
+          updateStatsBar(map);
+        } else {
+          document.getElementById('statsBar').style.display = 'none';
+        }
+        updatePersonStats(map, select.value);
+        updateNavButtons();
+      });
     });
+
+    // Sticky header shadow — observer is auto-attached inside renderCalendar()
 
     // Undo keyboard shortcut
     document.addEventListener('keydown', (e) => {
