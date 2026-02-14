@@ -163,6 +163,7 @@ function handleAddPeople(payload) {
   var dateCol = findCol(headers, 'date');
   var statusCol = findCol(headers, 'status');
   var noteCol = findCol(headers, 'note');
+  var assocCol = findCol(headers, 'association');
 
   if (nameCol === -1 || dateCol === -1 || statusCol === -1) {
     return jsonResponse({ success: false, error: 'Missing required columns. Found headers: ' + headers.join(', ') });
@@ -196,6 +197,7 @@ function handleAddPeople(payload) {
       row[dateCol] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       row[statusCol] = defaultStatus;
       if (noteCol !== -1) row[noteCol] = '';
+      if (assocCol !== -1) row[assocCol] = payload.association || '';
       newRows.push(row);
       d.setDate(d.getDate() + 1);
     }

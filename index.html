@@ -357,6 +357,127 @@
   [data-theme="dark"] .person-search-clear { background: var(--clr-border); color: var(--clr-text-secondary); }
   [data-theme="dark"] .person-search-clear:hover { background: var(--clr-text-tertiary); color: var(--clr-surface); }
 
+  /* Association Filter */
+  .assoc-filter-wrap { position: relative; display: inline-flex; }
+
+  .assoc-filter-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .assoc-filter-btn:hover { border-color: var(--clr-text-tertiary); color: var(--clr-text); }
+
+  .assoc-filter-btn--active {
+    border-color: var(--clr-activity);
+    color: var(--clr-activity);
+    background: var(--clr-activity-bg);
+  }
+  .assoc-filter-btn--active:hover { border-color: var(--clr-activity); }
+
+  .assoc-filter-btn__badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--clr-activity);
+    display: none;
+  }
+  .assoc-filter-btn--active .assoc-filter-btn__badge { display: block; }
+
+  .assoc-filter-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 220px;
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    z-index: 80;
+    display: none;
+    padding: 0.5rem 0;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .assoc-filter-popover--open { display: block; }
+
+  .assoc-filter-popover__header {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    border-bottom: 1px solid var(--clr-border);
+    margin-bottom: 0.25rem;
+  }
+  .assoc-filter-popover__header a {
+    color: var(--clr-text-tertiary);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .assoc-filter-popover__header a:hover { color: var(--clr-text); text-decoration: underline; }
+
+  .assoc-filter-popover__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .assoc-filter-popover__item:hover { background: var(--clr-activity-bg); }
+  .assoc-filter-popover__item input[type="checkbox"] { accent-color: var(--clr-activity); cursor: pointer; }
+
+  .assoc-filter-popover__footer {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem 0.25rem;
+    border-top: 1px solid var(--clr-border);
+    margin-top: 0.25rem;
+  }
+  .assoc-filter-popover__footer button {
+    flex: 1;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.82rem;
+    font-family: var(--font-body);
+    border-radius: 6px;
+    border: 1px solid var(--clr-border);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .assoc-filter-popover__btn-apply {
+    background: var(--clr-activity);
+    color: #fff;
+    border-color: var(--clr-activity) !important;
+  }
+  .assoc-filter-popover__btn-apply:hover { opacity: 0.9; }
+  .assoc-filter-popover__btn-reset {
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+  }
+  .assoc-filter-popover__btn-reset:hover { background: var(--clr-bg); }
+
+  [data-theme="dark"] .assoc-filter-btn { background: #2a2520; border-color: #3d362c; color: #a89e92; }
+  [data-theme="dark"] .assoc-filter-btn:hover { border-color: #5a5040; color: var(--clr-text); }
+  [data-theme="dark"] .assoc-filter-btn--active { background: #1a2e1a; border-color: var(--clr-activity); color: #4ade80; }
+  [data-theme="dark"] .assoc-filter-popover { background: var(--clr-surface); border-color: #3d362c; }
+  [data-theme="dark"] .assoc-filter-popover__header { border-color: #3d362c; }
+  [data-theme="dark"] .assoc-filter-popover__item:hover { background: #1a2e1a; }
+  [data-theme="dark"] .assoc-filter-popover__footer { border-color: #3d362c; }
+  [data-theme="dark"] .assoc-filter-popover__btn-reset { background: #2a2520; color: #a89e92; border-color: #3d362c; }
+  [data-theme="dark"] .assoc-filter-popover__btn-reset:hover { background: #332e27; }
+
   /* Legend */
   .legend {
     display: flex;
@@ -1770,6 +1891,43 @@
 
   .add-people-modal__btn--cancel:hover { background: #ede8e1; }
 
+  .add-people-modal__field { margin-bottom: 0.75rem; }
+  .add-people-modal__field-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--clr-text-secondary);
+    margin-bottom: 0.3rem;
+  }
+  .add-people-modal__select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.92rem;
+    font-family: var(--font-body);
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    appearance: auto;
+    cursor: pointer;
+  }
+  .add-people-modal__custom-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.92rem;
+    font-family: var(--font-body);
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    margin-top: 0.4rem;
+    display: none;
+  }
+  .add-people-modal__custom-input--visible { display: block; }
+
+  [data-theme="dark"] .add-people-modal__select { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+  [data-theme="dark"] .add-people-modal__custom-input { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+
   /* Fairness Dashboard */
   .fairness-overlay {
     position: fixed;
@@ -2311,6 +2469,13 @@
       <button class="filter-nav-btn" id="btnNextPerson" title="הבא" style="display:none;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
+      <div class="assoc-filter-wrap" id="assocFilterWrap">
+        <button class="assoc-filter-btn" id="btnAssocFilter" title="סנן לפי שיוך">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span class="assoc-filter-btn__badge"></span>
+        </button>
+        <div class="assoc-filter-popover" id="assocFilterPopover"></div>
+      </div>
     </div>
     <div class="view-toggle" id="viewToggle">
       <button class="view-toggle__btn view-toggle__btn--active" id="btnCalView">📅 לוח</button>
@@ -2450,7 +2615,7 @@
   };
 
   // ---- Editing state ----
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVbGx1AU4FmD1FVEpeT3kfBl2T2E9rrLOjs0k0slrHzAD8Lkq3JBwLGSUlLHbADNzBhg/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVV2JInfFv2UqOzf8KaA5S-q9ZwkmchqjmEoUvyAnzhoWrC6Yxhn_uO-19VBDUYkWN/exec';
   const DATE_START = '2026-04-26';
   const DATE_END = '2026-06-18';
 
@@ -2465,6 +2630,8 @@
   let currentNames = null;
   let currentSelectedPerson = '__all__';
   let currentView = 'calendar'; // 'calendar' | 'timeline'
+  let currentAssociationMap = {};   // name → association string
+  let currentAssociationFilter = null; // null = off, Set = active set of associations
 
   // ---- Utilities ----
 
@@ -2538,6 +2705,7 @@
     const dateIdx = header.indexOf('date');
     const statusIdx = header.indexOf('status');
     const noteIdx = header.indexOf('note');
+    const assocIdx = header.indexOf('association');
 
     if (nameIdx === -1 || dateIdx === -1 || statusIdx === -1) return [];
 
@@ -2549,7 +2717,8 @@
         name: parts[nameIdx].trim(),
         date: parts[dateIdx].trim(),
         status: parts[statusIdx].trim(),
-        note: noteIdx !== -1 && parts[noteIdx] ? parts[noteIdx].trim() : ''
+        note: noteIdx !== -1 && parts[noteIdx] ? parts[noteIdx].trim() : '',
+        association: assocIdx !== -1 && parts[assocIdx] ? parts[assocIdx].trim() : ''
       });
     }
     return rows;
@@ -2559,6 +2728,7 @@
     const map = {};
     const notesMap = {};
     const names = new Set();
+    const associationMap = {};
     rows.forEach(r => {
       if (!map[r.date]) map[r.date] = {};
       map[r.date][r.name] = r.status;
@@ -2567,8 +2737,26 @@
         notesMap[r.date][r.name] = r.note;
       }
       names.add(r.name);
+      // First non-empty association wins for each name
+      if (r.association && !associationMap[r.name]) {
+        associationMap[r.name] = r.association;
+      }
     });
-    return { map, notesMap, names: [...names].sort() };
+    return { map, notesMap, names: [...names].sort(), associationMap };
+  }
+
+  function getFilteredNames() {
+    if (!currentAssociationFilter) return currentNames;
+    return currentNames.filter(name => {
+      const assoc = currentAssociationMap[name] || '';
+      return currentAssociationFilter.has(assoc);
+    });
+  }
+
+  function getUniqueAssociations() {
+    const vals = new Set();
+    Object.values(currentAssociationMap).forEach(v => { if (v) vals.add(v); });
+    return [...vals].sort((a, b) => a.localeCompare(b, 'he'));
   }
 
   // ---- Rendering ----
@@ -2634,7 +2822,8 @@
     if (selectedPerson === '__all__') {
       const dayData = dataMap[key] || {};
       let actCount = 0, homeCount = 0, switchCount = 0;
-      Object.values(dayData).forEach(s => {
+      Object.entries(dayData).forEach(([name, s]) => {
+        if (currentAssociationFilter && !currentAssociationFilter.has(currentAssociationMap[name] || '')) return;
         if (s === 'activity') actCount++;
         else if (s === 'home') homeCount++;
         else if (s.startsWith('switch')) switchCount++;
@@ -2768,19 +2957,21 @@
   function updateStatsBar(dataMap) {
     const bar = document.getElementById('statsBar');
     const dayData = dataMap[todayKey] || {};
-    const total = Object.keys(dayData).length;
+    let total = 0;
+
+    let actCount = 0, homeCount = 0, switchCount = 0;
+    Object.entries(dayData).forEach(([name, s]) => {
+      if (currentAssociationFilter && !currentAssociationFilter.has(currentAssociationMap[name] || '')) return;
+      total++;
+      if (s === 'activity') actCount++;
+      else if (s === 'home') homeCount++;
+      else if (s && s.startsWith('switch')) switchCount++;
+    });
 
     if (total === 0) {
       bar.style.display = 'none';
       return;
     }
-
-    let actCount = 0, homeCount = 0, switchCount = 0;
-    Object.values(dayData).forEach(s => {
-      if (s === 'activity') actCount++;
-      else if (s === 'home') homeCount++;
-      else if (s && s.startsWith('switch')) switchCount++;
-    });
 
     const [, m, d] = todayKey.split('-').map(Number);
     let html = '<span class="stats-bar__title">';
@@ -2860,6 +3051,7 @@
     const atHome = [];
     const switching = [];
     Object.entries(dayData).forEach(([name, status]) => {
+      if (currentAssociationFilter && !currentAssociationFilter.has(currentAssociationMap[name] || '')) return;
       const note = dayNotes[name] || '';
       if (status === 'activity') atBase.push({ name, note, sub: '' });
       else if (status === 'home') atHome.push({ name, note, sub: '' });
@@ -3209,6 +3401,130 @@
     }
   }
 
+  // ---- Association Filter Logic ----
+
+  function renderAssocFilterPopover() {
+    const popover = document.getElementById('assocFilterPopover');
+    const associations = getUniqueAssociations();
+    const hasNoAssoc = currentNames.some(n => !currentAssociationMap[n]);
+
+    let html = '<div class="assoc-filter-popover__header">';
+    html += '<a id="assocSelectAll">בחר הכל</a>';
+    html += '<a id="assocClearAll">נקה הכל</a>';
+    html += '</div>';
+
+    associations.forEach(assoc => {
+      const checked = !currentAssociationFilter || currentAssociationFilter.has(assoc);
+      html += '<label class="assoc-filter-popover__item">';
+      html += '<input type="checkbox" value="' + escapeHtml(assoc) + '"' + (checked ? ' checked' : '') + '>';
+      html += '<span>' + escapeHtml(assoc) + '</span></label>';
+    });
+
+    if (hasNoAssoc) {
+      const checked = !currentAssociationFilter || currentAssociationFilter.has('');
+      html += '<label class="assoc-filter-popover__item">';
+      html += '<input type="checkbox" value=""' + (checked ? ' checked' : '') + '>';
+      html += '<span>(ללא שיוך)</span></label>';
+    }
+
+    html += '<div class="assoc-filter-popover__footer">';
+    html += '<button class="assoc-filter-popover__btn-apply" id="assocApply">החל</button>';
+    html += '<button class="assoc-filter-popover__btn-reset" id="assocReset">הצג הכל</button>';
+    html += '</div>';
+
+    popover.innerHTML = html;
+
+    document.getElementById('assocSelectAll').addEventListener('click', () => {
+      popover.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('assocClearAll').addEventListener('click', () => {
+      popover.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    });
+    document.getElementById('assocApply').addEventListener('click', () => {
+      applyAssocFilter();
+      popover.classList.remove('assoc-filter-popover--open');
+    });
+    document.getElementById('assocReset').addEventListener('click', () => {
+      currentAssociationFilter = null;
+      updateAssocFilterButton();
+      repopulatePersonDropdown();
+      refreshCalendarAndStats();
+      popover.classList.remove('assoc-filter-popover--open');
+    });
+  }
+
+  function applyAssocFilter() {
+    const popover = document.getElementById('assocFilterPopover');
+    const checked = popover.querySelectorAll('input[type="checkbox"]:checked');
+    const allBoxes = popover.querySelectorAll('input[type="checkbox"]');
+
+    if (checked.length === 0 || checked.length === allBoxes.length) {
+      currentAssociationFilter = null;
+    } else {
+      currentAssociationFilter = new Set();
+      checked.forEach(cb => currentAssociationFilter.add(cb.value));
+    }
+
+    updateAssocFilterButton();
+    repopulatePersonDropdown();
+    refreshCalendarAndStats();
+  }
+
+  function updateAssocFilterButton() {
+    const btn = document.getElementById('btnAssocFilter');
+    btn.classList.toggle('assoc-filter-btn--active', currentAssociationFilter !== null);
+  }
+
+  function repopulatePersonDropdown() {
+    const select = document.getElementById('personFilter');
+    const commander = 'גיל זאבי';
+    const filteredNames = getFilteredNames();
+    const currentVal = select.value;
+
+    // Clear all options
+    while (select.options.length > 0) select.remove(0);
+
+    // Re-add __all__
+    const allOpt = document.createElement('option');
+    allOpt.value = '__all__';
+    allOpt.textContent = 'כולם';
+    select.appendChild(allOpt);
+
+    // Re-add filtered names (commander first)
+    const sorted = [commander, ...filteredNames.filter(n => n !== commander)].filter(n => filteredNames.includes(n));
+    sorted.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name === commander ? '⭐ ' + name : name;
+      select.appendChild(opt);
+    });
+
+    // Re-snapshot for person search
+    capturePersonOptions();
+
+    // Restore selection if still valid
+    const stillHas = Array.from(select.options).some(o => o.value === currentVal);
+    if (stillHas) {
+      select.value = currentVal;
+    } else {
+      select.value = '__all__';
+      select.dispatchEvent(new Event('change'));
+    }
+  }
+
+  function refreshCalendarAndStats() {
+    fadeSwapCalendar(() => {
+      renderCurrentView();
+      if (currentSelectedPerson === '__all__') {
+        updateStatsBar(currentDataMap);
+      } else {
+        document.getElementById('statsBar').style.display = 'none';
+      }
+      updatePersonStats(currentDataMap, currentSelectedPerson);
+      renderWeekJumpBar();
+    });
+  }
+
   function stageEdit(dateKey, newStatus) {
     const person = currentSelectedPerson;
     const pendingKey = person + '|' + dateKey;
@@ -3522,6 +3838,21 @@
     html += '<div class="add-people-modal__title">הוספת אנשים</div>';
     html += '<div class="add-people-modal__desc">הכנס שמות, מופרדים בפסיק או שורה חדשה</div>';
     html += '<textarea class="add-people-modal__input" id="addPeopleInput" placeholder="שם ראשון, שם שני&#10;שם שלישי"></textarea>';
+
+    // Association selector
+    const associations = getUniqueAssociations();
+    html += '<div class="add-people-modal__field">';
+    html += '<label class="add-people-modal__field-label">שיוך</label>';
+    html += '<select class="add-people-modal__select" id="addPeopleAssoc">';
+    html += '<option value="">(ללא שיוך)</option>';
+    associations.forEach(a => {
+      html += '<option value="' + escapeHtml(a) + '">' + escapeHtml(a) + '</option>';
+    });
+    html += '<option value="__other__">אחר...</option>';
+    html += '</select>';
+    html += '<input type="text" class="add-people-modal__custom-input" id="addPeopleAssocCustom" placeholder="הזן שיוך חדש...">';
+    html += '</div>';
+
     html += '<div class="add-people-modal__warning" id="addPeopleWarning" style="display:none;"></div>';
     html += '<div class="add-people-modal__actions">';
     html += '<button class="add-people-modal__btn add-people-modal__btn--add" id="addPeopleSubmit">הוסף</button>';
@@ -3534,6 +3865,13 @@
       const inp = document.getElementById('addPeopleInput');
       if (inp) inp.focus();
     }, 100);
+
+    // Show/hide custom association input
+    document.getElementById('addPeopleAssoc').addEventListener('change', function() {
+      const customInput = document.getElementById('addPeopleAssocCustom');
+      customInput.classList.toggle('add-people-modal__custom-input--visible', this.value === '__other__');
+      if (this.value === '__other__') customInput.focus();
+    });
 
     let modalTouchTime = 0;
     function isModalTouchDuplicate(e) {
@@ -3594,12 +3932,18 @@
     btn.disabled = true;
     btn.textContent = 'מוסיף...';
 
+    // Read association value
+    const assocSelect = document.getElementById('addPeopleAssoc');
+    const assocCustom = document.getElementById('addPeopleAssocCustom');
+    const association = assocSelect.value === '__other__' ? assocCustom.value.trim() : assocSelect.value;
+
     try {
       await callAppsScript({
         action: 'addPeople',
         names: newNames,
         dateRange: { start: DATE_START, end: DATE_END },
-        defaultStatus: 'activity'
+        defaultStatus: 'activity',
+        association: association
       });
 
       document.getElementById('addPeopleModal').innerHTML = '';
@@ -3706,8 +4050,9 @@
 
   function computeFairnessData(dataMap, names) {
     const commander = 'גיל זאבי';
+    const filteredNames = getFilteredNames();
     const results = [];
-    names.forEach(name => {
+    filteredNames.forEach(name => {
       let homeDays = 0, baseDays = 0, switchDays = 0;
       Object.keys(dataMap).forEach(dateKey => {
         const status = dataMap[dateKey] && dataMap[dateKey][name];
@@ -3957,7 +4302,8 @@
     const end = new Date(2026, 5, 18);
     while (d <= end) { allDays.push(new Date(d)); d.setDate(d.getDate() + 1); }
 
-    const displayNames = [commander, ...names.filter(n => n !== commander)];
+    const filteredForTimeline = getFilteredNames();
+    const displayNames = [commander, ...filteredForTimeline.filter(n => n !== commander)].filter(n => filteredForTimeline.includes(n));
 
     const colDef = 'minmax(90px, auto) repeat(' + allDays.length + ', auto)';
 
@@ -4203,12 +4549,13 @@
 
     updateFreshnessBadge(dataSource);
 
-    const { map, notesMap, names } = buildDataMap(rows);
+    const { map, notesMap, names, associationMap } = buildDataMap(rows);
 
     // Store global refs
     currentDataMap = map;
     currentNotesMap = notesMap;
     currentNames = names;
+    currentAssociationMap = associationMap;
 
     const select = document.getElementById('personFilter');
     const commander = 'גיל זאבי';
@@ -4225,6 +4572,28 @@
     updatePersonStats(map, '__all__');
     renderWeekJumpBar();
     capturePersonOptions();
+
+    // Association filter button
+    const btnAssocFilter = document.getElementById('btnAssocFilter');
+    const assocPopover = document.getElementById('assocFilterPopover');
+
+    btnAssocFilter.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = assocPopover.classList.contains('assoc-filter-popover--open');
+      if (isOpen) {
+        assocPopover.classList.remove('assoc-filter-popover--open');
+      } else {
+        renderAssocFilterPopover();
+        assocPopover.classList.add('assoc-filter-popover--open');
+      }
+    });
+
+    // Close popover on click outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#assocFilterWrap')) {
+        assocPopover.classList.remove('assoc-filter-popover--open');
+      }
+    });
 
     // Today button + auto-scroll
     function scrollToToday() {
