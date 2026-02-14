@@ -4027,13 +4027,16 @@
       undoStack = [];
       toolbarCtrl.setMode(null);
       document.getElementById('saveBar').style.display = 'none';
-      // Timeline only available for everyone view
+      // Timeline and summary only available for everyone view
       const viewToggle = document.getElementById('viewToggle');
+      const btnFairnessEl = document.getElementById('btnFairness');
       if (select.value !== '__all__') {
         if (currentView === 'timeline') switchView('calendar');
         viewToggle.style.display = 'none';
+        btnFairnessEl.style.display = 'none';
       } else {
         viewToggle.style.display = '';
+        btnFairnessEl.style.display = '';
       }
       fadeSwapCalendar(() => {
         renderCurrentView();
