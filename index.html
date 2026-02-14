@@ -1336,7 +1336,7 @@
   };
 
   // ---- Editing state ----
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzL9VDoVpD_qbcByVwycD_RPFuaBcWyJCW-114Qf_1fIdckNVbKC85jcwRWGAKhXmtQQ/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVbGx1AU4FmD1FVEpeT3kfBl2T2E9rrLOjs0k0slrHzAD8Lkq3JBwLGSUlLHbADNzBhg/exec';
   const DATE_START = '2026-04-26';
   const DATE_END = '2026-06-18';
 
@@ -2033,12 +2033,21 @@
         notes: []
       });
 
+      const skippedKeys = new Set(result.missingKeys || []);
+
       edits.forEach(edit => {
+        const key = edit.name + '|' + edit.date;
+        if (skippedKeys.has(key)) return;
         if (!currentDataMap[edit.date]) currentDataMap[edit.date] = {};
         currentDataMap[edit.date][edit.name] = edit.status;
       });
 
-      pendingEdits = {};
+      // Only remove saved edits from pendingEdits; keep skipped ones
+      for (const key of Object.keys(pendingEdits)) {
+        if (!skippedKeys.has(key)) {
+          delete pendingEdits[key];
+        }
+      }
       undoStack = [];
 
       if (result.skipped > 0) {
@@ -2047,7 +2056,12 @@
         showToast('נשמרו ' + result.updated + ' שינויים בהצלחה', 'success');
       }
       renderCalendar(currentDataMap, currentNotesMap, currentNames, currentSelectedPerson);
-      document.getElementById('saveBar').style.display = 'none';
+      // Hide save bar only if no skipped edits remain
+      if (Object.keys(pendingEdits).length === 0) {
+        document.getElementById('saveBar').style.display = 'none';
+      } else {
+        updateSaveDiscardBar();
+      }
     } catch (err) {
       // Error toast shown by callAppsScript
     } finally {
@@ -2276,7 +2290,7 @@
       const key = formatDate(d);
       names.forEach(name => {
         const r = pseudoRandom();
-        rows.push({ name, date: key, status: r > 0.6 ? 'activity' : r > 0.15 ? 'home' : 'switch' });
+        rows.push({ name, date: key, status: r > 0.6 ? 'activity' : r > 0.15 ? 'home' : (r > 0.075 ? 'switch-home' : 'switch-base') });
       });
       d.setDate(d.getDate() + 1);
     }

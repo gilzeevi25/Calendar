@@ -115,7 +115,7 @@ function handleUpdateCells(payload) {
     });
   }
 
-  return jsonResponse({ success: true, updated: editCount, noted: noteCount, skipped: missingEdits.length });
+  return jsonResponse({ success: true, updated: editCount, noted: noteCount, skipped: missingEdits.length, missingKeys: missingEdits });
 }
 
 function parseDateLocal(dateStr) {
@@ -157,20 +157,31 @@ function handleGetData() {
 function handleAddPeople(payload) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('data');
   var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+
+  var nameCol = findCol(headers, 'name');
+  var dateCol = findCol(headers, 'date');
+  var statusCol = findCol(headers, 'status');
+  var noteCol = findCol(headers, 'note');
+
+  if (nameCol === -1 || dateCol === -1 || statusCol === -1) {
+    return jsonResponse({ success: false, error: 'Missing required columns. Found headers: ' + headers.join(', ') });
+  }
 
   var names = payload.names || [];
   var defaultStatus = payload.defaultStatus || 'activity';
   var startDate = parseDateLocal(payload.dateRange.start);
   var endDate = parseDateLocal(payload.dateRange.end);
 
-  // Collect existing names
+  // Collect existing names using dynamic column index
   var existingNames = {};
   for (var i = 1; i < data.length; i++) {
-    existingNames[String(data[i][0]).trim()] = true;
+    existingNames[String(data[i][nameCol]).trim()] = true;
   }
 
   var newRows = [];
   var skipped = [];
+  var numCols = headers.length;
 
   names.forEach(function(name) {
     name = name.trim();
@@ -180,14 +191,18 @@ function handleAddPeople(payload) {
     }
     var d = new Date(startDate.getTime());
     while (d <= endDate) {
-      // Write Date objects (not strings) so Sheets stores them consistently
-      newRows.push([name, new Date(d.getFullYear(), d.getMonth(), d.getDate()), defaultStatus, '']);
+      var row = new Array(numCols).fill('');
+      row[nameCol] = name;
+      row[dateCol] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      row[statusCol] = defaultStatus;
+      if (noteCol !== -1) row[noteCol] = '';
+      newRows.push(row);
       d.setDate(d.getDate() + 1);
     }
   });
 
   if (newRows.length > 0) {
-    sheet.getRange(data.length + 1, 1, newRows.length, 4).setValues(newRows);
+    sheet.getRange(data.length + 1, 1, newRows.length, numCols).setValues(newRows);
   }
 
   return jsonResponse({
