@@ -225,12 +225,14 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     animation: fadeInUp 0.6s ease-out 0.15s both;
+    overflow: visible;
   }
 
   .filter-group {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    overflow: visible;
   }
 
   .filter-group__label {
@@ -396,7 +398,9 @@
   .assoc-filter-btn--active .assoc-filter-btn__badge { display: block; }
 
   .assoc-filter-popover {
-    position: fixed;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
     min-width: 220px;
     background: var(--clr-surface);
     border: 1px solid var(--clr-border);
@@ -4582,11 +4586,6 @@
         assocPopover.classList.remove('assoc-filter-popover--open');
       } else {
         renderAssocFilterPopover();
-        // Position fixed popover relative to button
-        const rect = btnAssocFilter.getBoundingClientRect();
-        assocPopover.style.top = (rect.bottom + 6) + 'px';
-        assocPopover.style.right = (window.innerWidth - rect.right) + 'px';
-        assocPopover.style.left = 'auto';
         assocPopover.classList.add('assoc-filter-popover--open');
       }
     });
