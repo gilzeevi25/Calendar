@@ -1,0 +1,2864 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>שבצ״ק — פלוגה ב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Frank+Ruhl+Libre:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --clr-bg: #faf8f5;
+    --clr-surface: #ffffff;
+    --clr-border: #e8e2da;
+    --clr-text: #1a1612;
+    --clr-text-secondary: #6b5e52;
+    --clr-text-tertiary: #9c8f82;
+    --clr-activity: #16a34a;
+    --clr-activity-bg: #dcfce7;
+    --clr-home: #2563eb;
+    --clr-home-bg: #dbeafe;
+    --clr-accent: #7c3aed;
+    --clr-accent-bg: #f3f0ff;
+    --clr-danger: #dc2626;
+    --clr-warning: #d97706;
+    --clr-warning-bg: #fef3c7;
+    --radius: 10px;
+    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06);
+    --shadow-md: 0 4px 16px rgba(26,22,18,0.08);
+    --font-body: 'Heebo', sans-serif;
+    --font-display: 'Frank Ruhl Libre', serif;
+
+    --clr-patrol: #2563eb;
+    --clr-patrol-bg: #dbeafe;
+    --clr-guard: #16a34a;
+    --clr-guard-bg: #dcfce7;
+    --clr-kitchen: #d97706;
+    --clr-kitchen-bg: #fef3c7;
+    --clr-qrf: #dc2626;
+    --clr-qrf-bg: #fee2e2;
+  }
+
+  [data-theme="dark"] {
+    --clr-bg: #1a1714;
+    --clr-surface: #242019;
+    --clr-border: #3d362c;
+    --clr-text: #e8e2da;
+    --clr-text-secondary: #a89e92;
+    --clr-text-tertiary: #7a7068;
+    --clr-activity-bg: #1a2e1a;
+    --clr-home-bg: #1a2340;
+    --clr-accent-bg: #2a2540;
+    --clr-warning-bg: #332a12;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+
+    --clr-patrol-bg: #1a2340;
+    --clr-guard-bg: #1a2e1a;
+    --clr-kitchen-bg: #332a12;
+    --clr-qrf-bg: #2e1a1a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  [data-theme="dark"] body::before { opacity: 0.04; }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+    animation: fadeInDown 0.6s ease-out;
+  }
+
+  .header__title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    color: var(--clr-text);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+
+  .header__subtitle {
+    font-weight: 300;
+    font-size: 1rem;
+    color: var(--clr-text-secondary);
+  }
+
+  .header__line {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--clr-accent), var(--clr-patrol));
+    border-radius: 3px;
+    margin: 0.75rem auto 0;
+  }
+
+  .header__nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--clr-text-tertiary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .header__nav-link:hover { color: var(--clr-text-secondary); }
+  .header__nav-link svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .btn--help-corner {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 100;
+    font-size: 0.82rem;
+    color: var(--clr-accent);
+    border-color: var(--clr-accent);
+    background: var(--clr-surface);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.6s ease-out 0.15s both;
+  }
+
+  .controls__group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-sm);
+    white-space: nowrap;
+    touch-action: manipulation;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .btn:hover { border-color: #c4b8aa; background: #f5f1ec; }
+  [data-theme="dark"] .btn { background: #2a2520; border-color: #3d362c; color: #a89e92; }
+  [data-theme="dark"] .btn:hover { border-color: #5a5040; background: #332e27; }
+
+  .btn--primary { border-color: var(--clr-accent); color: var(--clr-accent); }
+  .btn--primary:hover { background: var(--clr-accent-bg); }
+  [data-theme="dark"] .btn--primary { border-color: #7c3aed; color: #a78bfa; }
+  [data-theme="dark"] .btn--primary:hover { background: #2a2540; }
+
+  .btn--success { border-color: var(--clr-activity); color: #15803d; }
+  .btn--success:hover { background: var(--clr-activity-bg); }
+  [data-theme="dark"] .btn--success { border-color: var(--clr-activity); color: #4ade80; }
+  [data-theme="dark"] .btn--success:hover { background: #1a2e1a; }
+
+  .btn--danger { border-color: var(--clr-danger); color: var(--clr-danger); }
+  .btn--danger:hover { background: #fee2e2; }
+
+  .btn--warning { border-color: var(--clr-warning); color: #92400e; }
+  .btn--warning:hover { background: var(--clr-warning-bg); }
+  [data-theme="dark"] .btn--warning { border-color: #a07208; color: #f0c050; }
+  [data-theme="dark"] .btn--warning:hover { background: #332a12; }
+
+  .btn--filled { background: var(--clr-accent); color: #fff; border-color: var(--clr-accent); }
+  .btn--filled:hover { background: #6d28d9; }
+
+  .btn--sm { font-size: 0.78rem; padding: 0.35rem 0.65rem; }
+
+  .btn--icon { padding: 0.5rem; min-width: 36px; justify-content: center; }
+  .btn--icon svg { width: 18px; height: 18px; }
+
+  .btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+  /* View toggle */
+  .view-toggle {
+    display: inline-flex;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--clr-border);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .view-toggle__btn {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.5rem 0.85rem;
+    border: none;
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .view-toggle__btn:last-child { border-inline-start: 1px solid var(--clr-border); }
+  .view-toggle__btn:hover { background: #f5f1ec; }
+  .view-toggle__btn--active { background: var(--clr-accent-bg); color: var(--clr-accent); font-weight: 600; }
+  [data-theme="dark"] .view-toggle { border-color: #3d362c; }
+  [data-theme="dark"] .view-toggle__btn { background: #2a2520; color: #a89e92; }
+  [data-theme="dark"] .view-toggle__btn:last-child { border-color: #3d362c; }
+  [data-theme="dark"] .view-toggle__btn:hover { background: #332e27; }
+  [data-theme="dark"] .view-toggle__btn--active { background: #2a2540; color: #a78bfa; }
+
+  /* Date navigator */
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .date-nav__label {
+    font-weight: 600;
+    font-size: 1rem;
+    min-width: 140px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .date-nav__input {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius);
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    display: none;
+  }
+  .date-nav__input--visible { display: block; }
+
+  /* Shift cards */
+  .shifts-container { display: flex; flex-direction: column; gap: 1rem; }
+
+  .shift-card {
+    background: var(--clr-surface);
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: border-color 0.2s;
+    animation: fadeInUp 0.3s ease-out both;
+  }
+  .shift-card:hover { border-color: #c4b8aa; }
+  [data-theme="dark"] .shift-card:hover { border-color: #5a5040; }
+
+  .shift-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--clr-border);
+    gap: 0.5rem;
+  }
+
+  .shift-card__type {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .shift-card__type-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .shift-card__time {
+    font-size: 0.82rem;
+    color: var(--clr-text-secondary);
+    font-weight: 400;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+
+  .shift-card__badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+  .shift-card__badge--full { background: var(--clr-activity-bg); color: #15803d; }
+  .shift-card__badge--partial { background: var(--clr-warning-bg); color: #92400e; }
+  .shift-card__badge--empty { background: #fee2e2; color: #dc2626; }
+  [data-theme="dark"] .shift-card__badge--full { background: #1a2e1a; color: #4ade80; }
+  [data-theme="dark"] .shift-card__badge--partial { background: #332a12; color: #f0c050; }
+  [data-theme="dark"] .shift-card__badge--empty { background: #2e1a1a; color: #f87171; }
+
+  .shift-card__actions {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+  }
+  .shift-card__action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.2rem;
+    color: var(--clr-text-tertiary);
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+  }
+  .shift-card__action-btn:hover { color: var(--clr-text); background: rgba(0,0,0,0.05); }
+  .shift-card__action-btn svg { width: 16px; height: 16px; }
+
+  .shift-card__body { padding: 0.75rem 1rem; }
+
+  .shift-card__person {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    font-size: 0.88rem;
+  }
+  .shift-card__person-name { font-weight: 500; }
+  .shift-card__person-role {
+    font-size: 0.75rem;
+    color: var(--clr-text-tertiary);
+    background: rgba(0,0,0,0.04);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+  [data-theme="dark"] .shift-card__person-role { background: rgba(255,255,255,0.06); }
+  .shift-card__person--manual { position: relative; }
+  .shift-card__person--manual::after {
+    content: '📌';
+    font-size: 0.7rem;
+    margin-inline-start: 0.25rem;
+  }
+
+  .shift-card__note {
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--clr-warning-bg);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #92400e;
+  }
+  [data-theme="dark"] .shift-card__note { background: #332a12; color: #f0c050; }
+
+  .shift-card__empty {
+    padding: 0.5rem 0;
+    font-size: 0.82rem;
+    color: var(--clr-text-tertiary);
+    font-style: italic;
+  }
+
+  /* Week / Gantt view */
+  .gantt {
+    overflow-x: auto;
+    background: var(--clr-surface);
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .gantt__table {
+    width: 100%;
+    min-width: 800px;
+    border-collapse: collapse;
+  }
+  .gantt__header-cell {
+    padding: 0.4rem 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--clr-text-tertiary);
+    text-align: center;
+    border-bottom: 1px solid var(--clr-border);
+    width: calc(100% / 25);
+  }
+  .gantt__header-cell:first-child { width: 90px; text-align: right; padding-right: 0.75rem; }
+  .gantt__row-label {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--clr-border);
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  .gantt__cell {
+    position: relative;
+    height: 36px;
+    border-bottom: 1px solid var(--clr-border);
+    border-inline-start: 1px solid rgba(0,0,0,0.03);
+  }
+  [data-theme="dark"] .gantt__cell { border-inline-start-color: rgba(255,255,255,0.03); }
+  .gantt__bar {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 4px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    z-index: 1;
+  }
+  .gantt__bar:hover { opacity: 0.85; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+    padding: 1rem;
+  }
+  [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.6); }
+
+  .modal {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    max-width: 700px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: scaleIn 0.25s ease-out;
+  }
+
+  .modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--clr-border);
+    position: sticky;
+    top: 0;
+    background: var(--clr-surface);
+    z-index: 2;
+  }
+  .modal__title { font-weight: 700; font-size: 1.1rem; }
+  .modal__close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--clr-text-tertiary);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .modal__close:hover { background: rgba(0,0,0,0.05); color: var(--clr-text); }
+  [data-theme="dark"] .modal__close:hover { background: rgba(255,255,255,0.08); }
+
+  .modal__body { padding: 1.25rem; }
+  .modal__footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--clr-border);
+    display: flex;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Form elements */
+  .form-group { margin-bottom: 1rem; }
+  .form-label {
+    display: block;
+    font-weight: 500;
+    font-size: 0.88rem;
+    margin-bottom: 0.35rem;
+    color: var(--clr-text-secondary);
+  }
+  .form-input, .form-select, .form-textarea {
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--clr-accent);
+  }
+  [data-theme="dark"] .form-input, [data-theme="dark"] .form-select, [data-theme="dark"] .form-textarea {
+    background: #1a1714;
+    border-color: #3d362c;
+    color: #e8e2da;
+  }
+  .form-textarea { resize: vertical; min-height: 60px; }
+  .form-row { display: flex; gap: 0.75rem; }
+  .form-row > * { flex: 1; }
+  .form-hint { font-size: 0.75rem; color: var(--clr-text-tertiary); margin-top: 0.2rem; }
+
+  /* Checkbox grid */
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.4rem;
+  }
+  .checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    padding: 0.3rem 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .checkbox-grid label:hover { background: rgba(0,0,0,0.03); }
+  [data-theme="dark"] .checkbox-grid label:hover { background: rgba(255,255,255,0.04); }
+
+  /* Tabs in modal */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--clr-border);
+    margin-bottom: 1rem;
+    overflow-x: auto;
+  }
+  .tabs__tab {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.6rem 1rem;
+    border: none;
+    background: none;
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tabs__tab:hover { color: var(--clr-text); }
+  .tabs__tab--active { color: var(--clr-accent); border-bottom-color: var(--clr-accent); font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel--active { display: block; }
+
+  /* Item list (for mission types, buddy rules) */
+  .item-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(0,0,0,0.02);
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+  [data-theme="dark"] .item-row { background: rgba(255,255,255,0.03); }
+  .item-row__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .item-row__name { font-weight: 500; flex: 1; }
+  .item-row__detail { color: var(--clr-text-tertiary); font-size: 0.78rem; }
+  .item-row__actions { display: flex; gap: 0.25rem; }
+  .item-row__btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--clr-text-tertiary);
+    padding: 0.15rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .item-row__btn:hover { color: var(--clr-danger); background: #fee2e2; }
+  .item-row__btn svg { width: 14px; height: 14px; }
+
+  /* Fairness table */
+  .fairness-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .fairness-table th {
+    text-align: right;
+    padding: 0.5rem 0.6rem;
+    font-weight: 600;
+    border-bottom: 2px solid var(--clr-border);
+    color: var(--clr-text-secondary);
+    white-space: nowrap;
+  }
+  .fairness-table td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid var(--clr-border);
+  }
+  .fairness-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--clr-accent);
+    transition: width 0.5s ease-out;
+  }
+  .fairness-bar-cell { min-width: 80px; }
+
+  /* Alerts panel */
+  .alerts-panel {
+    background: var(--clr-surface);
+    border: 1.5px solid var(--clr-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1rem;
+    animation: fadeInUp 0.3s ease-out;
+  }
+  .alerts-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--clr-border);
+    font-weight: 600;
+    font-size: 0.88rem;
+  }
+  .alerts-panel__list { padding: 0.5rem 1rem; }
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    font-size: 0.82rem;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-item__icon { flex-shrink: 0; font-size: 0.9rem; margin-top: 0.1rem; }
+  .alert-item__text { flex: 1; }
+  .alert-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--clr-danger);
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 100;
+    background: var(--clr-surface);
+    border: 1.5px solid var(--clr-border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s;
+  }
+  .theme-toggle:hover { border-color: #c4b8aa; }
+  .theme-toggle svg { width: 20px; height: 20px; stroke: var(--clr-text-secondary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  [data-theme="dark"] .theme-toggle { background: #2a2520; border-color: #3d362c; }
+
+  /* Toast */
+  .toast-container {
+    position: fixed;
+    top: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .toast {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: toastIn 0.3s ease-out;
+    max-width: 400px;
+    text-align: center;
+  }
+  .toast--success { background: #15803d; }
+  .toast--error { background: #dc2626; }
+  .toast--info { background: #2563eb; }
+  .toast--warning { background: #d97706; }
+
+  /* Loading spinner */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.2);
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--clr-border);
+    border-top-color: var(--clr-accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--clr-text-tertiary);
+  }
+  .empty-state__icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+  .empty-state__text { font-size: 0.95rem; margin-bottom: 1rem; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateY(-10px); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Print */
+  @media print {
+    .controls, .theme-toggle, .toast-container, .btn, .header__nav-link { display: none !important; }
+    .app { padding: 0; }
+    .shift-card { break-inside: avoid; }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .controls__group { flex-wrap: wrap; justify-content: center; }
+    .form-row { flex-direction: column; }
+    .gantt__table { min-width: 600px; }
+    .fairness-table { font-size: 0.75rem; }
+    .modal { max-width: 95vw; max-height: 90vh; }
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" title="מצב כהה/בהיר">
+  <svg viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+</button>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<div class="app">
+  <header class="header">
+    <h1 class="header__title">שבצ״ק — פלוגה ב</h1>
+    <p class="header__subtitle" id="headerSubtitle"></p>
+    <div class="header__line"></div>
+    <a class="header__nav-link" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      לוח שנה
+    </a>
+  </header>
+
+  <div class="controls">
+    <div class="controls__group">
+      <div class="date-nav" id="dateNav">
+        <button class="btn btn--icon" id="btnPrevDay" title="יום קודם">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <span class="date-nav__label" id="dateLabel"></span>
+        <input type="date" class="date-nav__input" id="datePicker">
+        <button class="btn btn--icon" id="btnNextDay" title="יום הבא">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+      </div>
+      <div class="view-toggle" id="viewToggle">
+        <button class="view-toggle__btn view-toggle__btn--active" id="btnDayView">תצוגת יום</button>
+        <button class="view-toggle__btn" id="btnWeekView">תצוגת שבוע</button>
+      </div>
+    </div>
+    <div class="controls__group">
+      <button class="btn btn--primary" id="btnConfig">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        הגדרות
+      </button>
+      <button class="btn btn--filled" id="btnGenerate">שיבוץ אוטומטי</button>
+      <button class="btn btn--warning" id="btnFairness">הוגנות</button>
+      <button class="btn" id="btnAlerts">
+        התראות
+        <span class="alert-badge" id="alertBadge" style="display:none;">0</span>
+      </button>
+      <button class="btn btn--success" id="btnExportPdf">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        ייצוא PDF
+      </button>
+      <button class="btn btn--danger" id="btnDeleteDay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        מחק יום
+      </button>
+    </div>
+  </div>
+  <button class="btn btn--outline btn--help-corner" id="btnHelp" title="עזרה">הוראות שימוש</button>
+
+  <div id="alertsPanel" style="display:none;"></div>
+
+  <div id="mainContent">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state__icon">📋</div>
+      <div class="empty-state__text">אין משמרות ליום זה</div>
+      <button class="btn btn--primary" id="btnCreateShifts">צור משמרות מתבנית</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===================== CONSTANTS =====================
+
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tIx9awHDsdXZ0y01QElrDNv4F9sy_7ENDFVlHPOns7H-KhRrHLGJG5zhpuVBZ_YV0A/exec';
+  const DATE_START = '2026-04-26';
+  const DATE_END = '2026-06-18';
+
+  const DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  const GREG_MONTHS = { 3: 'אפריל', 4: 'מאי', 5: 'יוני' };
+
+  const ROLE_LABELS = { officer: 'קצין', commander: 'מפקד', driver: 'נהג', member: 'חייל' };
+
+  const DEFAULT_MISSION_TYPES = [
+    { id: 'patrol', name: 'סיור', duration_hours: 8, min_team: 3, requires_commander: true, requires_driver: true, requires_officer: false, color: '#2563eb' },
+    { id: 'guard', name: 'שמירה', duration_hours: 4, min_team: 1, requires_commander: false, requires_driver: false, requires_officer: false, color: '#16a34a' },
+    { id: 'kitchen', name: 'תורנות מטבח', duration_hours: 24, min_team: 1, requires_commander: false, requires_driver: false, requires_officer: false, color: '#d97706' },
+    { id: 'qrf', name: 'כח כונן', duration_hours: 24, min_team: 3, requires_commander: true, requires_driver: false, requires_officer: false, color: '#dc2626' }
+  ];
+
+  const DEFAULT_SCHEDULING_PARAMS = {
+    min_rest_hours: 8,
+    max_consecutive_days: 5,
+    enforce_consecutive_limit: false
+  };
+
+  const DEFAULT_SHIFT_TEMPLATES = [
+    { mission_type: 'patrol', start_time: '06:00', end_time: '14:00' },
+    { mission_type: 'patrol', start_time: '14:00', end_time: '22:00' },
+    { mission_type: 'patrol', start_time: '22:00', end_time: '06:00' },
+    { mission_type: 'guard', start_time: '06:00', end_time: '10:00' },
+    { mission_type: 'guard', start_time: '10:00', end_time: '14:00' },
+    { mission_type: 'guard', start_time: '14:00', end_time: '18:00' },
+    { mission_type: 'guard', start_time: '18:00', end_time: '22:00' },
+    { mission_type: 'guard', start_time: '22:00', end_time: '02:00' },
+    { mission_type: 'guard', start_time: '02:00', end_time: '06:00' },
+    { mission_type: 'kitchen', start_time: '00:00', end_time: '00:00' },
+    { mission_type: 'qrf', start_time: '22:00', end_time: '22:00' }
+  ];
+
+  // ===================== STATE =====================
+
+  let currentDate = new Date();
+  let currentView = 'day'; // 'day' | 'week'
+  let config = {};
+  let missionTypes = [...DEFAULT_MISSION_TYPES];
+  let personnelTags = {};
+  let exclusions = {};
+  let buddyRules = [];
+  let schedulingParams = { ...DEFAULT_SCHEDULING_PARAMS };
+  let shiftTemplates = [...DEFAULT_SHIFT_TEMPLATES];
+  let shifts = [];
+  let calendarData = null; // { map, names }
+  let alertsList = [];
+  let isLoading = false;
+
+  // ===================== UTILITIES =====================
+
+  function formatDateStr(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  }
+
+  function parseDateStr(s) {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function formatDateHebrew(d) {
+    const day = DAY_NAMES[d.getDay()];
+    const dd = d.getDate();
+    const month = GREG_MONTHS[d.getMonth()] || '';
+    return `יום ${day}, ${dd} ${month ? 'ב' + month : ''}`;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function generateId(date, missionType, startTime) {
+    return `${date}_${missionType}_${startTime.replace(':', '')}`;
+  }
+
+  function timeToMinutes(t) {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  function shiftDurationHours(start, end) {
+    let s = timeToMinutes(start);
+    let e = timeToMinutes(end);
+    if (e <= s) e += 1440; // overnight
+    return (e - s) / 60;
+  }
+
+
+  function getMissionType(id) {
+    return missionTypes.find(m => m.id === id);
+  }
+
+  // Sort shifts by (mission_type order, then start_time)
+  function sortShiftsByTypeAndTime(shiftList) {
+    const typeOrder = {};
+    missionTypes.forEach((mt, i) => { typeOrder[mt.id] = i; });
+    shiftList.sort((a, b) => {
+      const orderA = typeOrder[a.mission_type] !== undefined ? typeOrder[a.mission_type] : 999;
+      const orderB = typeOrder[b.mission_type] !== undefined ? typeOrder[b.mission_type] : 999;
+      if (orderA !== orderB) return orderA - orderB;
+      return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+    });
+  }
+
+  function getWeekDates(baseDate) {
+    const dates = [];
+    const d = new Date(baseDate);
+    const day = d.getDay();
+    d.setDate(d.getDate() - day); // go to Sunday
+    for (let i = 0; i < 7; i++) {
+      dates.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return dates;
+  }
+
+  // ===================== TOAST =====================
+
+  function showToast(message, type, duration) {
+    type = type || 'info';
+    duration = duration || 3000;
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast--' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.animation = 'toastOut 0.3s ease-in forwards';
+      toast.addEventListener('animationend', () => toast.remove());
+    }, duration);
+  }
+
+  // ===================== API =====================
+
+  async function callAppsScript(payload) {
+    if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
+      showToast('יש להגדיר את כתובת Apps Script', 'error', 4000);
+      throw new Error('Apps Script URL not configured');
+    }
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      const result = await resp.json();
+      if (!result.success) throw new Error(result.error || 'שגיאה לא ידועה');
+      return result;
+    } catch (err) {
+      showToast('שגיאה: ' + err.message, 'error', 5000);
+      throw err;
+    }
+  }
+
+  function showLoading() {
+    if (isLoading) return;
+    isLoading = true;
+    const el = document.createElement('div');
+    el.id = 'loadingOverlay';
+    el.className = 'loading-overlay';
+    el.innerHTML = '<div class="spinner"></div>';
+    document.body.appendChild(el);
+  }
+
+  function hideLoading() {
+    isLoading = false;
+    const el = document.getElementById('loadingOverlay');
+    if (el) el.remove();
+  }
+
+  // ===================== DATA LOADING =====================
+
+  async function loadConfig() {
+    try {
+      const result = await callAppsScript({ action: 'getRosterConfig' });
+      config = result.config || {};
+
+      if (config.mission_types) {
+        try {
+          missionTypes = JSON.parse(config.mission_types);
+          // Ensure requires_officer field exists (backward compat)
+          missionTypes.forEach(mt => { if (mt.requires_officer === undefined) mt.requires_officer = false; });
+        } catch(e) {}
+      }
+      if (config.personnel_tags) {
+        try { personnelTags = JSON.parse(config.personnel_tags); } catch(e) {}
+      }
+      if (config.exclusions) {
+        try { exclusions = JSON.parse(config.exclusions); } catch(e) {}
+      }
+      if (config.buddy_rules) {
+        try { buddyRules = JSON.parse(config.buddy_rules); } catch(e) {}
+      }
+      if (config.scheduling_params) {
+        try { schedulingParams = { ...DEFAULT_SCHEDULING_PARAMS, ...JSON.parse(config.scheduling_params) }; } catch(e) {}
+      }
+      if (config.shift_templates) {
+        try { shiftTemplates = JSON.parse(config.shift_templates); } catch(e) {}
+      }
+    } catch (err) {
+      console.warn('Failed to load roster config, using defaults');
+    }
+  }
+
+  async function saveConfigKey(key, value) {
+    const json = typeof value === 'string' ? value : JSON.stringify(value);
+    await callAppsScript({ action: 'saveRosterConfig', key, value: json });
+    config[key] = json;
+  }
+
+  async function loadShifts(startDate, endDate) {
+    try {
+      const result = await callAppsScript({
+        action: 'getRosterShifts',
+        startDate: startDate || formatDateStr(currentDate),
+        endDate: endDate || formatDateStr(currentDate)
+      });
+      return result.shifts || [];
+    } catch (err) {
+      return [];
+    }
+  }
+
+  async function loadCalendarData() {
+    try {
+      const result = await callAppsScript({ action: 'getData' });
+      const rows = result.rows || [];
+      const map = {};
+      const namesSet = new Set();
+      rows.forEach(r => {
+        const name = r.name;
+        const date = r.date;
+        const status = r.status;
+        namesSet.add(name);
+        if (!map[date]) map[date] = {};
+        map[date][name] = status;
+      });
+      calendarData = { map, names: [...namesSet] };
+    } catch (err) {
+      console.warn('Failed to load calendar data');
+      calendarData = { map: {}, names: [] };
+    }
+  }
+
+  function getAvailablePersonnel(date) {
+    if (!calendarData) return [];
+    const dateStr = typeof date === 'string' ? date : formatDateStr(date);
+    const dayData = calendarData.map[dateStr] || {};
+    return calendarData.names.filter(name => {
+      const status = dayData[name];
+      return status === 'activity' || status === 'switch-base';
+    });
+  }
+
+  // ===================== SHIFT OPERATIONS =====================
+
+  async function createShiftsFromTemplate(startDate, endDate) {
+    const start = parseDateStr(startDate);
+    const end = parseDateStr(endDate);
+    const newShifts = [];
+
+    const d = new Date(start);
+    while (d <= end) {
+      const dateStr = formatDateStr(d);
+      shiftTemplates.forEach(t => {
+        const id = generateId(dateStr, t.mission_type, t.start_time);
+        newShifts.push({
+          id,
+          date: dateStr,
+          mission_type: t.mission_type,
+          start_time: t.start_time,
+          end_time: t.end_time,
+          note: ''
+        });
+      });
+      d.setDate(d.getDate() + 1);
+    }
+
+    if (newShifts.length === 0) return;
+
+    showLoading();
+    try {
+      await callAppsScript({ action: 'saveRosterShifts', shifts: newShifts });
+      showToast(`נוצרו ${newShifts.length} משמרות בהצלחה`, 'success');
+      await refreshView();
+    } catch (err) {
+      // toast already shown
+    } finally {
+      hideLoading();
+    }
+  }
+
+  async function deleteShift(shiftId) {
+    showLoading();
+    try {
+      await callAppsScript({ action: 'deleteRosterShifts', ids: [shiftId] });
+      showToast('המשמרת נמחקה', 'success');
+      await refreshView();
+    } catch (err) {
+      // toast shown
+    } finally {
+      hideLoading();
+    }
+  }
+
+  async function saveShiftNote(shiftId, note) {
+    const shift = shifts.find(s => s.id === shiftId);
+    if (!shift) return;
+    shift.note = note;
+    try {
+      await callAppsScript({ action: 'saveRosterShifts', shifts: [shift] });
+      showToast('ההערה נשמרה', 'success');
+    } catch (err) {}
+  }
+
+  // ===================== AUTO-SCHEDULING ALGORITHM =====================
+
+  function autoSchedule(targetShifts, allAssignments) {
+    const results = [];
+    const warnings = [];
+
+    // Build history for fairness: name -> { totalHours, missionCounts, lastEnd, consecutiveDays }
+    const history = {};
+    if (calendarData) {
+      calendarData.names.forEach(name => {
+        history[name] = { totalHours: 0, missionCounts: {}, lastEnd: null, consecutiveDays: 0 };
+      });
+    }
+
+    // Process existing assignments into history
+    allAssignments.forEach(a => {
+      const shift = shifts.find(s => s.id === a.shift_id);
+      if (!shift || !history[a.name]) return;
+      const dur = shift.start_time === shift.end_time ? 24 : shiftDurationHours(shift.start_time, shift.end_time);
+      history[a.name].totalHours += dur;
+
+      history[a.name].missionCounts[shift.mission_type] = (history[a.name].missionCounts[shift.mission_type] || 0) + 1;
+    });
+
+    // Group shifts by date then sort by constraint difficulty
+    const shiftsByDate = {};
+    targetShifts.forEach(s => {
+      if (!shiftsByDate[s.date]) shiftsByDate[s.date] = [];
+      shiftsByDate[s.date].push(s);
+    });
+
+    const sortedDates = Object.keys(shiftsByDate).sort();
+    // Track assignments made in this run: name -> [{ date, start, end, shiftId }]
+    const newAssignments = {};
+
+    // Pre-seed newAssignments with ALL manual assignments across ALL target shifts
+    // so manually-pinned people are excluded from being auto-assigned to other shifts
+    for (const date of sortedDates) {
+      const dayShifts = shiftsByDate[date];
+      for (const shift of dayShifts) {
+        (shift.assignments || [])
+          .filter(a => a.is_manual === 'TRUE')
+          .forEach(a => {
+            if (!newAssignments[a.name]) newAssignments[a.name] = [];
+            newAssignments[a.name].push({ date, start: shift.start_time, end: shift.end_time, shiftId: shift.id });
+          });
+      }
+    }
+
+    // Track which dates each person was assigned (for consecutive day counting)
+    const assignedOnDate = {}; // name -> Set of date strings
+
+    for (const date of sortedDates) {
+      const dayShifts = shiftsByDate[date];
+      const available = getAvailablePersonnel(date);
+
+      // Update consecutive days for each person before this day's assignments
+      const prevDate = new Date(parseDateStr(date));
+      prevDate.setDate(prevDate.getDate() - 1);
+      const prevDateStr = formatDateStr(prevDate);
+
+      if (calendarData) {
+        calendarData.names.forEach(name => {
+          if (!history[name]) return;
+          const wasAssignedYesterday = assignedOnDate[name] && assignedOnDate[name].has(prevDateStr);
+          const statusToday = calendarData.map[date] && calendarData.map[date][name];
+          const isHome = statusToday === 'home' || statusToday === 'switch-home';
+
+          if (isHome || !wasAssignedYesterday) {
+            // Went home or wasn't assigned yesterday → reset
+            history[name].consecutiveDays = 0;
+          }
+          // consecutiveDays will be incremented after assignment below
+        });
+      }
+
+      // Sort shifts: most constrained first (requires_commander, then by min_team desc)
+      dayShifts.sort((a, b) => {
+        const ma = getMissionType(a.mission_type);
+        const mb = getMissionType(b.mission_type);
+        const scoreA = (ma && ma.requires_commander ? 10 : 0) + (ma ? ma.min_team : 0);
+        const scoreB = (mb && mb.requires_commander ? 10 : 0) + (mb ? mb.min_team : 0);
+        return scoreB - scoreA;
+      });
+
+      for (const shift of dayShifts) {
+        const mt = getMissionType(shift.mission_type);
+        if (!mt) continue;
+        const minTeam = mt.min_team;
+
+        // Pre-placed manual assignments
+        const manualAssigned = (shift.assignments || [])
+          .filter(a => a.is_manual === 'TRUE')
+          .map(a => a.name);
+
+        const needed = minTeam - manualAssigned.length;
+        if (needed <= 0) {
+          // Manual assignments are already preserved in the DB (clearManual: false)
+          // No need to re-emit them — just skip this shift
+          continue;
+        }
+
+        // Filter candidates
+        const candidates = available.filter(name => {
+          if (manualAssigned.includes(name)) return false;
+
+          // Exclusion check
+          if (exclusions[name] && exclusions[name].includes(shift.mission_type)) return false;
+
+          // Already assigned to overlapping shift today?
+          const myAssignments = newAssignments[name] || [];
+          const isOverlapping = myAssignments.some(a => {
+            if (a.date !== date) return false;
+            let aStart = timeToMinutes(a.start);
+            let aEnd = timeToMinutes(a.end);
+            let sStart = timeToMinutes(shift.start_time);
+            let sEnd = timeToMinutes(shift.end_time);
+            if (aEnd <= aStart) aEnd += 1440;
+            if (sEnd <= sStart) sEnd += 1440;
+            return sStart < aEnd && sEnd > aStart;
+          });
+          if (isOverlapping) return false;
+
+          // Rest compliance
+          const h = history[name];
+          if (h && h.lastEnd) {
+            const restNeeded = schedulingParams.min_rest_hours * 60;
+            const shiftStart = new Date(date + 'T' + shift.start_time + ':00');
+            const diff = (shiftStart - h.lastEnd) / 60000;
+            if (diff < restNeeded && diff >= 0) return false;
+          }
+
+          // Buddy must-not
+          const buddyConflict = buddyRules.some(rule => {
+            if (rule.type !== 'must_not') return false;
+            const partner = rule.person1 === name ? rule.person2 : (rule.person2 === name ? rule.person1 : null);
+            if (!partner) return false;
+            const partnerAssigned = (newAssignments[partner] || []).some(a => a.shiftId === shift.id);
+            return partnerAssigned;
+          });
+          if (buddyConflict) return false;
+
+          return true;
+        });
+
+        // Score candidates
+        const scored = candidates.map(name => {
+          const h = history[name] || { totalHours: 0, missionCounts: {}, consecutiveDays: 0 };
+          let score = 0;
+
+          // Fairness: fewer hours → higher score
+          score += (1000 - h.totalHours) * 100;
+
+          // Diversity: hasn't done this mission recently
+          const mcount = h.missionCounts[shift.mission_type] || 0;
+          score += (50 - mcount) * 60;
+
+          // Consecutive days penalty (optional)
+          if (schedulingParams.enforce_consecutive_limit) {
+            score += (schedulingParams.max_consecutive_days - h.consecutiveDays) * 40;
+          }
+
+          // Buddy must-pair bonus
+          const buddyBonus = buddyRules.some(rule => {
+            if (rule.type !== 'must') return false;
+            const partner = rule.person1 === name ? rule.person2 : (rule.person2 === name ? rule.person1 : null);
+            if (!partner) return false;
+            return candidates.includes(partner);
+          });
+          if (buddyBonus) score += 30;
+
+          // Officer priority: if shift requires_officer, boost officers heavily
+          if (mt.requires_officer && (personnelTags[name] || []).includes('officer')) {
+            score += 50000;
+          }
+
+          return { name, score };
+        });
+
+        scored.sort((a, b) => b.score - a.score);
+
+        // Pick top N
+        const picked = scored.slice(0, needed).map(s => s.name);
+
+        // Assign roles
+        const allAssigned = [...manualAssigned, ...picked];
+        const assignedRoles = [];
+
+        // Manual roles are already preserved in DB — track them locally for overlap/role checks
+        manualAssigned.forEach(name => {
+          const existing = (shift.assignments || []).find(a => a.name === name);
+          assignedRoles.push({ name, role: existing ? existing.role : 'member', is_manual: true });
+        });
+
+        // Assign roles with flexible fallback:
+        // - If requires_officer: an officer is mandatory (not just any commander)
+        // - Officers ALWAYS get commander role (non-negotiable)
+        // - Commander-tagged (non-officer) preferred as commander, but can be member/driver if enough people
+        // - Driver-tagged preferred as driver, but can be member if enough drivers
+        let needsOfficer = mt.requires_officer && !assignedRoles.some(a => {
+          const t = personnelTags[a.name] || [];
+          return a.role === 'commander' && t.includes('officer');
+        });
+        let needsCommander = mt.requires_commander && !assignedRoles.some(a => a.role === 'commander');
+        let needsDriver = mt.requires_driver && !assignedRoles.some(a => a.role === 'driver');
+
+        // Sort picked: officers first (so they get priority for commander slots)
+        const sortedPicked = [...picked].sort((a, b) => {
+          const aOfficer = (personnelTags[a] || []).includes('officer') ? 0 : 1;
+          const bOfficer = (personnelTags[b] || []).includes('officer') ? 0 : 1;
+          return aOfficer - bOfficer;
+        });
+
+        sortedPicked.forEach(name => {
+          const tags = personnelTags[name] || [];
+          let role = 'member';
+
+          if (tags.includes('officer')) {
+            // Officers are ALWAYS commanders
+            role = 'commander';
+            needsOfficer = false;
+            needsCommander = false;
+          } else if (needsCommander && tags.includes('commander')) {
+            role = 'commander';
+            needsCommander = false;
+          } else if (needsDriver && tags.includes('driver')) {
+            role = 'driver';
+            needsDriver = false;
+          }
+          // Commander/driver-tagged people without a needed slot → fall back to member
+          assignedRoles.push({ name, role, is_manual: false });
+        });
+
+        // Track assignments — only emit auto-assigned to results (manual already in DB)
+        assignedRoles.forEach(a => {
+          if (!a.is_manual) {
+            results.push({ shift_id: shift.id, name: a.name, role: a.role, is_manual: false });
+          }
+          if (!newAssignments[a.name]) newAssignments[a.name] = [];
+          newAssignments[a.name].push({ date, start: shift.start_time, end: shift.end_time, shiftId: shift.id });
+
+          // Update history
+          if (history[a.name]) {
+            const dur = shift.start_time === shift.end_time ? 24 : shiftDurationHours(shift.start_time, shift.end_time);
+            history[a.name].totalHours += dur;
+      
+            history[a.name].missionCounts[shift.mission_type] = (history[a.name].missionCounts[shift.mission_type] || 0) + 1;
+
+            const endH = shift.end_time === '00:00' ? 24 : parseInt(shift.end_time.split(':')[0]);
+            history[a.name].lastEnd = new Date(date + 'T' + (endH < 10 ? '0' : '') + endH + ':00:00');
+
+            // Track assigned date for consecutive days counting
+            if (!assignedOnDate[a.name]) assignedOnDate[a.name] = new Set();
+            if (!assignedOnDate[a.name].has(date)) {
+              assignedOnDate[a.name].add(date);
+              history[a.name].consecutiveDays++;
+            }
+          }
+        });
+
+        // Check warnings
+        if (allAssigned.length < minTeam) {
+          warnings.push(`${mt.name} ${shift.start_time}-${shift.end_time} (${date}): חסרים ${minTeam - allAssigned.length} אנשים`);
+        }
+        if (needsOfficer) {
+          warnings.push(`${mt.name} ${shift.start_time}-${shift.end_time} (${date}): חסר קצין`);
+        }
+        if (needsCommander) {
+          warnings.push(`${mt.name} ${shift.start_time}-${shift.end_time} (${date}): חסר מפקד`);
+        }
+        if (needsDriver) {
+          warnings.push(`${mt.name} ${shift.start_time}-${shift.end_time} (${date}): חסר נהג`);
+        }
+      }
+    }
+
+    return { assignments: results, warnings };
+  }
+
+  async function runAutoSchedule() {
+    if (!calendarData) {
+      showToast('נתוני לוח השנה טרם נטענו', 'error');
+      return;
+    }
+
+    let startDate, endDate;
+    if (currentView === 'day') {
+      startDate = endDate = formatDateStr(currentDate);
+    } else {
+      const weekDates = getWeekDates(currentDate);
+      startDate = formatDateStr(weekDates[0]);
+      endDate = formatDateStr(weekDates[6]);
+    }
+
+    showLoading();
+    try {
+      // Load all shifts and existing assignments for the range
+      const loaded = await loadShifts(startDate, endDate);
+      if (loaded.length === 0) {
+        hideLoading();
+        showToast('אין משמרות לשיבוץ. צור משמרות מתבנית תחילה.', 'warning');
+        return;
+      }
+
+      // Also load surrounding shifts for rest calculation
+      const prevDate = new Date(parseDateStr(startDate));
+      prevDate.setDate(prevDate.getDate() - 2);
+      const allShifts = await loadShifts(formatDateStr(prevDate), endDate);
+      shifts = allShifts;
+
+      // Collect all existing assignments
+      const existingAssignments = [];
+      allShifts.forEach(s => {
+        (s.assignments || []).forEach(a => existingAssignments.push(a));
+      });
+
+      // Filter target shifts (only the requested range)
+      const targetShifts = loaded;
+
+      // Clear non-manual assignments for target shifts
+      const targetIds = targetShifts.map(s => s.id);
+      await callAppsScript({ action: 'clearRosterAssignments', shiftIds: targetIds, clearManual: false });
+
+      // Run solver
+      const { assignments, warnings } = autoSchedule(targetShifts, existingAssignments);
+
+      if (assignments.length === 0) {
+        hideLoading();
+        showToast('לא ניתן לשבץ אנשים. בדוק את הגדרות הכוח האדם.', 'warning');
+        return;
+      }
+
+      // Save assignments
+      await callAppsScript({ action: 'saveRosterAssignments', assignments });
+
+      warnings.forEach(w => showToast(w, 'warning', 5000));
+      showToast(`שובצו ${assignments.length} אנשים בהצלחה`, 'success');
+
+      await refreshView();
+    } catch (err) {
+      // toast shown
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // ===================== ALERTS =====================
+
+  function computeAlerts(dayShifts) {
+    const alerts = [];
+
+    dayShifts.forEach(shift => {
+      const mt = getMissionType(shift.mission_type);
+      if (!mt) return;
+
+      const assigned = shift.assignments || [];
+      const count = assigned.length;
+
+      if (count < mt.min_team) {
+        alerts.push({
+          type: 'understaffed',
+          icon: '🔴',
+          text: `${mt.name} ${shift.start_time}-${shift.end_time}: חסרים ${mt.min_team - count} אנשים (${count}/${mt.min_team})`
+        });
+      }
+
+      if (mt.requires_officer && !assigned.some(a => {
+        const t = personnelTags[a.name] || [];
+        return a.role === 'commander' && t.includes('officer');
+      })) {
+        alerts.push({
+          type: 'missing_role',
+          icon: '🔴',
+          text: `${mt.name} ${shift.start_time}-${shift.end_time}: חסר קצין`
+        });
+      }
+
+      if (mt.requires_commander && !assigned.some(a => a.role === 'commander')) {
+        alerts.push({
+          type: 'missing_role',
+          icon: '🟠',
+          text: `${mt.name} ${shift.start_time}-${shift.end_time}: חסר מפקד`
+        });
+      }
+
+      if (mt.requires_driver && !assigned.some(a => a.role === 'driver')) {
+        alerts.push({
+          type: 'missing_role',
+          icon: '🟠',
+          text: `${mt.name} ${shift.start_time}-${shift.end_time}: חסר נהג`
+        });
+      }
+    });
+
+    return alerts;
+  }
+
+  function renderAlerts() {
+    const panel = document.getElementById('alertsPanel');
+    const badge = document.getElementById('alertBadge');
+
+    if (alertsList.length === 0) {
+      panel.style.display = 'none';
+      badge.style.display = 'none';
+      return;
+    }
+
+    badge.style.display = '';
+    badge.textContent = alertsList.length;
+
+    if (panel.style.display === 'none') return; // only render if visible
+
+    let html = `<div class="alerts-panel">
+      <div class="alerts-panel__header">
+        <span>התראות (${alertsList.length})</span>
+        <button class="btn btn--sm" onclick="document.getElementById('alertsPanel').style.display='none'">סגור</button>
+      </div>
+      <div class="alerts-panel__list">`;
+
+    alertsList.forEach(a => {
+      html += `<div class="alert-item">
+        <span class="alert-item__icon">${a.icon}</span>
+        <span class="alert-item__text">${escapeHtml(a.text)}</span>
+      </div>`;
+    });
+
+    html += '</div></div>';
+    panel.innerHTML = html;
+  }
+
+  // ===================== RENDERING — DAY VIEW =====================
+
+  function renderDayView() {
+    const container = document.getElementById('mainContent');
+    const dateStr = formatDateStr(currentDate);
+    const dayShifts = shifts.filter(s => s.date === dateStr);
+
+    // Sort by mission type, then start_time
+    sortShiftsByTypeAndTime(dayShifts);
+
+    // Compute alerts
+    alertsList = computeAlerts(dayShifts);
+    renderAlerts();
+
+    if (dayShifts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__icon">📋</div>
+          <div class="empty-state__text">אין משמרות ליום זה</div>
+          <button class="btn btn--primary" id="btnCreateShifts">צור משמרות מתבנית</button>
+        </div>`;
+      const btn = document.getElementById('btnCreateShifts');
+      if (btn) btn.addEventListener('click', () => promptCreateShifts());
+      return;
+    }
+
+    let html = '<div class="shifts-container">';
+
+    dayShifts.forEach((shift, idx) => {
+      const mt = getMissionType(shift.mission_type);
+      const name = mt ? mt.name : shift.mission_type;
+      const color = mt ? mt.color : '#888';
+      const minTeam = mt ? mt.min_team : 1;
+      const assigned = shift.assignments || [];
+      const count = assigned.length;
+      const isFull = count >= minTeam;
+      const badgeClass = count === 0 ? 'empty' : (isFull ? 'full' : 'partial');
+      const timeLabel = shift.start_time === shift.end_time
+        ? 'יום שלם'
+        : `${shift.start_time}-${shift.end_time}`;
+
+      html += `<div class="shift-card" style="animation-delay:${idx * 0.05}s; border-right: 3px solid ${color};">
+        <div class="shift-card__header">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span class="shift-card__type">
+              <span class="shift-card__type-dot" style="background:${color};"></span>
+              ${escapeHtml(name)}
+            </span>
+            <span class="shift-card__time">${timeLabel}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span class="shift-card__badge shift-card__badge--${badgeClass}">${count}/${minTeam} ${isFull ? '✓' : ''}</span>
+            <div class="shift-card__actions">
+              <button class="shift-card__action-btn" title="שיבוץ ידני" data-action="manual" data-shift-id="${shift.id}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </button>
+              <button class="shift-card__action-btn" title="הערה" data-action="note" data-shift-id="${shift.id}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="shift-card__action-btn" title="מחק משמרת" data-action="delete" data-shift-id="${shift.id}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="shift-card__body">`;
+
+      if (assigned.length === 0) {
+        html += '<div class="shift-card__empty">לא שובצו אנשים</div>';
+      } else {
+        assigned.forEach(a => {
+          const roleLabel = ROLE_LABELS[a.role] || '';
+          const manualClass = a.is_manual === 'TRUE' ? ' shift-card__person--manual' : '';
+          html += `<div class="shift-card__person${manualClass}">
+            <span class="shift-card__person-name">${escapeHtml(a.name)}</span>
+            ${a.role !== 'member' ? `<span class="shift-card__person-role">${roleLabel}</span>` : ''}
+          </div>`;
+        });
+      }
+
+      if (shift.note) {
+        html += `<div class="shift-card__note">${escapeHtml(shift.note)}</div>`;
+      }
+
+      html += '</div></div>';
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    // Event delegation for action buttons
+    container.querySelectorAll('.shift-card__action-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const action = btn.dataset.action;
+        const shiftId = btn.dataset.shiftId;
+        if (action === 'delete') {
+          if (confirm('למחוק את המשמרת?')) deleteShift(shiftId);
+        } else if (action === 'note') {
+          promptShiftNote(shiftId);
+        } else if (action === 'manual') {
+          promptManualAssign(shiftId);
+        }
+      });
+    });
+  }
+
+  // ===================== RENDERING — WEEK / GANTT VIEW =====================
+
+  function renderWeekView() {
+    const container = document.getElementById('mainContent');
+    const weekDates = getWeekDates(currentDate);
+    const startStr = formatDateStr(weekDates[0]);
+    const endStr = formatDateStr(weekDates[6]);
+
+    const weekShifts = shifts.filter(s => s.date >= startStr && s.date <= endStr);
+
+    // Compute alerts for entire week
+    alertsList = computeAlerts(weekShifts);
+    renderAlerts();
+
+    if (weekShifts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__icon">📋</div>
+          <div class="empty-state__text">אין משמרות לשבוע זה</div>
+          <button class="btn btn--primary" id="btnCreateShifts">צור משמרות מתבנית</button>
+        </div>`;
+      const btn = document.getElementById('btnCreateShifts');
+      if (btn) btn.addEventListener('click', () => promptCreateShifts());
+      return;
+    }
+
+    // Build Gantt table
+    let html = '<div class="gantt"><table class="gantt__table"><thead><tr>';
+    html += '<th class="gantt__header-cell">יום</th>';
+    for (let h = 0; h < 24; h++) {
+      html += `<th class="gantt__header-cell">${String(h).padStart(2, '0')}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+
+    weekDates.forEach(date => {
+      const dateStr = formatDateStr(date);
+      const dayShifts = weekShifts.filter(s => s.date === dateStr);
+      const dayName = DAY_NAMES[date.getDay()];
+      const dayNum = date.getDate();
+
+      html += `<tr>
+        <td class="gantt__row-label">${dayName} ${dayNum}</td>`;
+
+      // Create 24 hour cells
+      for (let h = 0; h < 24; h++) {
+        html += '<td class="gantt__cell">';
+
+        // Find shifts that start at this hour
+        dayShifts.forEach(s => {
+          const startMin = timeToMinutes(s.start_time);
+          const startHour = Math.floor(startMin / 60);
+          if (startHour !== h) return;
+
+          let endMin = timeToMinutes(s.end_time);
+          if (endMin <= startMin) endMin += 1440;
+          const durationHours = (endMin - startMin) / 60;
+          const widthPercent = durationHours * 100;
+          const mt = getMissionType(s.mission_type);
+          const color = mt ? mt.color : '#888';
+          const label = mt ? mt.name : s.mission_type;
+          const assigned = (s.assignments || []).length;
+          const minTeam = mt ? mt.min_team : 1;
+
+          html += `<div class="gantt__bar" style="width:${widthPercent}%;background:${color};right:0;" title="${label} ${s.start_time}-${s.end_time} (${assigned}/${minTeam})">${label}</div>`;
+        });
+
+        html += '</td>';
+      }
+
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  }
+
+  // ===================== MODALS =====================
+
+  function createModal(title, bodyHtml, footerHtml) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal__header">
+          <span class="modal__title">${escapeHtml(title)}</span>
+          <button class="modal__close">&times;</button>
+        </div>
+        <div class="modal__body">${bodyHtml}</div>
+        ${footerHtml ? `<div class="modal__footer">${footerHtml}</div>` : ''}
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    const closeModal = () => overlay.remove();
+    overlay.querySelector('.modal__close').addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', function handler(e) {
+      if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', handler); }
+    });
+
+    return { overlay, close: closeModal };
+  }
+
+  function promptShiftNote(shiftId) {
+    const shift = shifts.find(s => s.id === shiftId);
+    if (!shift) return;
+
+    const { overlay, close } = createModal('הערה למשמרת', `
+      <div class="form-group">
+        <textarea class="form-textarea" id="modalNoteInput" rows="3" placeholder="הערת מסירה...">${escapeHtml(shift.note || '')}</textarea>
+      </div>
+    `, `
+      <button class="btn btn--filled" id="modalNoteSave">שמור</button>
+      <button class="btn" id="modalNoteCancel">ביטול</button>
+    `);
+
+    overlay.querySelector('#modalNoteSave').addEventListener('click', async () => {
+      const note = overlay.querySelector('#modalNoteInput').value.trim();
+      await saveShiftNote(shiftId, note);
+      close();
+      renderDayView();
+    });
+    overlay.querySelector('#modalNoteCancel').addEventListener('click', close);
+    overlay.querySelector('#modalNoteInput').focus();
+  }
+
+  function promptManualAssign(shiftId) {
+    const shift = shifts.find(s => s.id === shiftId);
+    if (!shift) return;
+
+    const mt = getMissionType(shift.mission_type);
+    const mtName = mt ? mt.name : shift.mission_type;
+    const timeLabel = shift.start_time === shift.end_time ? 'יום שלם' : `${shift.start_time}-${shift.end_time}`;
+
+    // Get available personnel for this date
+    const available = getAvailablePersonnel(shift.date);
+    const allNames = calendarData ? calendarData.names : [];
+    const currentManual = (shift.assignments || []).filter(a => a.is_manual === 'TRUE');
+    const currentManualNames = new Set(currentManual.map(a => a.name));
+
+    // Build person list — available people first, then rest (greyed out)
+    let checkboxHtml = '<div style="margin-bottom:0.75rem;font-size:0.8rem;color:var(--clr-text-tertiary);">סמן את האנשים שישובצו ידנית. שיבוץ ידני נעול — השיבוץ האוטומטי לא יגע בהם ולא ישבץ אותם למשמרות אחרות.</div>';
+    checkboxHtml += '<div class="checkbox-grid" style="grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));">';
+
+    // Role selector per person
+    const roleOptions = `
+      <select class="form-select manual-role-select" style="font-size:0.75rem;padding:0.15rem 0.3rem;min-width:auto;width:70px;border-radius:4px;" data-name="__NAME__">
+        <option value="member">חייל</option>
+        <option value="commander">מפקד</option>
+        <option value="officer">קצין</option>
+        <option value="driver">נהג</option>
+      </select>`;
+
+    allNames.forEach(name => {
+      const isOnBase = available.includes(name);
+      const isChecked = currentManualNames.has(name);
+      const existingRole = isChecked ? (currentManual.find(a => a.name === name)?.role || 'member') : 'member';
+      const opacity = isOnBase ? '1' : '0.45';
+      const hint = isOnBase ? '' : ' (לא במוצב)';
+
+      checkboxHtml += `<label style="opacity:${opacity};flex-direction:column;align-items:flex-start;gap:0.15rem;">
+        <div style="display:flex;align-items:center;gap:0.4rem;">
+          <input type="checkbox" class="manual-cb" data-name="${escapeHtml(name)}" ${isChecked ? 'checked' : ''}>
+          <span>${escapeHtml(name)}${hint}</span>
+        </div>
+        <div style="padding-right:1.2rem;">
+          ${roleOptions.replace('__NAME__', escapeHtml(name)).replace(`value="${existingRole}"`, `value="${existingRole}" selected`)}
+        </div>
+      </label>`;
+    });
+    checkboxHtml += '</div>';
+
+    const { overlay, close } = createModal(`שיבוץ ידני — ${mtName} ${timeLabel}`, checkboxHtml, `
+      <button class="btn btn--filled" id="modalManualSave">שמור שיבוץ ידני</button>
+      <button class="btn" id="modalManualCancel">ביטול</button>
+    `);
+
+    overlay.querySelector('#modalManualSave').addEventListener('click', async () => {
+      const checkboxes = overlay.querySelectorAll('.manual-cb');
+      const newAssignments = [];
+
+      checkboxes.forEach(cb => {
+        if (!cb.checked) return;
+        const name = cb.dataset.name;
+        const roleSelect = overlay.querySelector(`.manual-role-select[data-name="${CSS.escape(name)}"]`);
+        const role = roleSelect ? roleSelect.value : 'member';
+        newAssignments.push({
+          shift_id: shiftId,
+          name,
+          role,
+          is_manual: true,
+          assigned_at: new Date().toISOString()
+        });
+      });
+
+      showLoading();
+      try {
+        // Clear ALL existing assignments for this shift (both manual and auto)
+        await callAppsScript({ action: 'clearRosterAssignments', shiftIds: [shiftId], clearManual: true });
+
+        // Save the new manual assignments
+        if (newAssignments.length > 0) {
+          await callAppsScript({ action: 'saveRosterAssignments', assignments: newAssignments });
+        }
+
+        showToast(`שובצו ${newAssignments.length} אנשים ידנית`, 'success');
+        close();
+        await refreshView();
+      } catch (err) {
+        // toast shown
+      } finally {
+        hideLoading();
+      }
+    });
+
+    overlay.querySelector('#modalManualCancel').addEventListener('click', close);
+  }
+
+  function promptCreateShifts() {
+    const today = formatDateStr(currentDate);
+    const { overlay, close } = createModal('יצירת משמרות מתבנית', `
+      <div class="form-group">
+        <label class="form-label">תאריך התחלה</label>
+        <input type="date" class="form-input" id="modalStartDate" value="${today}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">תאריך סיום</label>
+        <input type="date" class="form-input" id="modalEndDate" value="${today}">
+      </div>
+      <div class="form-hint">ייווצרו משמרות לפי התבנית המוגדרת בהגדרות (${shiftTemplates.length} משמרות ליום)</div>
+    `, `
+      <button class="btn btn--filled" id="modalCreateBtn">צור משמרות</button>
+      <button class="btn" id="modalCancelBtn">ביטול</button>
+    `);
+
+    overlay.querySelector('#modalCreateBtn').addEventListener('click', async () => {
+      const start = overlay.querySelector('#modalStartDate').value;
+      const end = overlay.querySelector('#modalEndDate').value;
+      if (!start || !end) { showToast('יש לבחור תאריכים', 'error'); return; }
+      if (start > end) { showToast('תאריך התחלה חייב להיות לפני תאריך סיום', 'error'); return; }
+      close();
+      await createShiftsFromTemplate(start, end);
+    });
+    overlay.querySelector('#modalCancelBtn').addEventListener('click', close);
+  }
+
+  // ===================== CONFIG MODAL =====================
+
+  function openConfigModal() {
+    let activeTab = 'missions';
+
+    function renderConfigBody() {
+      return `
+        <div class="tabs" id="configTabs">
+          <button class="tabs__tab ${activeTab === 'missions' ? 'tabs__tab--active' : ''}" data-tab="missions">סוגי משימות</button>
+          <button class="tabs__tab ${activeTab === 'tags' ? 'tabs__tab--active' : ''}" data-tab="tags">תגיות כוח אדם</button>
+          <button class="tabs__tab ${activeTab === 'exclusions' ? 'tabs__tab--active' : ''}" data-tab="exclusions">פטורים</button>
+          <button class="tabs__tab ${activeTab === 'buddies' ? 'tabs__tab--active' : ''}" data-tab="buddies">כללי זוגות</button>
+          <button class="tabs__tab ${activeTab === 'params' ? 'tabs__tab--active' : ''}" data-tab="params">פרמטרים</button>
+          <button class="tabs__tab ${activeTab === 'templates' ? 'tabs__tab--active' : ''}" data-tab="templates">תבנית משמרות</button>
+        </div>
+
+        <div class="tab-panel ${activeTab === 'missions' ? 'tab-panel--active' : ''}" id="panelMissions">
+          ${renderMissionTypesPanel()}
+        </div>
+        <div class="tab-panel ${activeTab === 'tags' ? 'tab-panel--active' : ''}" id="panelTags">
+          ${renderPersonnelTagsPanel()}
+        </div>
+        <div class="tab-panel ${activeTab === 'exclusions' ? 'tab-panel--active' : ''}" id="panelExclusions">
+          ${renderExclusionsPanel()}
+        </div>
+        <div class="tab-panel ${activeTab === 'buddies' ? 'tab-panel--active' : ''}" id="panelBuddies">
+          ${renderBuddyRulesPanel()}
+        </div>
+        <div class="tab-panel ${activeTab === 'params' ? 'tab-panel--active' : ''}" id="panelParams">
+          ${renderSchedulingParamsPanel()}
+        </div>
+        <div class="tab-panel ${activeTab === 'templates' ? 'tab-panel--active' : ''}" id="panelTemplates">
+          ${renderShiftTemplatesPanel()}
+        </div>
+      `;
+    }
+
+    const { overlay, close } = createModal('הגדרות שבצ״ק', renderConfigBody(), `
+      <button class="btn btn--filled" id="configSave">שמור הגדרות</button>
+      <button class="btn" id="configClose">סגור</button>
+    `);
+
+    function rebindTabs() {
+      overlay.querySelectorAll('.tabs__tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          activeTab = tab.dataset.tab;
+          overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+          rebindTabs();
+          rebindPanels();
+        });
+      });
+    }
+
+    function rebindPanels() {
+      // Mission type add button
+      const addMtBtn = overlay.querySelector('#addMissionType');
+      if (addMtBtn) {
+        addMtBtn.addEventListener('click', () => {
+          const name = overlay.querySelector('#newMtName').value.trim();
+          const dur = parseInt(overlay.querySelector('#newMtDuration').value) || 8;
+          const team = parseInt(overlay.querySelector('#newMtTeam').value) || 1;
+          const color = overlay.querySelector('#newMtColor').value;
+          if (!name) { showToast('יש להזין שם משימה', 'error'); return; }
+          const id = name.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now();
+          missionTypes.push({ id, name, duration_hours: dur, min_team: team, requires_commander: false, requires_driver: false, color });
+          overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+          rebindTabs();
+          rebindPanels();
+        });
+      }
+
+      // Delete mission type buttons
+      overlay.querySelectorAll('.delete-mt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          missionTypes = missionTypes.filter(m => m.id !== id);
+          overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+          rebindTabs();
+          rebindPanels();
+        });
+      });
+
+      // Toggle checkboxes for commander/driver
+      overlay.querySelectorAll('.mt-toggle').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const id = cb.dataset.id;
+          const field = cb.dataset.field;
+          const mt = missionTypes.find(m => m.id === id);
+          if (mt) mt[field] = cb.checked;
+        });
+      });
+
+      // Personnel tag checkboxes
+      overlay.querySelectorAll('.tag-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const name = cb.dataset.name;
+          const tag = cb.dataset.tag;
+          if (!personnelTags[name]) personnelTags[name] = [];
+          if (cb.checked) {
+            if (!personnelTags[name].includes(tag)) personnelTags[name].push(tag);
+          } else {
+            personnelTags[name] = personnelTags[name].filter(t => t !== tag);
+          }
+        });
+      });
+
+      // Exclusion checkboxes
+      overlay.querySelectorAll('.excl-cb').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const name = cb.dataset.name;
+          const mt = cb.dataset.mt;
+          if (!exclusions[name]) exclusions[name] = [];
+          if (cb.checked) {
+            if (!exclusions[name].includes(mt)) exclusions[name].push(mt);
+          } else {
+            exclusions[name] = exclusions[name].filter(m => m !== mt);
+          }
+        });
+      });
+
+      // Buddy rule add
+      const addBuddyBtn = overlay.querySelector('#addBuddyRule');
+      if (addBuddyBtn) {
+        addBuddyBtn.addEventListener('click', () => {
+          const type = overlay.querySelector('#buddyType').value;
+          const p1 = overlay.querySelector('#buddyPerson1').value;
+          const p2 = overlay.querySelector('#buddyPerson2').value;
+          if (!p1 || !p2 || p1 === p2) { showToast('יש לבחור שני אנשים שונים', 'error'); return; }
+          buddyRules.push({ type, person1: p1, person2: p2 });
+          overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+          rebindTabs();
+          rebindPanels();
+        });
+      }
+
+      // Delete buddy rule
+      overlay.querySelectorAll('.delete-buddy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          buddyRules.splice(idx, 1);
+          overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+          rebindTabs();
+          rebindPanels();
+        });
+      });
+
+      // Scheduling params inputs
+      overlay.querySelectorAll('.param-input').forEach(input => {
+        input.addEventListener('change', () => {
+          const key = input.dataset.key;
+          schedulingParams[key] = isNaN(input.value) ? input.value : Number(input.value);
+        });
+      });
+
+      // Scheduling params toggle (consecutive limit)
+      overlay.querySelectorAll('.param-toggle').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const key = cb.dataset.key;
+          schedulingParams[key] = cb.checked;
+          // Enable/disable the related number input
+          const numInput = overlay.querySelector('.param-input[data-key="max_consecutive_days"]');
+          if (numInput) numInput.disabled = !cb.checked;
+        });
+      });
+
+      // Template add
+      const addTplBtn = overlay.querySelector('#addTemplate');
+      if (addTplBtn) {
+        addTplBtn.addEventListener('click', () => {
+          const mt = overlay.querySelector('#tplMissionType').value;
+          const start = overlay.querySelector('#tplStart').value || '08:00';
+          const end = overlay.querySelector('#tplEnd').value || '16:00';
+          shiftTemplates.push({ mission_type: mt, start_time: start, end_time: end });
+          overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+          rebindTabs();
+          rebindPanels();
+        });
+      }
+
+      // Delete template
+      overlay.querySelectorAll('.delete-tpl').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          shiftTemplates.splice(idx, 1);
+          overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+          rebindTabs();
+          rebindPanels();
+        });
+      });
+    }
+
+    rebindTabs();
+    rebindPanels();
+
+    overlay.querySelector('#configSave').addEventListener('click', async () => {
+      showLoading();
+      try {
+        await saveConfigKey('mission_types', missionTypes);
+        await saveConfigKey('personnel_tags', personnelTags);
+        await saveConfigKey('exclusions', exclusions);
+        await saveConfigKey('buddy_rules', buddyRules);
+        await saveConfigKey('scheduling_params', schedulingParams);
+        await saveConfigKey('shift_templates', shiftTemplates);
+        showToast('ההגדרות נשמרו בהצלחה', 'success');
+        close();
+      } catch (err) {} finally { hideLoading(); }
+    });
+    overlay.querySelector('#configClose').addEventListener('click', close);
+  }
+
+  function renderMissionTypesPanel() {
+    let html = '<div class="item-list">';
+    missionTypes.forEach(mt => {
+      html += `<div class="item-row">
+        <span class="item-row__dot" style="background:${mt.color}"></span>
+        <span class="item-row__name">${escapeHtml(mt.name)}</span>
+        <span class="item-row__detail">${mt.duration_hours}ש | ${mt.min_team} אנשים</span>
+        <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_officer" ${mt.requires_officer ? 'checked' : ''}> קצין חובה</label>
+        <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_commander" ${mt.requires_commander ? 'checked' : ''}> מפקד</label>
+        <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_driver" ${mt.requires_driver ? 'checked' : ''}> נהג</label>
+        <div class="item-row__actions">
+          <button class="item-row__btn delete-mt" data-id="${mt.id}" title="מחק">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+
+    html += `<div style="margin-top:1rem;padding:0.75rem;background:rgba(0,0,0,0.02);border-radius:8px;">
+      <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.5rem;">הוסף סוג משימה</div>
+      <div class="form-row">
+        <div class="form-group"><input class="form-input" id="newMtName" placeholder="שם (למשל: סיור)"></div>
+        <div class="form-group"><input class="form-input" id="newMtDuration" type="number" value="8" placeholder="שעות"></div>
+        <div class="form-group"><input class="form-input" id="newMtTeam" type="number" value="1" placeholder="מינ׳ אנשים"></div>
+        <div class="form-group"><input class="form-input" id="newMtColor" type="color" value="#2563eb"></div>
+      </div>
+      <button class="btn btn--sm btn--primary" id="addMissionType">הוסף</button>
+    </div>`;
+
+    return html;
+  }
+
+  function renderPersonnelTagsPanel() {
+    const names = calendarData ? calendarData.names : [];
+    if (names.length === 0) return '<div class="form-hint">טען נתוני לוח שנה תחילה</div>';
+
+    const tags = ['officer', 'commander', 'driver'];
+    const tagLabels = { officer: 'קצין (תמיד מפקד)', commander: 'מפקד', driver: 'נהג' };
+
+    let html = '<table class="fairness-table"><thead><tr><th>שם</th>';
+    tags.forEach(t => { html += `<th style="text-align:center;">${tagLabels[t]}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    names.forEach(name => {
+      const pTags = personnelTags[name] || [];
+      html += `<tr><td style="font-weight:500;">${escapeHtml(name)}</td>`;
+      tags.forEach(t => {
+        const checked = pTags.includes(t) ? 'checked' : '';
+        html += `<td style="text-align:center;"><input type="checkbox" class="tag-cb" data-name="${escapeHtml(name)}" data-tag="${t}" ${checked}></td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function renderExclusionsPanel() {
+    const names = calendarData ? calendarData.names : [];
+    if (names.length === 0) return '<div class="form-hint">טען נתוני לוח שנה תחילה</div>';
+
+    let html = '<table class="fairness-table"><thead><tr><th>שם</th>';
+    missionTypes.forEach(mt => { html += `<th style="text-align:center;">${escapeHtml(mt.name)}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    names.forEach(name => {
+      const excl = exclusions[name] || [];
+      html += `<tr><td style="font-weight:500;">${escapeHtml(name)}</td>`;
+      missionTypes.forEach(mt => {
+        const checked = excl.includes(mt.id) ? 'checked' : '';
+        html += `<td style="text-align:center;"><input type="checkbox" class="excl-cb" data-name="${escapeHtml(name)}" data-mt="${mt.id}" ${checked}></td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    return html;
+  }
+
+  function renderBuddyRulesPanel() {
+    const names = calendarData ? calendarData.names : [];
+
+    let html = '<div class="item-list">';
+    buddyRules.forEach((rule, idx) => {
+      const typeLabel = rule.type === 'must' ? 'חייב יחד' : 'אסור יחד';
+      const color = rule.type === 'must' ? 'var(--clr-activity)' : 'var(--clr-danger)';
+      html += `<div class="item-row">
+        <span style="font-size:0.78rem;font-weight:600;color:${color};">${typeLabel}</span>
+        <span class="item-row__name">${escapeHtml(rule.person1)} ↔ ${escapeHtml(rule.person2)}</span>
+        <button class="item-row__btn delete-buddy" data-idx="${idx}" title="מחק">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>`;
+    });
+    html += '</div>';
+
+    if (names.length > 0) {
+      const nameOptions = names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+      html += `<div style="margin-top:1rem;padding:0.75rem;background:rgba(0,0,0,0.02);border-radius:8px;">
+        <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.5rem;">הוסף כלל</div>
+        <div class="form-row">
+          <div class="form-group">
+            <select class="form-select" id="buddyType">
+              <option value="must">חייב יחד</option>
+              <option value="must_not">אסור יחד</option>
+            </select>
+          </div>
+          <div class="form-group"><select class="form-select" id="buddyPerson1"><option value="">בחר אדם</option>${nameOptions}</select></div>
+          <div class="form-group"><select class="form-select" id="buddyPerson2"><option value="">בחר אדם</option>${nameOptions}</select></div>
+        </div>
+        <button class="btn btn--sm btn--primary" id="addBuddyRule">הוסף</button>
+      </div>`;
+    }
+
+    return html;
+  }
+
+  function renderSchedulingParamsPanel() {
+    const checked = schedulingParams.enforce_consecutive_limit ? 'checked' : '';
+    return `
+      <div class="form-group">
+        <label class="form-label">שעות מנוחה מינימליות בין משמרות</label>
+        <input class="form-input param-input" data-key="min_rest_hours" type="number" value="${schedulingParams.min_rest_hours}" style="max-width:200px;">
+        <div class="form-hint">מספר שעות מנוחה מינימלי בין סיום משמרת לתחילת הבאה</div>
+      </div>
+      <div style="margin-top:1rem;padding:0.75rem;background:rgba(0,0,0,0.02);border-radius:8px;">
+        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.88rem;font-weight:500;cursor:pointer;">
+          <input type="checkbox" class="param-toggle" data-key="enforce_consecutive_limit" ${checked}>
+          הגבלת ימים רצופים
+        </label>
+        <div class="form-hint" style="margin-top:0.25rem;">כשמופעל, השיבוץ מעדיף לתת הפסקה לאנשים שעבדו ימים רבים ברצף. מתאפס כשאדם יוצא הביתה.</div>
+        <div style="margin-top:0.5rem;">
+          <label class="form-label">מקסימום ימים רצופים</label>
+          <input class="form-input param-input" data-key="max_consecutive_days" type="number" value="${schedulingParams.max_consecutive_days}" style="max-width:200px;" ${checked ? '' : 'disabled'}>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderShiftTemplatesPanel() {
+    let html = '<div class="item-list">';
+    shiftTemplates.forEach((tpl, idx) => {
+      const mt = getMissionType(tpl.mission_type);
+      const mtName = mt ? mt.name : tpl.mission_type;
+      const color = mt ? mt.color : '#888';
+      const timeLabel = tpl.start_time === tpl.end_time ? 'יום שלם' : `${tpl.start_time}-${tpl.end_time}`;
+      html += `<div class="item-row">
+        <span class="item-row__dot" style="background:${color}"></span>
+        <span class="item-row__name">${escapeHtml(mtName)}</span>
+        <span class="item-row__detail">${timeLabel}</span>
+        <button class="item-row__btn delete-tpl" data-idx="${idx}" title="מחק">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>`;
+    });
+    html += '</div>';
+
+    const mtOptions = missionTypes.map(mt => `<option value="${mt.id}">${escapeHtml(mt.name)}</option>`).join('');
+    html += `<div style="margin-top:1rem;padding:0.75rem;background:rgba(0,0,0,0.02);border-radius:8px;">
+      <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.5rem;">הוסף למשמרת לתבנית</div>
+      <div class="form-row">
+        <div class="form-group"><select class="form-select" id="tplMissionType">${mtOptions}</select></div>
+        <div class="form-group"><input class="form-input" id="tplStart" type="time" value="08:00"></div>
+        <div class="form-group"><input class="form-input" id="tplEnd" type="time" value="16:00"></div>
+      </div>
+      <button class="btn btn--sm btn--primary" id="addTemplate">הוסף</button>
+    </div>`;
+
+    return html;
+  }
+
+  // ===================== FAIRNESS MODAL =====================
+
+  function openFairnessModal() {
+    // Aggregate assignment data
+    const personStats = {};
+    if (calendarData) {
+      calendarData.names.forEach(name => {
+        personStats[name] = { totalHours: 0, missions: {} };
+        missionTypes.forEach(mt => { personStats[name].missions[mt.id] = 0; });
+      });
+    }
+
+    shifts.forEach(s => {
+      (s.assignments || []).forEach(a => {
+        if (!personStats[a.name]) {
+          personStats[a.name] = { totalHours: 0, missions: {} };
+          missionTypes.forEach(mt => { personStats[a.name].missions[mt.id] = 0; });
+        }
+        const dur = s.start_time === s.end_time ? 24 : shiftDurationHours(s.start_time, s.end_time);
+        personStats[a.name].totalHours += dur;
+        personStats[a.name].missions[s.mission_type] = (personStats[a.name].missions[s.mission_type] || 0) + 1;
+      });
+    });
+
+    const maxHours = Math.max(1, ...Object.values(personStats).map(p => p.totalHours));
+
+    let tableHtml = '<table class="fairness-table"><thead><tr><th>שם</th><th>סה״כ שעות</th>';
+    missionTypes.forEach(mt => { tableHtml += `<th>${escapeHtml(mt.name)}</th>`; });
+    tableHtml += '<th>חלוקה</th></tr></thead><tbody>';
+
+    const sortedNames = Object.keys(personStats).sort((a, b) => personStats[b].totalHours - personStats[a].totalHours);
+
+    sortedNames.forEach(name => {
+      const p = personStats[name];
+      if (p.totalHours === 0) return;
+      const barWidth = Math.round((p.totalHours / maxHours) * 100);
+      tableHtml += `<tr>
+        <td style="font-weight:500;">${escapeHtml(name)}</td>
+        <td>${p.totalHours}</td>`;
+      missionTypes.forEach(mt => {
+        tableHtml += `<td>${p.missions[mt.id] || 0}</td>`;
+      });
+      tableHtml += `<td class="fairness-bar-cell"><div class="fairness-bar" style="width:${barWidth}%;"></div></td>
+      </tr>`;
+    });
+
+    tableHtml += '</tbody></table>';
+
+    if (sortedNames.length === 0 || Object.values(personStats).every(p => p.totalHours === 0)) {
+      tableHtml = '<div class="empty-state"><div class="empty-state__icon">📊</div><div class="empty-state__text">אין נתוני שיבוץ להצגה</div></div>';
+    }
+
+    createModal('לוח הוגנות', `<div style="overflow-x:auto;">${tableHtml}</div>`, '');
+  }
+
+  // ===================== DATE NAVIGATION =====================
+
+  function updateDateDisplay() {
+    const label = document.getElementById('dateLabel');
+    const subtitle = document.getElementById('headerSubtitle');
+
+    if (currentView === 'day') {
+      label.textContent = formatDateHebrew(currentDate);
+      subtitle.textContent = formatDateStr(currentDate);
+    } else {
+      const weekDates = getWeekDates(currentDate);
+      const startStr = `${weekDates[0].getDate()}/${weekDates[0].getMonth() + 1}`;
+      const endStr = `${weekDates[6].getDate()}/${weekDates[6].getMonth() + 1}`;
+      label.textContent = `${startStr} — ${endStr}`;
+      subtitle.textContent = `שבוע: ${formatDateStr(weekDates[0])} עד ${formatDateStr(weekDates[6])}`;
+    }
+  }
+
+  // ===================== HELP MODAL =====================
+
+  function openHelpModal() {
+    const helpHtml = `
+      <div style="font-size:0.88rem;line-height:1.8;color:var(--clr-text);">
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin-bottom:0.5rem;color:var(--clr-accent);">מה זה שבצ״ק?</h3>
+        <p>שבצ״ק הוא מערכת שיבוץ משמרות למחלקה. המערכת מחוברת ישירות ללוח השנה (לוח הפעילויות) — היא יודעת מי נמצא במוצב ומי בבית בכל יום, ומשבצת אנשים למשמרות בהתאם.</p>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">חיבור ללוח השנה</h3>
+        <p>המערכת קוראת את נתוני הנוכחות מהגיליון (סטטוס "במוצב" / "בבית" לכל אדם בכל יום). רק אנשים שנמצאים <strong>במוצב</strong> באותו יום זמינים לשיבוץ. אם אדם יוצא הביתה — הוא לא יופיע כזמין, וספירת הימים הרצופים שלו מתאפסת.</p>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">תהליך עבודה מומלץ</h3>
+        <ol style="padding-right:1.2rem;">
+          <li><strong>יצירת משמרות</strong> — בחרו טווח תאריכים ולחצו "צור משמרות מתבנית". זה יוצר את כל המשמרות (סיורים, שמירות, מטבח, כח כונן) לפי התבנית שהגדרתם.</li>
+          <li><strong>שיבוץ ידני (אופציונלי)</strong> — לחצו על אייקון האנשים (👥) במשמרת כדי לקבע אנשים ידנית. שיבוץ ידני מסומן ב-📌 ולא ישתנה.</li>
+          <li><strong>שיבוץ אוטומטי</strong> — לחצו "שיבוץ אוטומטי". המערכת תמלא את כל המשמרות הפנויות תוך שמירה על הוגנות ואילוצים.</li>
+          <li><strong>בדיקה ותיקון</strong> — בדקו התראות, הוגנות, ותקנו ידנית לפי הצורך.</li>
+          <li><strong>ייצוא</strong> — לחצו "ייצוא PDF" כדי להדפיס את השבצ״ק ולתלות על הלוח.</li>
+        </ol>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">סוגי משימות</h3>
+        <p>כל סוג משימה מוגדר עם: שם, צבע, משך, מינימום אנשים, ודרישות תפקיד. ניתן להוסיף, לערוך ולמחוק סוגי משימות בהגדרות. דרישות התפקיד:</p>
+        <ul style="padding-right:1.2rem;">
+          <li><strong>קצין חובה</strong> — המשימה דורשת קצין ספציפית (לא מפקד רגיל). אם אין קצין זמין — תופיע התראה.</li>
+          <li><strong>מפקד</strong> — המשימה דורשת מפקד. קצין מקבל עדיפות, אך גם מפקד רגיל יכול למלא את התפקיד.</li>
+          <li><strong>נהג</strong> — המשימה דורשת נהג מתויג.</li>
+        </ul>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">תפקידים ותגיות</h3>
+        <table style="width:100%;border-collapse:collapse;margin:0.5rem 0;font-size:0.82rem;">
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">קצין</td>
+            <td style="padding:0.4rem 0.6rem;">תמיד משובץ כמפקד. לא ישמש כחייל רגיל או נהג — תמיד בתפקיד פיקוד.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">מפקד</td>
+            <td style="padding:0.4rem 0.6rem;">מועדף לתפקיד מפקד במשמרות שדורשות מפקד. אם יש מספיק אנשים — יכול לשמש גם כחייל רגיל או נהג.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">נהג</td>
+            <td style="padding:0.4rem 0.6rem;">מועדף לתפקיד נהג. אם יש מספיק נהגים — יכול לשמש גם כחייל רגיל.</td>
+          </tr>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">חייל</td>
+            <td style="padding:0.4rem 0.6rem;">תפקיד ברירת מחדל לכל מי שלא מתויג אחרת.</td>
+          </tr>
+        </table>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">שיבוץ ידני (📌)</h3>
+        <p>לחצו על אייקון האנשים (👥) במשמרת כלשהי. בחרו אנשים וקבעו להם תפקיד. שיבוץ ידני הוא <strong>נעול</strong>:</p>
+        <ul style="padding-right:1.2rem;">
+          <li>השיבוץ האוטומטי <strong>לא ישנה</strong> אותו</li>
+          <li>אותו אדם <strong>לא ישובץ</strong> למשמרת אחרת שחופפת בזמן</li>
+          <li>מסומן ב-📌 בכרטיס המשמרת</li>
+        </ul>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">איך עובד השיבוץ האוטומטי?</h3>
+        <p>המערכת ממלאת את המשמרות בצורה חכמה:</p>
+        <ol style="padding-right:1.2rem;">
+          <li><strong>זמינות</strong> — רק אנשים שנמצאים במוצב (לפי לוח השנה) זמינים לשיבוץ.</li>
+          <li><strong>אילוצים קשיחים</strong> — המערכת לא תשבץ אדם אם:
+            <ul style="padding-right:1rem;">
+              <li>הוא כבר משובץ למשמרת חופפת באותו יום</li>
+              <li>הוא פטור מסוג המשימה הזה (פטורים בהגדרות)</li>
+              <li>לא עברו מספיק שעות מנוחה מאז המשמרת הקודמת שלו</li>
+              <li>יש כלל "אסור יחד" עם אדם שכבר משובץ</li>
+            </ul>
+          </li>
+          <li><strong>ניקוד הוגנות</strong> — מבין הזמינים, המערכת מעדיפה:
+            <ul style="padding-right:1rem;">
+              <li>אנשים עם פחות שעות שיבוץ כוללות (הוגנות)</li>
+              <li>אנשים שלא עשו את המשימה הזו לאחרונה (גיוון)</li>
+              <li>אנשים עם כלל "חייב יחד" שהשותף שלהם גם זמין</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">הגבלת ימים רצופים (אופציונלי)</h3>
+        <p>ניתן להפעיל בהגדרות → פרמטרים. כשמופעל, המערכת מעדיפה לתת הפסקה לאנשים שעבדו ימים רבים ברצף. הספירה <strong>מתאפסת</strong> כשאדם יוצא הביתה.</p>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">הגדרות נוספות (⚙)</h3>
+        <table style="width:100%;border-collapse:collapse;margin:0.5rem 0;font-size:0.82rem;">
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">סוגי משימות</td>
+            <td style="padding:0.4rem 0.6rem;">הוספה, עריכה ומחיקה של סוגי משמרות (סיור, שמירה, מטבח וכו׳).</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">תגיות כוח אדם</td>
+            <td style="padding:0.4rem 0.6rem;">סימון אנשים כקצין, מפקד או נהג.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">פטורים</td>
+            <td style="padding:0.4rem 0.6rem;">פטור אדם מסוג משימה מסוים (למשל: פטור ממטבח).</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">כללי זוגות</td>
+            <td style="padding:0.4rem 0.6rem;">"חייב יחד" — שני אנשים משובצים יחד. "אסור יחד" — לא ישובצו לאותה משמרת.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">פרמטרים</td>
+            <td style="padding:0.4rem 0.6rem;">שעות מנוחה מינימליות והגבלת ימים רצופים.</td>
+          </tr>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">תבנית משמרות</td>
+            <td style="padding:0.4rem 0.6rem;">הגדרת המשמרות שנוצרות בכל יום (סוג, שעת התחלה וסיום).</td>
+          </tr>
+        </table>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">כפתורים</h3>
+        <table style="width:100%;border-collapse:collapse;margin:0.5rem 0;font-size:0.82rem;">
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">⚙ הגדרות</td>
+            <td style="padding:0.4rem 0.6rem;">פתיחת חלון ההגדרות.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">שיבוץ אוטומטי</td>
+            <td style="padding:0.4rem 0.6rem;">הפעלת השיבוץ החכם ליום / שבוע הנוכחי.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">הוגנות</td>
+            <td style="padding:0.4rem 0.6rem;">טבלת חלוקת שעות ומשימות לכל אדם.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">התראות</td>
+            <td style="padding:0.4rem 0.6rem;">רשימת בעיות: משמרות חסרות אנשים, חסר מפקד/נהג.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">ייצוא PDF</td>
+            <td style="padding:0.4rem 0.6rem;">פתיחת השבצ״ק בחלון הדפסה לשמירה כ-PDF או הדפסה.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">מחק יום</td>
+            <td style="padding:0.4rem 0.6rem;">מחיקת כל המשמרות של היום (כולל שיבוצים). אפשר ליצור מחדש מתבנית.</td>
+          </tr>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">👥 (בכרטיס משמרת)</td>
+            <td style="padding:0.4rem 0.6rem;">שיבוץ ידני — בחירת אנשים ותפקידים ידנית למשמרת.</td>
+          </tr>
+        </table>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">תצוגות</h3>
+        <p><strong>תצוגת יום</strong> — כרטיסי משמרות מפורטים עם שמות, תפקידים והערות.<br>
+        <strong>תצוגת שבוע</strong> — תצוגת גאנט (ציר זמן) שמראה את כל המשמרות של השבוע בטבלה.</p>
+
+        <div style="margin-top:1.5rem;padding:0.75rem;background:var(--clr-accent-bg);border-radius:8px;font-size:0.82rem;">
+          <strong>טיפ:</strong> לחצו על התאריך בסרגל העליון כדי לפתוח בורר תאריכים ולקפוץ ליום ספציפי.
+        </div>
+      </div>
+    `;
+
+    createModal('עזרה — מערכת שבצ״ק', helpHtml, '');
+  }
+
+  function navigateDate(delta) {
+    if (currentView === 'day') {
+      currentDate.setDate(currentDate.getDate() + delta);
+    } else {
+      currentDate.setDate(currentDate.getDate() + delta * 7);
+    }
+    updateDateDisplay();
+    refreshView();
+  }
+
+  // ===================== VIEW REFRESH =====================
+
+  async function refreshView() {
+    let startDate, endDate;
+    if (currentView === 'day') {
+      startDate = endDate = formatDateStr(currentDate);
+    } else {
+      const weekDates = getWeekDates(currentDate);
+      startDate = formatDateStr(weekDates[0]);
+      endDate = formatDateStr(weekDates[6]);
+    }
+
+    shifts = await loadShifts(startDate, endDate);
+
+    if (currentView === 'day') {
+      renderDayView();
+    } else {
+      renderWeekView();
+    }
+  }
+
+  // ===================== DELETE CURRENT DAY =====================
+
+  async function deleteCurrentDay() {
+    const dateStr = formatDateStr(currentDate);
+    const dayShifts = shifts.filter(s => s.date === dateStr);
+
+    if (dayShifts.length === 0) {
+      showToast('אין משמרות למחיקה ביום זה', 'info');
+      return;
+    }
+
+    if (!confirm(`למחוק את כל ${dayShifts.length} המשמרות של ${formatDateHebrew(currentDate)}?`)) return;
+
+    showLoading();
+    try {
+      const ids = dayShifts.map(s => s.id);
+      await callAppsScript({ action: 'deleteRosterShifts', ids });
+      showToast(`נמחקו ${ids.length} משמרות`, 'success');
+      await refreshView();
+    } catch (err) {
+      // toast shown
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // ===================== PDF EXPORT =====================
+
+  function exportPdf() {
+    const dateStr = formatDateStr(currentDate);
+    const dayShifts = shifts.filter(s => s.date === dateStr);
+
+    if (dayShifts.length === 0) {
+      showToast('אין משמרות לייצוא ביום זה', 'info');
+      return;
+    }
+
+    sortShiftsByTypeAndTime(dayShifts);
+
+    const dateLabel = formatDateHebrew(currentDate);
+
+    let html = `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>שבצ״ק — ${dateLabel}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Frank+Ruhl+Libre:wght@700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Heebo', sans-serif; padding: 2rem; color: #1a1612; direction: rtl; }
+  h1 { font-family: 'Frank Ruhl Libre', serif; font-size: 1.8rem; text-align: center; margin-bottom: 0.25rem; }
+  .subtitle { text-align: center; font-size: 1rem; color: #6b5e52; margin-bottom: 1.5rem; }
+  .line { width: 60px; height: 3px; background: linear-gradient(90deg, #7c3aed, #2563eb); border-radius: 3px; margin: 0.5rem auto 1.5rem; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  th { background: #f5f1ec; padding: 0.6rem 0.8rem; text-align: right; font-weight: 700; font-size: 0.85rem; border: 1px solid #e8e2da; }
+  td { padding: 0.5rem 0.8rem; border: 1px solid #e8e2da; font-size: 0.85rem; vertical-align: top; }
+  .mission-header { background: #faf8f5; font-weight: 700; font-size: 0.95rem; }
+  .mission-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 0.4rem; vertical-align: middle; }
+  .role-badge { display: inline-block; font-size: 0.72rem; padding: 0.1rem 0.4rem; border-radius: 4px; background: #f0edf5; color: #5b21b6; margin-right: 0.3rem; }
+  .note-row td { background: #fef9c3; font-size: 0.8rem; color: #92400e; font-style: italic; }
+  .footer { text-align: center; font-size: 0.75rem; color: #9c8f82; margin-top: 2rem; border-top: 1px solid #e8e2da; padding-top: 0.75rem; }
+  @media print { body { padding: 1rem; } }
+</style>
+</head>
+<body>
+<h1>שבצ״ק — פלוגה ב</h1>
+<div class="subtitle">${escapeHtml(dateLabel)} | ${dateStr}</div>
+<div class="line"></div>
+<table>
+<thead>
+  <tr>
+    <th style="width:20%;">משימה</th>
+    <th style="width:20%;white-space:nowrap;">שעות</th>
+    <th style="width:60%;">משובצים</th>
+  </tr>
+</thead>
+<tbody>`;
+
+    dayShifts.forEach(shift => {
+      const mt = getMissionType(shift.mission_type);
+      const mtName = mt ? mt.name : shift.mission_type;
+      const color = mt ? mt.color : '#888';
+      const minTeam = mt ? mt.min_team : 1;
+      const assigned = shift.assignments || [];
+      const count = assigned.length;
+      const timeLabel = shift.start_time === shift.end_time ? 'יום שלם' : `${shift.start_time} — ${shift.end_time}`;
+      const statusText = count >= minTeam ? `✓ ${count}/${minTeam}` : `✗ ${count}/${minTeam}`;
+
+      const peopleHtml = assigned.length > 0
+        ? assigned.map(a => {
+            const roleLabel = ROLE_LABELS[a.role] || '';
+            const badge = a.role !== 'member' ? `<span class="role-badge">${roleLabel}</span>` : '';
+            const pin = a.is_manual === 'TRUE' ? ' 📌' : '';
+            return `${escapeHtml(a.name)}${badge}${pin}`;
+          }).join('<br>')
+        : '<span style="color:#9c8f82;">—</span>';
+
+      html += `
+  <tr>
+    <td class="mission-header"><span class="mission-dot" style="background:${color};"></span>${escapeHtml(mtName)}</td>
+    <td style="direction:ltr;text-align:center;white-space:nowrap;">${timeLabel}</td>
+    <td>${peopleHtml}</td>
+  </tr>`;
+
+      if (shift.note) {
+        html += `<tr class="note-row"><td colspan="3">📝 ${escapeHtml(shift.note)}</td></tr>`;
+      }
+    });
+
+    html += `
+</tbody>
+</table>
+<div class="footer">שבצ״ק — פלוגה ב | הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</div>
+</body>
+</html>`;
+
+    // Open in new window for print/save-as-PDF
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(html);
+    printWindow.document.close();
+    // Auto-trigger print dialog after content loads
+    printWindow.onload = () => printWindow.print();
+  }
+
+  // ===================== THEME =====================
+
+  function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }
+
+  function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem('theme', 'dark');
+    }
+  }
+
+  // ===================== INIT =====================
+
+  async function init() {
+    initTheme();
+
+    // Set initial date to today if in range, else to DATE_START
+    const today = new Date();
+    const rangeStart = parseDateStr(DATE_START);
+    const rangeEnd = parseDateStr(DATE_END);
+    if (today >= rangeStart && today <= rangeEnd) {
+      currentDate = today;
+    } else {
+      currentDate = rangeStart;
+    }
+
+    updateDateDisplay();
+
+    // Wire up controls
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('btnPrevDay').addEventListener('click', () => navigateDate(-1));
+    document.getElementById('btnNextDay').addEventListener('click', () => navigateDate(1));
+    document.getElementById('btnConfig').addEventListener('click', openConfigModal);
+    document.getElementById('btnGenerate').addEventListener('click', runAutoSchedule);
+    document.getElementById('btnFairness').addEventListener('click', openFairnessModal);
+
+    document.getElementById('btnHelp').addEventListener('click', openHelpModal);
+    document.getElementById('btnExportPdf').addEventListener('click', exportPdf);
+    document.getElementById('btnDeleteDay').addEventListener('click', deleteCurrentDay);
+
+    document.getElementById('btnAlerts').addEventListener('click', () => {
+      const panel = document.getElementById('alertsPanel');
+      panel.style.display = panel.style.display === 'none' ? '' : 'none';
+      renderAlerts();
+    });
+
+    // View toggle
+    document.getElementById('btnDayView').addEventListener('click', () => {
+      if (currentView === 'day') return;
+      currentView = 'day';
+      document.getElementById('btnDayView').classList.add('view-toggle__btn--active');
+      document.getElementById('btnWeekView').classList.remove('view-toggle__btn--active');
+      updateDateDisplay();
+      refreshView();
+    });
+    document.getElementById('btnWeekView').addEventListener('click', () => {
+      if (currentView === 'week') return;
+      currentView = 'week';
+      document.getElementById('btnWeekView').classList.add('view-toggle__btn--active');
+      document.getElementById('btnDayView').classList.remove('view-toggle__btn--active');
+      updateDateDisplay();
+      refreshView();
+    });
+
+    // Date label click → show date picker
+    document.getElementById('dateLabel').addEventListener('click', () => {
+      const picker = document.getElementById('datePicker');
+      picker.classList.toggle('date-nav__input--visible');
+      picker.value = formatDateStr(currentDate);
+      picker.focus();
+    });
+    document.getElementById('datePicker').addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val) {
+        currentDate = parseDateStr(val);
+        updateDateDisplay();
+        refreshView();
+      }
+      e.target.classList.remove('date-nav__input--visible');
+    });
+
+    // Create shifts button in empty state
+    const createBtn = document.getElementById('btnCreateShifts');
+    if (createBtn) createBtn.addEventListener('click', () => promptCreateShifts());
+
+    // Load data
+    showLoading();
+    try {
+      await Promise.all([loadConfig(), loadCalendarData()]);
+      await refreshView();
+    } catch (err) {
+      showToast('שגיאה בטעינת הנתונים', 'error');
+    } finally {
+      hideLoading();
+    }
+  }
+
+  // Start
+  init();
+
+})();
+</script>
+
+</body>
+</html>

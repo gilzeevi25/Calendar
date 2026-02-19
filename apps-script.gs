@@ -20,6 +20,20 @@ function doPost(e) {
       return handleAddPeople(payload);
     } else if (action === 'getData') {
       return handleGetData();
+    } else if (action === 'getRosterConfig') {
+      return handleGetRosterConfig();
+    } else if (action === 'saveRosterConfig') {
+      return handleSaveRosterConfig(payload);
+    } else if (action === 'getRosterShifts') {
+      return handleGetRosterShifts(payload);
+    } else if (action === 'saveRosterShifts') {
+      return handleSaveRosterShifts(payload);
+    } else if (action === 'deleteRosterShifts') {
+      return handleDeleteRosterShifts(payload);
+    } else if (action === 'saveRosterAssignments') {
+      return handleSaveRosterAssignments(payload);
+    } else if (action === 'clearRosterAssignments') {
+      return handleClearRosterAssignments(payload);
     } else {
       return jsonResponse({ success: false, error: 'Unknown action: ' + action });
     }
@@ -213,6 +227,224 @@ function handleAddPeople(payload) {
     skipped: skipped,
     totalRows: newRows.length
   });
+}
+
+// ---- Roster helpers ----
+
+function getOrCreateSheet(name, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    if (headers && headers.length > 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    }
+  }
+  return sheet;
+}
+
+function formatTime(d) {
+  var hh = String(d.getHours()).padStart(2, '0');
+  var mm = String(d.getMinutes()).padStart(2, '0');
+  return hh + ':' + mm;
+}
+
+function sheetToObjects(sheet) {
+  var data = sheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+  var headers = data[0].map(function(h) { return String(h).trim(); });
+  var rows = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = {};
+    for (var j = 0; j < headers.length; j++) {
+      var val = data[i][j];
+      if (val instanceof Date) {
+        // Google Sheets stores time-only values as Date with year 1899/1900
+        if (val.getFullYear() <= 1900) {
+          val = formatTime(val);
+        } else {
+          val = formatDate(val);
+        }
+      }
+      row[headers[j]] = String(val).trim();
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+
+// ---- Roster Config (key-value store) ----
+
+function handleGetRosterConfig() {
+  var sheet = getOrCreateSheet('roster_config', ['key', 'value']);
+  var rows = sheetToObjects(sheet);
+  var config = {};
+  rows.forEach(function(r) {
+    config[r.key] = r.value;
+  });
+  return jsonResponse({ success: true, config: config });
+}
+
+function handleSaveRosterConfig(payload) {
+  var sheet = getOrCreateSheet('roster_config', ['key', 'value']);
+  var data = sheet.getDataRange().getValues();
+  var key = payload.key;
+  var value = payload.value;
+
+  // Find existing row for this key
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim() === key) {
+      sheet.getRange(i + 1, 2).setValue(value);
+      return jsonResponse({ success: true, action: 'updated', key: key });
+    }
+  }
+  // Insert new row
+  sheet.appendRow([key, value]);
+  return jsonResponse({ success: true, action: 'inserted', key: key });
+}
+
+// ---- Roster Shifts ----
+
+function handleGetRosterShifts(payload) {
+  var shiftSheet = getOrCreateSheet('roster_shifts', ['id', 'date', 'mission_type', 'start_time', 'end_time', 'note']);
+  var assignSheet = getOrCreateSheet('roster_assignments', ['shift_id', 'name', 'role', 'is_manual', 'assigned_at']);
+
+  var shifts = sheetToObjects(shiftSheet);
+  var assignments = sheetToObjects(assignSheet);
+
+  // Optional date range filter
+  if (payload.startDate && payload.endDate) {
+    shifts = shifts.filter(function(s) {
+      return s.date >= payload.startDate && s.date <= payload.endDate;
+    });
+  }
+
+  // Group assignments by shift_id
+  var assignMap = {};
+  assignments.forEach(function(a) {
+    if (!assignMap[a.shift_id]) assignMap[a.shift_id] = [];
+    assignMap[a.shift_id].push(a);
+  });
+
+  // Attach assignments to shifts
+  shifts.forEach(function(s) {
+    s.assignments = assignMap[s.id] || [];
+  });
+
+  return jsonResponse({ success: true, shifts: shifts });
+}
+
+function handleSaveRosterShifts(payload) {
+  var headers = ['id', 'date', 'mission_type', 'start_time', 'end_time', 'note'];
+  var sheet = getOrCreateSheet('roster_shifts', headers);
+  var data = sheet.getDataRange().getValues();
+
+  // Find column indices for time fields (0-based)
+  var startTimeCol = headers.indexOf('start_time') + 1; // 1-based for Sheets
+  var endTimeCol = headers.indexOf('end_time') + 1;
+
+  // Build id -> row index map
+  var idMap = {};
+  for (var i = 1; i < data.length; i++) {
+    idMap[String(data[i][0]).trim()] = i + 1;
+  }
+
+  var shifts = payload.shifts || [];
+  var created = 0, updated = 0;
+
+  shifts.forEach(function(s) {
+    var rowData = [s.id, s.date, s.mission_type, s.start_time, s.end_time, s.note || ''];
+    var existingRow = idMap[s.id];
+    if (existingRow) {
+      sheet.getRange(existingRow, 1, 1, headers.length).setValues([rowData]);
+      // Force time columns to plain text so Sheets doesn't auto-convert to Date
+      sheet.getRange(existingRow, startTimeCol).setNumberFormat('@').setValue(s.start_time);
+      sheet.getRange(existingRow, endTimeCol).setNumberFormat('@').setValue(s.end_time);
+      updated++;
+    } else {
+      var newRow = data.length + created + 1;
+      sheet.appendRow(rowData);
+      // Force time columns to plain text so Sheets doesn't auto-convert to Date
+      sheet.getRange(newRow, startTimeCol).setNumberFormat('@').setValue(s.start_time);
+      sheet.getRange(newRow, endTimeCol).setNumberFormat('@').setValue(s.end_time);
+      created++;
+    }
+  });
+
+  return jsonResponse({ success: true, created: created, updated: updated });
+}
+
+function handleDeleteRosterShifts(payload) {
+  var sheet = getOrCreateSheet('roster_shifts', ['id', 'date', 'mission_type', 'start_time', 'end_time', 'note']);
+  var assignSheet = getOrCreateSheet('roster_assignments', ['shift_id', 'name', 'role', 'is_manual', 'assigned_at']);
+  var ids = payload.ids || [];
+  var idSet = {};
+  ids.forEach(function(id) { idSet[id] = true; });
+
+  // Delete assignments for these shifts
+  var aData = assignSheet.getDataRange().getValues();
+  var aRowsToDelete = [];
+  for (var i = 1; i < aData.length; i++) {
+    if (idSet[String(aData[i][0]).trim()]) aRowsToDelete.push(i + 1);
+  }
+  // Delete from bottom to top to preserve row indices
+  for (var j = aRowsToDelete.length - 1; j >= 0; j--) {
+    assignSheet.deleteRow(aRowsToDelete[j]);
+  }
+
+  // Delete shifts
+  var sData = sheet.getDataRange().getValues();
+  var sRowsToDelete = [];
+  for (var i = 1; i < sData.length; i++) {
+    if (idSet[String(sData[i][0]).trim()]) sRowsToDelete.push(i + 1);
+  }
+  for (var j = sRowsToDelete.length - 1; j >= 0; j--) {
+    sheet.deleteRow(sRowsToDelete[j]);
+  }
+
+  return jsonResponse({ success: true, deletedShifts: sRowsToDelete.length, deletedAssignments: aRowsToDelete.length });
+}
+
+// ---- Roster Assignments ----
+
+function handleSaveRosterAssignments(payload) {
+  var headers = ['shift_id', 'name', 'role', 'is_manual', 'assigned_at'];
+  var sheet = getOrCreateSheet('roster_assignments', headers);
+  var assignments = payload.assignments || [];
+  var now = new Date().toISOString();
+
+  assignments.forEach(function(a) {
+    sheet.appendRow([a.shift_id, a.name, a.role || 'member', a.is_manual ? 'TRUE' : 'FALSE', a.assigned_at || now]);
+  });
+
+  return jsonResponse({ success: true, saved: assignments.length });
+}
+
+function handleClearRosterAssignments(payload) {
+  var sheet = getOrCreateSheet('roster_assignments', ['shift_id', 'name', 'role', 'is_manual', 'assigned_at']);
+  var shiftIds = payload.shiftIds || [];
+  var idSet = {};
+  shiftIds.forEach(function(id) { idSet[id] = true; });
+
+  // Only clear non-manual assignments unless clearManual is true
+  var clearManual = payload.clearManual || false;
+  var data = sheet.getDataRange().getValues();
+  var rowsToDelete = [];
+
+  for (var i = 1; i < data.length; i++) {
+    var sid = String(data[i][0]).trim();
+    var isManual = String(data[i][3]).trim().toUpperCase() === 'TRUE';
+    if (idSet[sid] && (clearManual || !isManual)) {
+      rowsToDelete.push(i + 1);
+    }
+  }
+
+  for (var j = rowsToDelete.length - 1; j >= 0; j--) {
+    sheet.deleteRow(rowsToDelete[j]);
+  }
+
+  return jsonResponse({ success: true, cleared: rowsToDelete.length });
 }
 
 function jsonResponse(obj) {

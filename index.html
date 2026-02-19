@@ -2065,6 +2065,11 @@
   [data-theme="dark"] .toolbar__btn--fairness { border-color: #a07208; color: #f0c050; }
   [data-theme="dark"] .toolbar__btn--fairness:hover { background: #332a12; }
 
+  .toolbar__btn--roster { border-color: #7c3aed; color: #5b21b6; text-decoration: none; display: inline-flex; align-items: center; }
+  .toolbar__btn--roster:hover { background: #f3f0ff; }
+  [data-theme="dark"] .toolbar__btn--roster { border-color: #7c3aed; color: #a78bfa; }
+  [data-theme="dark"] .toolbar__btn--roster:hover { background: #2a2540; }
+
   /* Rotation Pattern Generator */
   .rotation-overlay {
     position: fixed;
@@ -2442,7 +2447,7 @@
 </button>
 <div class="app">
   <header class="header">
-    <h1 class="header__title">מחלקה 1</h1>
+    <h1 class="header__title">פלוגה ב</h1>
     <p class="header__subtitle">18.6.2026 – 26.4.2026</p>
     <div class="header__line"></div>
     <div class="freshness-badge" id="freshnessBadge" style="display:none;" title="לחץ לרענן"></div>
@@ -2492,6 +2497,7 @@
       </div>
       <button class="toolbar__btn toolbar__btn--add-people" id="btnAddPeople">➕ הוסף אנשים</button>
       <button class="toolbar__btn toolbar__btn--fairness" id="btnFairness">📊 סיכום</button>
+      <a href="roster.html" class="toolbar__btn toolbar__btn--roster" title="שבצ״ק">📋 שבצ״ק</a>
     </div>
     <div class="legend">
       <span class="legend__item"><span class="legend__dot legend__dot--activity"></span>במוצב</span>
@@ -2617,7 +2623,7 @@
   };
 
   // ---- Editing state ----
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVV2JInfFv2UqOzf8KaA5S-q9ZwkmchqjmEoUvyAnzhoWrC6Yxhn_uO-19VBDUYkWN/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tIx9awHDsdXZ0y01QElrDNv4F9sy_7ENDFVlHPOns7H-KhRrHLGJG5zhpuVBZ_YV0A/exec';
   const DATE_START = '2026-04-26';
   const DATE_END = '2026-06-18';
 
