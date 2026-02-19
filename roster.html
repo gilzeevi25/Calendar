@@ -391,63 +391,77 @@
   }
 
   /* Week / Gantt view */
-  .gantt {
-    overflow-x: auto;
+  /* Week Summary Table */
+  .week-summary {
     background: var(--clr-surface);
     border: 1.5px solid var(--clr-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
+    overflow-x: auto;
   }
-  .gantt__table {
+  .week-summary__table {
     width: 100%;
-    min-width: 800px;
     border-collapse: collapse;
+    min-width: 400px;
   }
-  .gantt__header-cell {
-    padding: 0.4rem 0;
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: var(--clr-text-tertiary);
+  .week-summary__table th {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
     text-align: center;
-    border-bottom: 1px solid var(--clr-border);
-    width: calc(100% / 25);
+    border-bottom: 2px solid var(--clr-border);
+    white-space: nowrap;
   }
-  .gantt__header-cell:first-child { width: 90px; text-align: right; padding-right: 0.75rem; }
-  .gantt__row-label {
-    padding: 0.5rem 0.75rem;
+  .week-summary__table th:first-child {
+    text-align: right;
+    padding-right: 0.75rem;
+    width: 100px;
+  }
+  .week-summary__day-row {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .week-summary__day-row:hover {
+    background: var(--clr-accent-bg);
+  }
+  .week-summary__day-label {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--clr-border);
+    white-space: nowrap;
+  }
+  .week-summary__cell {
+    padding: 0.5rem;
+    text-align: center;
     font-size: 0.82rem;
     font-weight: 600;
     border-bottom: 1px solid var(--clr-border);
-    white-space: nowrap;
-    vertical-align: middle;
-  }
-  .gantt__cell {
-    position: relative;
-    height: 36px;
-    border-bottom: 1px solid var(--clr-border);
     border-inline-start: 1px solid rgba(0,0,0,0.03);
   }
-  [data-theme="dark"] .gantt__cell { border-inline-start-color: rgba(255,255,255,0.03); }
-  .gantt__bar {
-    position: absolute;
-    top: 4px;
-    bottom: 4px;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: #fff;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 0 4px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    z-index: 1;
+  [data-theme="dark"] .week-summary__cell {
+    border-inline-start-color: rgba(255,255,255,0.03);
   }
-  .gantt__bar:hover { opacity: 0.85; }
+  .week-summary__cell--full {
+    color: var(--clr-activity);
+    background: var(--clr-activity-bg);
+  }
+  .week-summary__cell--partial {
+    color: #d97706;
+    background: rgba(217, 119, 6, 0.08);
+  }
+  .week-summary__cell--empty {
+    color: var(--clr-danger);
+    background: rgba(220, 38, 38, 0.06);
+  }
+  .week-summary__cell--none {
+    color: var(--clr-text-tertiary);
+    font-weight: 400;
+  }
+  .week-summary__today {
+    background: var(--clr-accent-bg);
+  }
 
   /* Modal */
   .modal-overlay {
@@ -793,7 +807,7 @@
   @media (max-width: 768px) {
     .controls__group { flex-wrap: wrap; justify-content: center; }
     .form-row { flex-direction: column; }
-    .gantt__table { min-width: 600px; }
+    .week-summary__table { min-width: 350px; }
     .fairness-table { font-size: 0.75rem; }
     .modal { max-width: 95vw; max-height: 90vh; }
   }
@@ -854,7 +868,7 @@
       </button>
       <button class="btn btn--danger" id="btnDeleteDay">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-        מחק יום
+        מחק משמרות
       </button>
     </div>
   </div>
@@ -887,10 +901,10 @@
   const ROLE_LABELS = { officer: 'קצין', commander: 'מפקד', driver: 'נהג', member: 'חייל' };
 
   const DEFAULT_MISSION_TYPES = [
-    { id: 'patrol', name: 'סיור', duration_hours: 8, min_team: 3, requires_commander: true, requires_driver: true, requires_officer: false, color: '#2563eb' },
-    { id: 'guard', name: 'שמירה', duration_hours: 4, min_team: 1, requires_commander: false, requires_driver: false, requires_officer: false, color: '#16a34a' },
-    { id: 'kitchen', name: 'תורנות מטבח', duration_hours: 24, min_team: 1, requires_commander: false, requires_driver: false, requires_officer: false, color: '#d97706' },
-    { id: 'qrf', name: 'כח כונן', duration_hours: 24, min_team: 3, requires_commander: true, requires_driver: false, requires_officer: false, color: '#dc2626' }
+    { id: 'patrol', name: 'סיור', duration_hours: 8, min_team: 3, requires_commander: true, requires_driver: true, requires_officer: false, color: '#2563eb', fixed_people: [] },
+    { id: 'guard', name: 'שמירה', duration_hours: 4, min_team: 1, requires_commander: false, requires_driver: false, requires_officer: false, color: '#16a34a', fixed_people: [] },
+    { id: 'kitchen', name: 'תורנות מטבח', duration_hours: 24, min_team: 1, requires_commander: false, requires_driver: false, requires_officer: false, color: '#d97706', fixed_people: [] },
+    { id: 'qrf', name: 'כח כונן', duration_hours: 24, min_team: 3, requires_commander: true, requires_driver: false, requires_officer: false, color: '#dc2626', fixed_people: [] }
   ];
 
   const DEFAULT_SCHEDULING_PARAMS = {
@@ -928,6 +942,20 @@
   let calendarData = null; // { map, names }
   let alertsList = [];
   let isLoading = false;
+
+  // ===================== CONFIG GUARD =====================
+
+  function isConfigSaved() {
+    return !!config.mission_types;
+  }
+
+  function requireConfig() {
+    if (!isConfigSaved()) {
+      showToast('יש להגדיר ולשמור הגדרות (⚙️) לפני שיבוץ משמרות', 'error', 5000);
+      return false;
+    }
+    return true;
+  }
 
   // ===================== UTILITIES =====================
 
@@ -975,6 +1003,14 @@
 
   function getMissionType(id) {
     return missionTypes.find(m => m.id === id);
+  }
+
+  function getPersonRole(name) {
+    const tags = personnelTags[name] || [];
+    if (tags.includes('officer')) return 'officer';
+    if (tags.includes('commander')) return 'commander';
+    if (tags.includes('driver')) return 'driver';
+    return 'member';
   }
 
   // Sort shifts by (mission_type order, then start_time)
@@ -1066,7 +1102,7 @@
         try {
           missionTypes = JSON.parse(config.mission_types);
           // Ensure requires_officer field exists (backward compat)
-          missionTypes.forEach(mt => { if (mt.requires_officer === undefined) mt.requires_officer = false; });
+          missionTypes.forEach(mt => { if (mt.requires_officer === undefined) mt.requires_officer = false; if (!mt.fixed_people) mt.fixed_people = []; });
         } catch(e) {}
       }
       if (config.personnel_tags) {
@@ -1145,6 +1181,7 @@
     const start = parseDateStr(startDate);
     const end = parseDateStr(endDate);
     const newShifts = [];
+    const fixedAssignments = [];
 
     const d = new Date(start);
     while (d <= end) {
@@ -1159,6 +1196,19 @@
           end_time: t.end_time,
           note: ''
         });
+
+        // Auto-assign fixed people for this mission type
+        const mt = getMissionType(t.mission_type);
+        if (mt && mt.fixed_people && mt.fixed_people.length > 0) {
+          mt.fixed_people.forEach(name => {
+            fixedAssignments.push({
+              shift_id: id,
+              name: name,
+              role: getPersonRole(name),
+              is_manual: 'TRUE'
+            });
+          });
+        }
       });
       d.setDate(d.getDate() + 1);
     }
@@ -1168,6 +1218,9 @@
     showLoading();
     try {
       await callAppsScript({ action: 'saveRosterShifts', shifts: newShifts });
+      if (fixedAssignments.length > 0) {
+        await callAppsScript({ action: 'saveRosterAssignments', assignments: fixedAssignments });
+      }
       showToast(`נוצרו ${newShifts.length} משמרות בהצלחה`, 'success');
       await refreshView();
     } catch (err) {
@@ -1222,6 +1275,14 @@
       history[a.name].totalHours += dur;
 
       history[a.name].missionCounts[shift.mission_type] = (history[a.name].missionCounts[shift.mission_type] || 0) + 1;
+
+      // Track lastEnd for rest gap enforcement
+      const endH = shift.end_time === '00:00' ? 24 : parseInt(shift.end_time.split(':')[0]);
+      const endM = shift.end_time === '00:00' ? 0 : parseInt(shift.end_time.split(':')[1]);
+      const shiftEnd = new Date(shift.date + 'T' + String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0') + ':00');
+      if (!history[a.name].lastEnd || shiftEnd > history[a.name].lastEnd) {
+        history[a.name].lastEnd = shiftEnd;
+      }
     });
 
     // Group shifts by date then sort by constraint difficulty
@@ -1309,9 +1370,10 @@
           // Exclusion check
           if (exclusions[name] && exclusions[name].includes(shift.mission_type)) return false;
 
-          // Already assigned to overlapping shift today?
+          // Already assigned to overlapping or too-close shift today?
           const myAssignments = newAssignments[name] || [];
-          const isOverlapping = myAssignments.some(a => {
+          const restMinutes = schedulingParams.min_rest_hours * 60;
+          const hasConflict = myAssignments.some(a => {
             if (a.date !== date) return false;
             let aStart = timeToMinutes(a.start);
             let aEnd = timeToMinutes(a.end);
@@ -1319,9 +1381,16 @@
             let sEnd = timeToMinutes(shift.end_time);
             if (aEnd <= aStart) aEnd += 1440;
             if (sEnd <= sStart) sEnd += 1440;
-            return sStart < aEnd && sEnd > aStart;
+            // Check overlap
+            if (sStart < aEnd && sEnd > aStart) return true;
+            // Check insufficient rest gap
+            const gapAfter = sStart - aEnd;
+            const gapBefore = aStart - sEnd;
+            const gap = Math.max(gapAfter, gapBefore);
+            if (gap >= 0 && gap < restMinutes) return true;
+            return false;
           });
-          if (isOverlapping) return false;
+          if (hasConflict) return false;
 
           // Rest compliance
           const h = history[name];
@@ -1480,6 +1549,7 @@
   }
 
   async function runAutoSchedule() {
+    if (!requireConfig()) return;
     if (!calendarData) {
       showToast('נתוני לוח השנה טרם נטענו', 'error');
       return;
@@ -1736,13 +1806,14 @@
     });
   }
 
-  // ===================== RENDERING — WEEK / GANTT VIEW =====================
+  // ===================== RENDERING — WEEK SUMMARY VIEW =====================
 
   function renderWeekView() {
     const container = document.getElementById('mainContent');
     const weekDates = getWeekDates(currentDate);
     const startStr = formatDateStr(weekDates[0]);
     const endStr = formatDateStr(weekDates[6]);
+    const todayStr = formatDateStr(new Date());
 
     const weekShifts = shifts.filter(s => s.date >= startStr && s.date <= endStr);
 
@@ -1762,12 +1833,17 @@
       return;
     }
 
-    // Build Gantt table
-    let html = '<div class="gantt"><table class="gantt__table"><thead><tr>';
-    html += '<th class="gantt__header-cell">יום</th>';
-    for (let h = 0; h < 24; h++) {
-      html += `<th class="gantt__header-cell">${String(h).padStart(2, '0')}</th>`;
-    }
+    // Determine which mission types are present this week
+    const activeMtIds = [...new Set(weekShifts.map(s => s.mission_type))];
+    const activeMts = activeMtIds.map(id => getMissionType(id)).filter(Boolean);
+
+    // Build summary table
+    let html = '<div class="week-summary"><table class="week-summary__table"><thead><tr>';
+    html += '<th>יום</th>';
+    activeMts.forEach(mt => {
+      html += `<th><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${mt.color};margin-left:4px;vertical-align:middle;"></span> ${escapeHtml(mt.name)}</th>`;
+    });
+    html += '<th style="border-inline-start:2px solid var(--clr-border);">סה״כ</th>';
     html += '</tr></thead><tbody>';
 
     weekDates.forEach(date => {
@@ -1775,41 +1851,63 @@
       const dayShifts = weekShifts.filter(s => s.date === dateStr);
       const dayName = DAY_NAMES[date.getDay()];
       const dayNum = date.getDate();
+      const isToday = dateStr === todayStr;
 
-      html += `<tr>
-        <td class="gantt__row-label">${dayName} ${dayNum}</td>`;
+      html += `<tr class="week-summary__day-row ${isToday ? 'week-summary__today' : ''}" data-date="${dateStr}">`;
+      html += `<td class="week-summary__day-label">${dayName} ${dayNum}</td>`;
 
-      // Create 24 hour cells
-      for (let h = 0; h < 24; h++) {
-        html += '<td class="gantt__cell">';
+      let dayTotalAssigned = 0;
+      let dayTotalRequired = 0;
 
-        // Find shifts that start at this hour
-        dayShifts.forEach(s => {
-          const startMin = timeToMinutes(s.start_time);
-          const startHour = Math.floor(startMin / 60);
-          if (startHour !== h) return;
+      activeMts.forEach(mt => {
+        const mtShifts = dayShifts.filter(s => s.mission_type === mt.id);
+        if (mtShifts.length === 0) {
+          html += '<td class="week-summary__cell week-summary__cell--none">—</td>';
+          return;
+        }
 
-          let endMin = timeToMinutes(s.end_time);
-          if (endMin <= startMin) endMin += 1440;
-          const durationHours = (endMin - startMin) / 60;
-          const widthPercent = durationHours * 100;
-          const mt = getMissionType(s.mission_type);
-          const color = mt ? mt.color : '#888';
-          const label = mt ? mt.name : s.mission_type;
-          const assigned = (s.assignments || []).length;
-          const minTeam = mt ? mt.min_team : 1;
+        const totalAssigned = mtShifts.reduce((sum, s) => sum + (s.assignments || []).length, 0);
+        const totalRequired = mtShifts.reduce((sum, s) => {
+          const m = getMissionType(s.mission_type);
+          return sum + (m ? m.min_team : 1);
+        }, 0);
 
-          html += `<div class="gantt__bar" style="width:${widthPercent}%;background:${color};right:0;" title="${label} ${s.start_time}-${s.end_time} (${assigned}/${minTeam})">${label}</div>`;
-        });
+        dayTotalAssigned += totalAssigned;
+        dayTotalRequired += totalRequired;
 
-        html += '</td>';
-      }
+        let cellClass = 'week-summary__cell--empty';
+        if (totalAssigned >= totalRequired) cellClass = 'week-summary__cell--full';
+        else if (totalAssigned > 0) cellClass = 'week-summary__cell--partial';
+
+        html += `<td class="week-summary__cell ${cellClass}">${totalAssigned}/${totalRequired}</td>`;
+      });
+
+      // Day total column
+      let totalClass = 'week-summary__cell--empty';
+      if (dayTotalRequired === 0) totalClass = 'week-summary__cell--none';
+      else if (dayTotalAssigned >= dayTotalRequired) totalClass = 'week-summary__cell--full';
+      else if (dayTotalAssigned > 0) totalClass = 'week-summary__cell--partial';
+
+      html += `<td class="week-summary__cell ${totalClass}" style="border-inline-start:2px solid var(--clr-border);font-weight:700;">${dayTotalAssigned}/${dayTotalRequired}</td>`;
 
       html += '</tr>';
     });
 
     html += '</tbody></table></div>';
     container.innerHTML = html;
+
+    // Click handler: navigate to day view on row click
+    container.querySelectorAll('.week-summary__day-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const dateStr = row.dataset.date;
+        currentDate = parseDateStr(dateStr);
+        currentView = 'day';
+        document.getElementById('btnDayView').classList.add('view-toggle__btn--active');
+        document.getElementById('btnWeekView').classList.remove('view-toggle__btn--active');
+        updateDateDisplay();
+        refreshView();
+      });
+    });
   }
 
   // ===================== MODALS =====================
@@ -1865,6 +1963,7 @@
   }
 
   function promptManualAssign(shiftId) {
+    if (!requireConfig()) return;
     const shift = shifts.find(s => s.id === shiftId);
     if (!shift) return;
 
@@ -1957,6 +2056,7 @@
   }
 
   function promptCreateShifts() {
+    if (!requireConfig()) return;
     const today = formatDateStr(currentDate);
     const { overlay, close } = createModal('יצירת משמרות מתבנית', `
       <div class="form-group">
@@ -2048,7 +2148,7 @@
           const color = overlay.querySelector('#newMtColor').value;
           if (!name) { showToast('יש להזין שם משימה', 'error'); return; }
           const id = name.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now();
-          missionTypes.push({ id, name, duration_hours: dur, min_team: team, requires_commander: false, requires_driver: false, color });
+          missionTypes.push({ id, name, duration_hours: dur, min_team: team, requires_commander: false, requires_driver: false, requires_officer: false, color, fixed_people: [] });
           overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
           rebindTabs();
           rebindPanels();
@@ -2073,6 +2173,16 @@
           const field = cb.dataset.field;
           const mt = missionTypes.find(m => m.id === id);
           if (mt) mt[field] = cb.checked;
+        });
+      });
+
+      // Fixed people buttons
+      overlay.querySelectorAll('.fixed-people-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mtId = btn.dataset.id;
+          const mt = missionTypes.find(m => m.id === mtId);
+          if (!mt) return;
+          promptFixedPeople(mt);
         });
       });
 
@@ -2149,6 +2259,27 @@
         });
       });
 
+      // All-day toggle for template
+      const tplAllDay = overlay.querySelector('#tplAllDay');
+      if (tplAllDay) {
+        tplAllDay.addEventListener('change', () => {
+          const startInput = overlay.querySelector('#tplStart');
+          const endInput = overlay.querySelector('#tplEnd');
+          if (!startInput || !endInput) return;
+          if (tplAllDay.checked) {
+            startInput.value = '00:00';
+            endInput.value = '00:00';
+            startInput.disabled = true;
+            endInput.disabled = true;
+          } else {
+            startInput.disabled = false;
+            endInput.disabled = false;
+            startInput.value = '08:00';
+            endInput.value = '16:00';
+          }
+        });
+      }
+
       // Template add
       const addTplBtn = overlay.querySelector('#addTemplate');
       if (addTplBtn) {
@@ -2173,6 +2304,42 @@
           rebindPanels();
         });
       });
+    }
+
+    function promptFixedPeople(mt) {
+      const names = calendarData ? calendarData.names : [];
+      if (names.length === 0) { showToast('טען נתוני לוח שנה תחילה', 'error'); return; }
+
+      const currentFixed = new Set(mt.fixed_people || []);
+      let checkboxHtml = `<div style="margin-bottom:0.75rem;font-size:0.85rem;color:var(--clr-text-secondary);">סמן אנשים שישובצו אוטומטית בכל משמרת מסוג <strong>${escapeHtml(mt.name)}</strong>:</div>`;
+      checkboxHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:0.5rem;">';
+      names.forEach(name => {
+        const checked = currentFixed.has(name) ? 'checked' : '';
+        checkboxHtml += `<label style="display:flex;align-items:center;gap:0.3rem;font-size:0.85rem;cursor:pointer;">
+          <input type="checkbox" class="fixed-person-cb" data-name="${escapeHtml(name)}" ${checked}>
+          ${escapeHtml(name)}
+        </label>`;
+      });
+      checkboxHtml += '</div>';
+
+      const sub = createModal(
+        'אנשים קבועים — ' + mt.name,
+        checkboxHtml,
+        '<button class="btn btn--filled" id="fixedPeopleSave">שמור</button> <button class="btn" id="fixedPeopleCancel">ביטול</button>'
+      );
+
+      sub.overlay.querySelector('#fixedPeopleSave').addEventListener('click', () => {
+        const selected = [];
+        sub.overlay.querySelectorAll('.fixed-person-cb:checked').forEach(cb => {
+          selected.push(cb.dataset.name);
+        });
+        mt.fixed_people = selected;
+        sub.close();
+        overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
+        rebindTabs();
+        rebindPanels();
+      });
+      sub.overlay.querySelector('#fixedPeopleCancel').addEventListener('click', sub.close);
     }
 
     rebindTabs();
@@ -2204,6 +2371,7 @@
         <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_officer" ${mt.requires_officer ? 'checked' : ''}> קצין חובה</label>
         <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_commander" ${mt.requires_commander ? 'checked' : ''}> מפקד</label>
         <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_driver" ${mt.requires_driver ? 'checked' : ''}> נהג</label>
+        <button class="btn btn--sm fixed-people-btn" data-id="${mt.id}" style="font-size:0.72rem;padding:0.15rem 0.5rem;">אנשים קבועים (${(mt.fixed_people || []).length})</button>
         <div class="item-row__actions">
           <button class="item-row__btn delete-mt" data-id="${mt.id}" title="מחק">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -2357,6 +2525,11 @@
       <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.5rem;">הוסף למשמרת לתבנית</div>
       <div class="form-row">
         <div class="form-group"><select class="form-select" id="tplMissionType">${mtOptions}</select></div>
+        <div class="form-group" style="display:flex;align-items:center;">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" id="tplAllDay"> יום שלם
+          </label>
+        </div>
         <div class="form-group"><input class="form-input" id="tplStart" type="time" value="08:00"></div>
         <div class="form-group"><input class="form-input" id="tplEnd" type="time" value="16:00"></div>
       </div>
@@ -2624,30 +2797,80 @@
     }
   }
 
-  // ===================== DELETE CURRENT DAY =====================
+  // ===================== DELETE SHIFTS (DATE RANGE) =====================
 
-  async function deleteCurrentDay() {
-    const dateStr = formatDateStr(currentDate);
-    const dayShifts = shifts.filter(s => s.date === dateStr);
+  function promptDeleteShifts() {
+    const today = formatDateStr(currentDate);
+    const { overlay, close } = createModal('מחיקת משמרות', `
+      <div class="form-group">
+        <label class="form-label">תאריך התחלה</label>
+        <input type="date" class="form-input" id="modalDeleteStart" value="${today}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">תאריך סיום</label>
+        <input type="date" class="form-input" id="modalDeleteEnd" value="${today}">
+      </div>
+      <div class="form-hint" id="deletePreview" style="margin-top:0.5rem;font-weight:500;"></div>
+    `, `
+      <button class="btn btn--danger" id="modalDeleteBtn">מחק משמרות</button>
+      <button class="btn" id="modalDeleteCancel">ביטול</button>
+    `);
 
-    if (dayShifts.length === 0) {
-      showToast('אין משמרות למחיקה ביום זה', 'info');
-      return;
+    let debounceTimer;
+    async function updatePreview() {
+      const start = overlay.querySelector('#modalDeleteStart').value;
+      const end = overlay.querySelector('#modalDeleteEnd').value;
+      const preview = overlay.querySelector('#deletePreview');
+      if (!start || !end || start > end) {
+        preview.textContent = start && end && start > end ? 'תאריך התחלה חייב להיות לפני תאריך סיום' : '';
+        return;
+      }
+      preview.textContent = 'טוען...';
+      try {
+        const rangeShifts = await loadShifts(start, end);
+        preview.textContent = rangeShifts.length > 0
+          ? `יימחקו ${rangeShifts.length} משמרות`
+          : 'אין משמרות בטווח זה';
+      } catch (e) {
+        preview.textContent = 'שגיאה בטעינת נתונים';
+      }
     }
 
-    if (!confirm(`למחוק את כל ${dayShifts.length} המשמרות של ${formatDateHebrew(currentDate)}?`)) return;
-
-    showLoading();
-    try {
-      const ids = dayShifts.map(s => s.id);
-      await callAppsScript({ action: 'deleteRosterShifts', ids });
-      showToast(`נמחקו ${ids.length} משמרות`, 'success');
-      await refreshView();
-    } catch (err) {
-      // toast shown
-    } finally {
-      hideLoading();
+    function debouncedPreview() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(updatePreview, 300);
     }
+
+    overlay.querySelector('#modalDeleteStart').addEventListener('change', debouncedPreview);
+    overlay.querySelector('#modalDeleteEnd').addEventListener('change', debouncedPreview);
+    updatePreview();
+
+    overlay.querySelector('#modalDeleteBtn').addEventListener('click', async () => {
+      const start = overlay.querySelector('#modalDeleteStart').value;
+      const end = overlay.querySelector('#modalDeleteEnd').value;
+      if (!start || !end) { showToast('יש לבחור תאריכים', 'error'); return; }
+      if (start > end) { showToast('תאריך התחלה חייב להיות לפני תאריך סיום', 'error'); return; }
+
+      close();
+      showLoading();
+      try {
+        const rangeShifts = await loadShifts(start, end);
+        if (rangeShifts.length === 0) {
+          showToast('אין משמרות למחיקה בטווח זה', 'info');
+          return;
+        }
+        const ids = rangeShifts.map(s => s.id);
+        await callAppsScript({ action: 'deleteRosterShifts', ids });
+        showToast(`נמחקו ${ids.length} משמרות`, 'success');
+        await refreshView();
+      } catch (err) {
+        // toast shown
+      } finally {
+        hideLoading();
+      }
+    });
+
+    overlay.querySelector('#modalDeleteCancel').addEventListener('click', close);
   }
 
   // ===================== PDF EXPORT =====================
@@ -2795,7 +3018,7 @@
 
     document.getElementById('btnHelp').addEventListener('click', openHelpModal);
     document.getElementById('btnExportPdf').addEventListener('click', exportPdf);
-    document.getElementById('btnDeleteDay').addEventListener('click', deleteCurrentDay);
+    document.getElementById('btnDeleteDay').addEventListener('click', promptDeleteShifts);
 
     document.getElementById('btnAlerts').addEventListener('click', () => {
       const panel = document.getElementById('alertsPanel');
