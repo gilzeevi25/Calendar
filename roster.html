@@ -1276,10 +1276,11 @@
 
       history[a.name].missionCounts[shift.mission_type] = (history[a.name].missionCounts[shift.mission_type] || 0) + 1;
 
-      // Track lastEnd for rest gap enforcement
-      const endH = shift.end_time === '00:00' ? 24 : parseInt(shift.end_time.split(':')[0]);
-      const endM = shift.end_time === '00:00' ? 0 : parseInt(shift.end_time.split(':')[1]);
-      const shiftEnd = new Date(shift.date + 'T' + String(endH).padStart(2,'0') + ':' + String(endM).padStart(2,'0') + ':00');
+      // Track lastEnd for rest gap enforcement (overnight: end < start → add 1 day)
+      const shiftEnd = new Date(shift.date + 'T' + (shift.end_time === '00:00' ? '24:00' : shift.end_time) + ':00');
+      if (shift.end_time !== shift.start_time && timeToMinutes(shift.end_time) <= timeToMinutes(shift.start_time)) {
+        shiftEnd.setDate(shiftEnd.getDate() + 1);
+      }
       if (!history[a.name].lastEnd || shiftEnd > history[a.name].lastEnd) {
         history[a.name].lastEnd = shiftEnd;
       }
@@ -1531,8 +1532,11 @@
       
             history[a.name].missionCounts[shift.mission_type] = (history[a.name].missionCounts[shift.mission_type] || 0) + 1;
 
-            const endH = shift.end_time === '00:00' ? 24 : parseInt(shift.end_time.split(':')[0]);
-            history[a.name].lastEnd = new Date(date + 'T' + (endH < 10 ? '0' : '') + endH + ':00:00');
+            const lastEndDate = new Date(date + 'T' + (shift.end_time === '00:00' ? '24:00' : shift.end_time) + ':00');
+            if (shift.end_time !== shift.start_time && timeToMinutes(shift.end_time) <= timeToMinutes(shift.start_time)) {
+              lastEndDate.setDate(lastEndDate.getDate() + 1);
+            }
+            history[a.name].lastEnd = lastEndDate;
 
             // Track assigned date for consecutive days counting
             if (!assignedOnDate[a.name]) assignedOnDate[a.name] = new Set();
