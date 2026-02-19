@@ -2805,21 +2805,26 @@
   // ===================== VIEW REFRESH =====================
 
   async function refreshView() {
-    let startDate, endDate;
-    if (currentView === 'day') {
-      startDate = endDate = formatDateStr(currentDate);
-    } else {
-      const weekDates = getWeekDates(currentDate);
-      startDate = formatDateStr(weekDates[0]);
-      endDate = formatDateStr(weekDates[6]);
-    }
+    showLoading();
+    try {
+      let startDate, endDate;
+      if (currentView === 'day') {
+        startDate = endDate = formatDateStr(currentDate);
+      } else {
+        const weekDates = getWeekDates(currentDate);
+        startDate = formatDateStr(weekDates[0]);
+        endDate = formatDateStr(weekDates[6]);
+      }
 
-    shifts = await loadShifts(startDate, endDate);
+      shifts = await loadShifts(startDate, endDate);
 
-    if (currentView === 'day') {
-      renderDayView();
-    } else {
-      renderWeekView();
+      if (currentView === 'day') {
+        renderDayView();
+      } else {
+        renderWeekView();
+      }
+    } finally {
+      hideLoading();
     }
   }
 
