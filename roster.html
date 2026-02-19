@@ -1337,12 +1337,12 @@
         });
       }
 
-      // Sort shifts: most constrained first (requires_commander, then by min_team desc)
+      // Sort shifts: most constrained first (role requirements, then by min_team desc)
       dayShifts.sort((a, b) => {
         const ma = getMissionType(a.mission_type);
         const mb = getMissionType(b.mission_type);
-        const scoreA = (ma && ma.requires_commander ? 10 : 0) + (ma ? ma.min_team : 0);
-        const scoreB = (mb && mb.requires_commander ? 10 : 0) + (mb ? mb.min_team : 0);
+        const scoreA = (ma && ma.requires_officer ? 20 : 0) + (ma && ma.requires_commander ? 10 : 0) + (ma && ma.requires_driver ? 10 : 0) + (ma ? ma.min_team : 0);
+        const scoreB = (mb && mb.requires_officer ? 20 : 0) + (mb && mb.requires_commander ? 10 : 0) + (mb && mb.requires_driver ? 10 : 0) + (mb ? mb.min_team : 0);
         return scoreB - scoreA;
       });
 
@@ -1440,67 +1440,81 @@
           });
           if (buddyBonus) score += 30;
 
-          // Officer priority: if shift requires_officer, boost officers heavily
-          if (mt.requires_officer && (personnelTags[name] || []).includes('officer')) {
-            score += 50000;
-          }
-
           return { name, score };
         });
 
         scored.sort((a, b) => b.score - a.score);
 
-        // Pick top N
-        const picked = scored.slice(0, needed).map(s => s.name);
-
-        // Assign roles
-        const allAssigned = [...manualAssigned, ...picked];
+        // --- Role-aware picking: fill required role slots first, then remaining by score ---
         const assignedRoles = [];
+        const pickedSet = new Set();
 
-        // Manual roles are already preserved in DB — track them locally for overlap/role checks
+        // Manual roles preserved from DB
         manualAssigned.forEach(name => {
           const existing = (shift.assignments || []).find(a => a.name === name);
           assignedRoles.push({ name, role: existing ? existing.role : 'member', is_manual: true });
+          pickedSet.add(name);
         });
 
-        // Assign roles with flexible fallback:
-        // - If requires_officer: an officer is mandatory (not just any commander)
-        // - Officers ALWAYS get commander role (non-negotiable)
-        // - Commander-tagged (non-officer) preferred as commander, but can be member/driver if enough people
-        // - Driver-tagged preferred as driver, but can be member if enough drivers
-        let needsOfficer = mt.requires_officer && !assignedRoles.some(a => {
-          const t = personnelTags[a.name] || [];
-          return a.role === 'commander' && t.includes('officer');
+        // Check which roles manual assignments already cover
+        let needsOfficer = mt.requires_officer && !manualAssigned.some(n => (personnelTags[n] || []).includes('officer'));
+        let needsCommander = mt.requires_commander && !manualAssigned.some(n => {
+          const t = personnelTags[n] || [];
+          return t.includes('officer') || t.includes('commander');
         });
-        let needsCommander = mt.requires_commander && !assignedRoles.some(a => a.role === 'commander');
-        let needsDriver = mt.requires_driver && !assignedRoles.some(a => a.role === 'driver');
+        let needsDriver = mt.requires_driver && !manualAssigned.some(n => (personnelTags[n] || []).includes('driver'));
 
-        // Sort picked: officers first (so they get priority for commander slots)
-        const sortedPicked = [...picked].sort((a, b) => {
-          const aOfficer = (personnelTags[a] || []).includes('officer') ? 0 : 1;
-          const bOfficer = (personnelTags[b] || []).includes('officer') ? 0 : 1;
-          return aOfficer - bOfficer;
-        });
+        let slotsLeft = needed;
 
-        sortedPicked.forEach(name => {
-          const tags = personnelTags[name] || [];
-          let role = 'member';
-
-          if (tags.includes('officer')) {
-            // Officers are ALWAYS commanders
-            role = 'commander';
+        // 1) Reserve a slot for officer if required
+        if (needsOfficer && slotsLeft > 0) {
+          const pick = scored.find(s => !pickedSet.has(s.name) && (personnelTags[s.name] || []).includes('officer'));
+          if (pick) {
+            assignedRoles.push({ name: pick.name, role: 'commander', is_manual: false });
+            pickedSet.add(pick.name);
+            slotsLeft--;
             needsOfficer = false;
             needsCommander = false;
-          } else if (needsCommander && tags.includes('commander')) {
-            role = 'commander';
+          }
+        }
+
+        // 2) Reserve a slot for commander if required (officer also satisfies this)
+        if (needsCommander && slotsLeft > 0) {
+          const pick = scored.find(s => !pickedSet.has(s.name) && ((personnelTags[s.name] || []).includes('officer') || (personnelTags[s.name] || []).includes('commander')));
+          if (pick) {
+            assignedRoles.push({ name: pick.name, role: 'commander', is_manual: false });
+            pickedSet.add(pick.name);
+            slotsLeft--;
             needsCommander = false;
-          } else if (needsDriver && tags.includes('driver')) {
-            role = 'driver';
+            if ((personnelTags[pick.name] || []).includes('officer')) needsOfficer = false;
+          }
+        }
+
+        // 3) Reserve a slot for driver if required
+        if (needsDriver && slotsLeft > 0) {
+          const pick = scored.find(s => !pickedSet.has(s.name) && (personnelTags[s.name] || []).includes('driver'));
+          if (pick) {
+            assignedRoles.push({ name: pick.name, role: 'driver', is_manual: false });
+            pickedSet.add(pick.name);
+            slotsLeft--;
             needsDriver = false;
           }
-          // Commander/driver-tagged people without a needed slot → fall back to member
-          assignedRoles.push({ name, role, is_manual: false });
-        });
+        }
+
+        // 4) Fill remaining slots by fairness score
+        if (slotsLeft > 0) {
+          const rest = scored.filter(s => !pickedSet.has(s.name)).slice(0, slotsLeft);
+          rest.forEach(s => {
+            const tags = personnelTags[s.name] || [];
+            let role = 'member';
+            if (tags.includes('officer')) role = 'commander';
+            assignedRoles.push({ name: s.name, role, is_manual: false });
+            pickedSet.add(s.name);
+          });
+        }
+
+        const picked = assignedRoles.filter(a => !a.is_manual).map(a => a.name);
+        const allAssigned = [...manualAssigned, ...picked];
 
         // Track assignments — only emit auto-assigned to results (manual already in DB)
         assignedRoles.forEach(a => {
