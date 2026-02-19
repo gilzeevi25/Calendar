@@ -2176,6 +2176,14 @@
         });
       });
 
+      // Editable duration_hours / min_team inputs
+      overlay.querySelectorAll('.mt-edit').forEach(inp => {
+        inp.addEventListener('change', () => {
+          const mt = missionTypes.find(m => m.id === inp.dataset.id);
+          if (mt) mt[inp.dataset.field] = parseInt(inp.value) || 1;
+        });
+      });
+
       // Fixed people buttons
       overlay.querySelectorAll('.fixed-people-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2367,7 +2375,7 @@
       html += `<div class="item-row">
         <span class="item-row__dot" style="background:${mt.color}"></span>
         <span class="item-row__name">${escapeHtml(mt.name)}</span>
-        <span class="item-row__detail">${mt.duration_hours}ש | ${mt.min_team} אנשים</span>
+        <span class="item-row__detail"><input type="number" class="mt-edit" data-id="${mt.id}" data-field="duration_hours" value="${mt.duration_hours}" min="1" max="24" style="width:3rem;text-align:center;border:1px solid #ccc;border-radius:4px;padding:0.1rem 0.2rem;font-size:0.8rem;">ש | <input type="number" class="mt-edit" data-id="${mt.id}" data-field="min_team" value="${mt.min_team}" min="1" max="20" style="width:3rem;text-align:center;border:1px solid #ccc;border-radius:4px;padding:0.1rem 0.2rem;font-size:0.8rem;"> אנשים</span>
         <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_officer" ${mt.requires_officer ? 'checked' : ''}> קצין חובה</label>
         <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_commander" ${mt.requires_commander ? 'checked' : ''}> מפקד</label>
         <label style="font-size:0.75rem;display:flex;align-items:center;gap:0.2rem;"><input type="checkbox" class="mt-toggle" data-id="${mt.id}" data-field="requires_driver" ${mt.requires_driver ? 'checked' : ''}> נהג</label>
