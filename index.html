@@ -2448,7 +2448,7 @@
 <div class="app">
   <header class="header">
     <h1 class="header__title">פלוגה ב</h1>
-    <p class="header__subtitle">18.6.2026 – 26.4.2026</p>
+    <p class="header__subtitle">26.4.2026 – 18.6.2026</p>
     <div class="header__line"></div>
     <div class="freshness-badge" id="freshnessBadge" style="display:none;" title="לחץ לרענן"></div>
     <a class="header__sheet-link" href="https://docs.google.com/spreadsheets/d/1AL55-KKFtd2jM2pAGwqZoacYm-kIcqFx-K-DOht-COA/edit" target="_blank" rel="noopener">
@@ -3234,8 +3234,13 @@
 
     const rect = cellElement.getBoundingClientRect();
     picker.style.position = 'fixed';
-    picker.style.top = (rect.bottom + 4) + 'px';
-    picker.style.right = (window.innerWidth - rect.right) + 'px';
+    const pickerHeight = 180;
+    let top = rect.bottom + 4;
+    if (top + pickerHeight > window.innerHeight) {
+      top = rect.top - pickerHeight - 4;
+    }
+    picker.style.top = top + 'px';
+    picker.style.right = Math.max(0, window.innerWidth - rect.right) + 'px';
     document.body.appendChild(picker);
 
     setTimeout(() => {
