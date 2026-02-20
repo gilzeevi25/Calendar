@@ -803,6 +803,82 @@
     .shift-card { break-inside: avoid; }
   }
 
+  /* Person history tooltip */
+  .person-tooltip {
+    position: fixed;
+    z-index: 2000;
+    background: var(--clr-text);
+    color: var(--clr-bg);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.78rem;
+    direction: rtl;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+  .person-tooltip--visible { opacity: 1; }
+  .person-tooltip__title {
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    font-size: 0.82rem;
+  }
+  .person-tooltip__divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin: 0.3rem 0;
+  }
+  .person-tooltip__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .person-tooltip__empty {
+    color: rgba(255,255,255,0.6);
+    font-style: italic;
+  }
+  [data-theme="dark"] .person-tooltip {
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    border: 1px solid var(--clr-border);
+  }
+  [data-theme="dark"] .person-tooltip__divider {
+    border-top-color: var(--clr-border);
+  }
+  [data-theme="dark"] .person-tooltip__empty {
+    color: var(--clr-text-tertiary);
+  }
+
+  /* All-day shift rest select */
+  .shift-card__allday-select {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    padding: 0.15rem 0.35rem;
+    border: 1px solid var(--clr-border);
+    border-radius: 6px;
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .shift-card__allday-select:focus {
+    outline: none;
+    border-color: var(--clr-accent);
+  }
+  [data-theme="dark"] .shift-card__allday-select {
+    background: #1a1714;
+    border-color: #3d362c;
+    color: #a89e92;
+  }
+  .shift-card__actual-time {
+    font-size: 0.75rem;
+    color: var(--clr-activity);
+    font-weight: 500;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .controls__group { flex-wrap: wrap; justify-content: center; }
@@ -939,6 +1015,7 @@
   let schedulingParams = { ...DEFAULT_SCHEDULING_PARAMS };
   let shiftTemplates = [...DEFAULT_SHIFT_TEMPLATES];
   let shifts = [];
+  let recentShifts = []; // shifts from 3 days before current view, for tooltip
   let calendarData = null; // { map, names }
   let alertsList = [];
   let isLoading = false;
@@ -1000,6 +1077,64 @@
     return (e - s) / 60;
   }
 
+
+  // Effective shift times considering actual_end_time for all-day shifts
+  function getEffectiveDuration(shift) {
+    if (shift.start_time === shift.end_time) {
+      if (shift.actual_end_time) {
+        return shiftDurationHours('06:00', shift.actual_end_time);
+      }
+      return 24;
+    }
+    return shiftDurationHours(shift.start_time, shift.end_time);
+  }
+
+  function getEffectiveLastEnd(shift) {
+    if (shift.start_time === shift.end_time && shift.actual_end_time) {
+      return new Date(shift.date + 'T' + shift.actual_end_time + ':00');
+    }
+    const endTime = shift.end_time === '00:00' ? '24:00' : shift.end_time;
+    const shiftEnd = new Date(shift.date + 'T' + endTime + ':00');
+    if (shift.end_time !== shift.start_time && timeToMinutes(shift.end_time) <= timeToMinutes(shift.start_time)) {
+      shiftEnd.setDate(shiftEnd.getDate() + 1);
+    }
+    return shiftEnd;
+  }
+
+  function getEffectiveShiftRange(shift) {
+    if (shift.start_time === shift.end_time && shift.actual_end_time) {
+      return { start: '06:00', end: shift.actual_end_time };
+    }
+    return { start: shift.start_time, end: shift.end_time };
+  }
+
+  function getPersonRecentHistory(personName) {
+    const entries = [];
+    recentShifts.forEach(function(shift) {
+      const assigned = shift.assignments || [];
+      const match = assigned.find(function(a) { return a.name === personName; });
+      if (match) {
+        const mt = getMissionType(shift.mission_type);
+        const mtName = mt ? mt.name : shift.mission_type;
+        const tLabel = shift.start_time === shift.end_time
+          ? 'יום שלם'
+          : shift.start_time + '-' + shift.end_time;
+        const d = parseDateStr(shift.date);
+        const dayName = DAY_NAMES[d.getDay()];
+        const dd = d.getDate();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        entries.push({
+          date: shift.date,
+          dayName: dayName,
+          dateLabel: dd + '/' + mm,
+          mtName: mtName,
+          timeLabel: tLabel
+        });
+      }
+    });
+    entries.sort(function(a, b) { return a.date.localeCompare(b.date); });
+    return entries;
+  }
 
   function getMissionType(id) {
     return missionTypes.find(m => m.id === id);
@@ -1271,16 +1406,13 @@
     allAssignments.forEach(a => {
       const shift = shifts.find(s => s.id === a.shift_id);
       if (!shift || !history[a.name]) return;
-      const dur = shift.start_time === shift.end_time ? 24 : shiftDurationHours(shift.start_time, shift.end_time);
+      const dur = getEffectiveDuration(shift);
       history[a.name].totalHours += dur;
 
       history[a.name].missionCounts[shift.mission_type] = (history[a.name].missionCounts[shift.mission_type] || 0) + 1;
 
-      // Track lastEnd for rest gap enforcement (overnight: end < start → add 1 day)
-      const shiftEnd = new Date(shift.date + 'T' + (shift.end_time === '00:00' ? '24:00' : shift.end_time) + ':00');
-      if (shift.end_time !== shift.start_time && timeToMinutes(shift.end_time) <= timeToMinutes(shift.start_time)) {
-        shiftEnd.setDate(shiftEnd.getDate() + 1);
-      }
+      // Track lastEnd for rest gap enforcement
+      const shiftEnd = getEffectiveLastEnd(shift);
       if (!history[a.name].lastEnd || shiftEnd > history[a.name].lastEnd) {
         history[a.name].lastEnd = shiftEnd;
       }
@@ -1306,7 +1438,8 @@
           .filter(a => a.is_manual === 'TRUE')
           .forEach(a => {
             if (!newAssignments[a.name]) newAssignments[a.name] = [];
-            newAssignments[a.name].push({ date, start: shift.start_time, end: shift.end_time, shiftId: shift.id });
+            const effRange = getEffectiveShiftRange(shift);
+            newAssignments[a.name].push({ date, start: effRange.start, end: effRange.end, shiftId: shift.id });
           });
       }
     }
@@ -1374,12 +1507,13 @@
           // Already assigned to overlapping or too-close shift today?
           const myAssignments = newAssignments[name] || [];
           const restMinutes = schedulingParams.min_rest_hours * 60;
+          const sRange = getEffectiveShiftRange(shift);
           const hasConflict = myAssignments.some(a => {
             if (a.date !== date) return false;
             let aStart = timeToMinutes(a.start);
             let aEnd = timeToMinutes(a.end);
-            let sStart = timeToMinutes(shift.start_time);
-            let sEnd = timeToMinutes(shift.end_time);
+            let sStart = timeToMinutes(sRange.start);
+            let sEnd = timeToMinutes(sRange.end);
             if (aEnd <= aStart) aEnd += 1440;
             if (sEnd <= sStart) sEnd += 1440;
             // Check overlap
@@ -1523,20 +1657,17 @@
             results.push({ shift_id: shift.id, name: a.name, role: a.role, is_manual: false });
           }
           if (!newAssignments[a.name]) newAssignments[a.name] = [];
-          newAssignments[a.name].push({ date, start: shift.start_time, end: shift.end_time, shiftId: shift.id });
+          const effR = getEffectiveShiftRange(shift);
+          newAssignments[a.name].push({ date, start: effR.start, end: effR.end, shiftId: shift.id });
 
           // Update history
           if (history[a.name]) {
-            const dur = shift.start_time === shift.end_time ? 24 : shiftDurationHours(shift.start_time, shift.end_time);
+            const dur = getEffectiveDuration(shift);
             history[a.name].totalHours += dur;
       
             history[a.name].missionCounts[shift.mission_type] = (history[a.name].missionCounts[shift.mission_type] || 0) + 1;
 
-            const lastEndDate = new Date(date + 'T' + (shift.end_time === '00:00' ? '24:00' : shift.end_time) + ':00');
-            if (shift.end_time !== shift.start_time && timeToMinutes(shift.end_time) <= timeToMinutes(shift.start_time)) {
-              lastEndDate.setDate(lastEndDate.getDate() + 1);
-            }
-            history[a.name].lastEnd = lastEndDate;
+            history[a.name].lastEnd = getEffectiveLastEnd(shift);
 
             // Track assigned date for consecutive days counting
             if (!assignedOnDate[a.name]) assignedOnDate[a.name] = new Set();
@@ -1607,6 +1738,11 @@
       // Filter target shifts (only the requested range)
       const targetShifts = loaded;
 
+      // Count manual assignments to preserve
+      const manualCount = targetShifts.reduce((sum, s) => {
+        return sum + (s.assignments || []).filter(a => a.is_manual === 'TRUE').length;
+      }, 0);
+
       // Clear non-manual assignments for target shifts
       const targetIds = targetShifts.map(s => s.id);
       await callAppsScript({ action: 'clearRosterAssignments', shiftIds: targetIds, clearManual: false });
@@ -1624,6 +1760,9 @@
       await callAppsScript({ action: 'saveRosterAssignments', assignments });
 
       warnings.forEach(w => showToast(w, 'warning', 5000));
+      if (manualCount > 0) {
+        showToast(`שיבוץ אוטומטי: שומר ${manualCount} שיבוצים ידניים ומשלים את השאר`, 'info', 4000);
+      }
       showToast(`שובצו ${assignments.length} אנשים בהצלחה`, 'success');
 
       await refreshView();
@@ -1755,9 +1894,12 @@
       const count = assigned.length;
       const isFull = count >= minTeam;
       const badgeClass = count === 0 ? 'empty' : (isFull ? 'full' : 'partial');
-      const timeLabel = shift.start_time === shift.end_time
-        ? 'יום שלם'
+      const isAllDay = shift.start_time === shift.end_time;
+      const actualEndLabel = isAllDay && shift.actual_end_time ? ` <span class="shift-card__actual-time">(06:00-${escapeHtml(shift.actual_end_time)})</span>` : '';
+      const timeLabel = isAllDay
+        ? 'יום שלם' + actualEndLabel
         : `${shift.start_time}-${shift.end_time}`;
+      const alldaySelectHtml = isAllDay ? `<select class="shift-card__allday-select" data-shift-id="${shift.id}"><option value="">יום שלם + מנוחה</option><option value="14:00"${shift.actual_end_time === '14:00' ? ' selected' : ''}>06:00-14:00 (פנוי בבוקר)</option></select>` : '';
 
       html += `<div class="shift-card" style="animation-delay:${idx * 0.05}s; border-right: 3px solid ${color};">
         <div class="shift-card__header">
@@ -1767,6 +1909,7 @@
               ${escapeHtml(name)}
             </span>
             <span class="shift-card__time">${timeLabel}</span>
+            ${alldaySelectHtml}
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <span class="shift-card__badge shift-card__badge--${badgeClass}">${count}/${minTeam} ${isFull ? '✓' : ''}</span>
@@ -1819,6 +1962,74 @@
           promptShiftNote(shiftId);
         } else if (action === 'manual') {
           promptManualAssign(shiftId);
+        }
+      });
+    });
+
+    // All-day shift rest option change handler
+    container.querySelectorAll('.shift-card__allday-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        const shiftId = sel.dataset.shiftId;
+        const shift = shifts.find(s => s.id === shiftId);
+        if (!shift) return;
+        shift.actual_end_time = sel.value || '';
+        try {
+          await callAppsScript({ action: 'saveRosterShifts', shifts: [shift] });
+          showToast('עודכן בהצלחה', 'success');
+          renderDayView();
+        } catch (err) {}
+      });
+    });
+
+    // Tooltip for person names (3-day history)
+    container.querySelectorAll('.shift-card__person-name').forEach(nameEl => {
+      nameEl.style.cursor = 'default';
+      nameEl.addEventListener('mouseenter', function(e) {
+        const personName = nameEl.textContent.trim();
+        const history = getPersonRecentHistory(personName);
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'person-tooltip';
+
+        let content = '<div class="person-tooltip__title">' + escapeHtml(personName) + ' — 3 ימים אחרונים:</div>';
+        content += '<hr class="person-tooltip__divider">';
+
+        if (history.length === 0) {
+          content += '<div class="person-tooltip__empty">ללא משמרות ב-3 ימים אחרונים</div>';
+        } else {
+          history.forEach(function(h) {
+            content += '<div class="person-tooltip__row"><span>יום ' + escapeHtml(h.dayName) + ' ' + escapeHtml(h.dateLabel) + ':</span> <span>' + escapeHtml(h.mtName) + ' ' + escapeHtml(h.timeLabel) + '</span></div>';
+          });
+        }
+
+        tooltip.innerHTML = content;
+        document.body.appendChild(tooltip);
+
+        // Position tooltip below the name element
+        const rect = nameEl.getBoundingClientRect();
+        tooltip.style.top = (rect.bottom + 8) + 'px';
+        tooltip.style.right = (window.innerWidth - rect.right) + 'px';
+
+        // Ensure tooltip doesn't overflow viewport
+        requestAnimationFrame(function() {
+          const tRect = tooltip.getBoundingClientRect();
+          if (tRect.bottom > window.innerHeight) {
+            tooltip.style.top = (rect.top - tRect.height - 8) + 'px';
+          }
+          if (tRect.left < 0) {
+            tooltip.style.right = 'auto';
+            tooltip.style.left = '8px';
+          }
+          tooltip.classList.add('person-tooltip--visible');
+        });
+
+        nameEl._tooltip = tooltip;
+      });
+
+      nameEl.addEventListener('mouseleave', function() {
+        if (nameEl._tooltip) {
+          nameEl._tooltip.remove();
+          nameEl._tooltip = null;
         }
       });
     });
@@ -2583,7 +2794,7 @@
           personStats[a.name] = { totalHours: 0, missions: {} };
           missionTypes.forEach(mt => { personStats[a.name].missions[mt.id] = 0; });
         }
-        const dur = s.start_time === s.end_time ? 24 : shiftDurationHours(s.start_time, s.end_time);
+        const dur = getEffectiveDuration(s);
         personStats[a.name].totalHours += dur;
         personStats[a.name].missions[s.mission_type] = (personStats[a.name].missions[s.mission_type] || 0) + 1;
       });
@@ -2652,11 +2863,11 @@
 
         <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">תהליך עבודה מומלץ</h3>
         <ol style="padding-right:1.2rem;">
-          <li><strong>יצירת משמרות</strong> — בחרו טווח תאריכים ולחצו "צור משמרות מתבנית". זה יוצר את כל המשמרות (סיורים, שמירות, מטבח, כח כונן) לפי התבנית שהגדרתם.</li>
-          <li><strong>שיבוץ ידני (אופציונלי)</strong> — לחצו על אייקון האנשים (👥) במשמרת כדי לקבע אנשים ידנית. שיבוץ ידני מסומן ב-📌 ולא ישתנה.</li>
-          <li><strong>שיבוץ אוטומטי</strong> — לחצו "שיבוץ אוטומטי". המערכת תמלא את כל המשמרות הפנויות תוך שמירה על הוגנות ואילוצים.</li>
-          <li><strong>בדיקה ותיקון</strong> — בדקו התראות, הוגנות, ותקנו ידנית לפי הצורך.</li>
-          <li><strong>ייצוא</strong> — לחצו "ייצוא PDF" כדי להדפיס את השבצ״ק ולתלות על הלוח.</li>
+          <li><strong>יצירת משמרות</strong> — בחרו טווח תאריכים ולחצו "צור משמרות מתבנית".</li>
+          <li><strong>שיבוץ ידני חלקי (אופציונלי)</strong> — לחצו על 👥 במשמרות שבהן אתם רוצים לקבע אנשים ספציפיים. אפשר לשבץ חלק מהאנשים — לא חובה למלא את כל הדרישות.</li>
+          <li><strong>שיבוץ אוטומטי</strong> — לחצו "שיבוץ אוטומטי". המערכת תשלים את המשמרות שלא מלאות, בלי לגעת בשיבוצים ידניים (📌). זו הדרך המומלצת: קודם קובעים ידנית את מה שחשוב, ואז המערכת משלימה את השאר.</li>
+          <li><strong>בדיקה ותיקון</strong> — בדקו התראות והוגנות.</li>
+          <li><strong>ייצוא</strong> — לחצו "ייצוא PDF" להדפסה.</li>
         </ol>
 
         <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">סוגי משימות</h3>
@@ -2694,6 +2905,10 @@
           <li>אותו אדם <strong>לא ישובץ</strong> למשמרת אחרת שחופפת בזמן</li>
           <li>מסומן ב-📌 בכרטיס המשמרת</li>
         </ul>
+
+        <div style="margin-top:0.75rem;padding:0.75rem;background:var(--clr-accent-bg);border-radius:8px;font-size:0.82rem;">
+          <strong>💡 טיפ:</strong> הדרך הנכונה לעבוד — קודם שיבוץ ידני חלקי (לקבע את האנשים שחשובים לכם), ואז שיבוץ אוטומטי שמשלים את השאר. השיבוץ האוטומטי אף פעם לא דורס שיבוץ ידני.
+        </div>
 
         <h3 style="font-size:1.05rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--clr-accent);">איך עובד השיבוץ האוטומטי?</h3>
         <p>המערכת ממלאת את המשמרות בצורה חכמה:</p>
@@ -2816,7 +3031,13 @@
         endDate = formatDateStr(weekDates[6]);
       }
 
-      shifts = await loadShifts(startDate, endDate);
+      // Load extra 3 days back for person history tooltip
+      const recentStart = new Date(parseDateStr(startDate));
+      recentStart.setDate(recentStart.getDate() - 3);
+      const allLoaded = await loadShifts(formatDateStr(recentStart), endDate);
+
+      recentShifts = allLoaded.filter(s => s.date < startDate);
+      shifts = allLoaded.filter(s => s.date >= startDate && s.date <= endDate);
 
       if (currentView === 'day') {
         renderDayView();
