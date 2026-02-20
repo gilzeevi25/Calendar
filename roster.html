@@ -870,32 +870,6 @@
     color: var(--clr-text-tertiary);
   }
 
-  /* All-day shift rest select */
-  .shift-card__allday-select {
-    font-family: var(--font-body);
-    font-size: 0.72rem;
-    padding: 0.15rem 0.35rem;
-    border: 1px solid var(--clr-border);
-    border-radius: 6px;
-    background: var(--clr-surface);
-    color: var(--clr-text-secondary);
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-  .shift-card__allday-select:focus {
-    outline: none;
-    border-color: var(--clr-accent);
-  }
-  [data-theme="dark"] .shift-card__allday-select {
-    background: #1a1714;
-    border-color: #3d362c;
-    color: #a89e92;
-  }
-  .shift-card__actual-time {
-    font-size: 0.75rem;
-    color: var(--clr-activity);
-    font-weight: 500;
-  }
 
   /* Responsive */
   @media (max-width: 768px) {
@@ -1398,14 +1372,16 @@
       const dateStr = formatDateStr(d);
       shiftTemplates.forEach(t => {
         const id = generateId(dateStr, t.mission_type, t.start_time);
-        newShifts.push({
+        const shift = {
           id,
           date: dateStr,
           mission_type: t.mission_type,
           start_time: t.start_time,
           end_time: t.end_time,
           note: ''
-        });
+        };
+        if (t.rest_end_time) shift.actual_end_time = t.rest_end_time;
+        newShifts.push(shift);
 
         // Auto-assign fixed people for this mission type
         const mt = getMissionType(t.mission_type);
@@ -2010,12 +1986,7 @@
       const count = assigned.length;
       const isFull = count >= minTeam;
       const badgeClass = count === 0 ? 'empty' : (isFull ? 'full' : 'partial');
-      const isAllDay = shift.start_time === shift.end_time;
-      const actualEndLabel = isAllDay && shift.actual_end_time ? ` <span class="shift-card__actual-time">(06:00-${escapeHtml(shift.actual_end_time)})</span>` : '';
-      const timeLabel = isAllDay
-        ? 'יום שלם' + actualEndLabel
-        : `${shift.start_time}-${shift.end_time}`;
-      const alldaySelectHtml = isAllDay ? `<select class="shift-card__allday-select" data-shift-id="${shift.id}"><option value="">יום שלם + מנוחה</option><option value="14:00"${shift.actual_end_time === '14:00' ? ' selected' : ''}>06:00-14:00 (פנוי בבוקר)</option></select>` : '';
+      const timeLabel = `${shift.start_time}-${shift.end_time}`;
 
       parts.push(`<div class="shift-card" style="animation-delay:${idx * 0.05}s; border-right: 3px solid ${color};">
         <div class="shift-card__header">
@@ -2025,7 +1996,6 @@
               ${escapeHtml(name)}
             </span>
             <span class="shift-card__time">${timeLabel}</span>
-            ${alldaySelectHtml}
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <span class="shift-card__badge shift-card__badge--${badgeClass}">${count}/${minTeam} ${isFull ? '✓' : ''}</span>
@@ -2637,20 +2607,33 @@
         tplAllDay.addEventListener('change', () => {
           const startInput = overlay.querySelector('#tplStart');
           const endInput = overlay.querySelector('#tplEnd');
+          const restRow = overlay.querySelector('#tplRestRow');
           if (!startInput || !endInput) return;
           if (tplAllDay.checked) {
             startInput.value = '00:00';
             endInput.value = '00:00';
             startInput.disabled = true;
             endInput.disabled = true;
+            if (restRow) restRow.style.display = '';
           } else {
             startInput.disabled = false;
             endInput.disabled = false;
             startInput.value = '08:00';
             endInput.value = '16:00';
+            if (restRow) restRow.style.display = 'none';
           }
         });
       }
+
+      // Rest select for existing all-day templates
+      overlay.querySelectorAll('.tpl-rest-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const idx = parseInt(sel.dataset.idx);
+          if (shiftTemplates[idx]) {
+            shiftTemplates[idx].rest_end_time = sel.value || '';
+          }
+        });
+      });
 
       // Template add
       const addTplBtn = overlay.querySelector('#addTemplate');
@@ -2659,7 +2642,12 @@
           const mt = overlay.querySelector('#tplMissionType').value;
           const start = overlay.querySelector('#tplStart').value || '08:00';
           const end = overlay.querySelector('#tplEnd').value || '16:00';
-          shiftTemplates.push({ mission_type: mt, start_time: start, end_time: end });
+          const isAllDay = start === end;
+          const restEndSel = overlay.querySelector('#tplRestEndTime');
+          const restEnd = isAllDay && restEndSel ? restEndSel.value : '';
+          const tpl = { mission_type: mt, start_time: start, end_time: end };
+          if (restEnd) tpl.rest_end_time = restEnd;
+          shiftTemplates.push(tpl);
           overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
           rebindTabs();
           rebindPanels();
@@ -2880,11 +2868,17 @@
       const mt = getMissionType(tpl.mission_type);
       const mtName = mt ? mt.name : tpl.mission_type;
       const color = mt ? mt.color : '#888';
-      const timeLabel = tpl.start_time === tpl.end_time ? 'יום שלם' : `${tpl.start_time}-${tpl.end_time}`;
+      const isAllDay = tpl.start_time === tpl.end_time;
+      const timeLabel = isAllDay ? 'יום שלם' : `${tpl.start_time}-${tpl.end_time}`;
+      const restHtml = isAllDay ? `<select class="form-select tpl-rest-select" data-idx="${idx}" style="font-size:0.78rem;padding:0.15rem 0.3rem;max-width:160px;">
+        <option value=""${!tpl.rest_end_time ? ' selected' : ''}>ללא מנוחה</option>
+        <option value="14:00"${tpl.rest_end_time === '14:00' ? ' selected' : ''}>מנוחה (06:00-14:00)</option>
+      </select>` : '';
       html += `<div class="item-row">
         <span class="item-row__dot" style="background:${color}"></span>
         <span class="item-row__name">${escapeHtml(mtName)}</span>
         <span class="item-row__detail">${timeLabel}</span>
+        ${restHtml}
         <button class="item-row__btn delete-tpl" data-idx="${idx}" title="מחק">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
@@ -2904,6 +2898,17 @@
         </div>
         <div class="form-group"><input class="form-input" id="tplStart" type="time" value="08:00"></div>
         <div class="form-group"><input class="form-input" id="tplEnd" type="time" value="16:00"></div>
+      </div>
+      <div class="form-row" id="tplRestRow" style="display:none;margin-top:0.4rem;">
+        <div class="form-group" style="display:flex;align-items:center;">
+          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;white-space:nowrap;">
+            מנוחה:
+            <select class="form-select" id="tplRestEndTime" style="font-size:0.85rem;padding:0.2rem 0.35rem;">
+              <option value="">ללא מנוחה</option>
+              <option value="14:00">06:00-14:00 (פנוי בבוקר)</option>
+            </select>
+          </label>
+        </div>
       </div>
       <button class="btn btn--sm btn--primary" id="addTemplate">הוסף</button>
     </div>`;
@@ -3449,21 +3454,6 @@
       // Empty state create-shifts button
       if (e.target.id === 'btnCreateShifts' || e.target.closest('#btnCreateShifts')) {
         promptCreateShifts();
-      }
-    });
-
-    mainContent.addEventListener('change', (e) => {
-      // All-day shift rest option select (day view)
-      const sel = e.target.closest('.shift-card__allday-select');
-      if (sel) {
-        const shiftId = sel.dataset.shiftId;
-        const shift = shifts.find(s => s.id === shiftId);
-        if (!shift) return;
-        const oldValue = shift.actual_end_time;
-        shift.actual_end_time = sel.value || '';
-        callAppsScript({ action: 'saveRosterShifts', shifts: [shift] })
-          .then(() => { buildShiftsByDateIndex(); showToast('עודכן בהצלחה', 'success'); renderDayView(); })
-          .catch(() => { shift.actual_end_time = oldValue; sel.value = oldValue || ''; });
       }
     });
 
