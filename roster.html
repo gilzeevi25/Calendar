@@ -1338,7 +1338,15 @@
         startDate: startDate || formatDateStr(currentDate),
         endDate: endDate || formatDateStr(currentDate)
       });
-      return result.shifts || [];
+      const shifts = result.shifts || [];
+      // Normalize is_manual: Google Sheets may return boolean true which
+      // becomes lowercase "true" via String(), but all comparisons expect 'TRUE'
+      shifts.forEach(s => {
+        (s.assignments || []).forEach(a => {
+          a.is_manual = String(a.is_manual || '').toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE';
+        });
+      });
+      return shifts;
     } catch (err) {
       showToast('שגיאה בטעינת משמרות', 'error');
       return [];
@@ -1902,7 +1910,7 @@
 
       if (mt.requires_officer && !assigned.some(a => {
         const t = personnelTags[a.name] || [];
-        return a.role === 'commander' && t.includes('officer');
+        return t.includes('officer');
       })) {
         alerts.push({
           type: 'missing_role',
@@ -2229,14 +2237,18 @@
 
     document.body.appendChild(overlay);
 
-    const closeModal = () => overlay.remove();
+    const handler = (e) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    const closeModal = () => {
+      document.removeEventListener('keydown', handler);
+      overlay.remove();
+    };
     overlay.querySelector('.modal__close').addEventListener('click', closeModal);
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) closeModal();
     });
-    document.addEventListener('keydown', function handler(e) {
-      if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', handler); }
-    });
+    document.addEventListener('keydown', handler);
 
     return { overlay, close: closeModal };
   }
@@ -2360,7 +2372,7 @@
           shift_id: shiftId,
           name,
           role,
-          is_manual: true,
+          is_manual: 'TRUE',
           assigned_at: new Date().toISOString()
         });
       });
