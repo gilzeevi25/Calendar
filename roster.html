@@ -1020,6 +1020,23 @@
   let alertsList = [];
   let isLoading = false;
 
+  // Performance: Map for O(1) mission type lookups
+  let missionTypeMap = new Map();
+  function buildMissionTypeMap() {
+    missionTypeMap = new Map(missionTypes.map(m => [m.id, m]));
+  }
+  buildMissionTypeMap(); // initial build from DEFAULT_MISSION_TYPES
+
+  // Performance: pre-index shifts by date for O(1) lookups
+  let shiftsByDateIndex = new Map();
+  function buildShiftsByDateIndex() {
+    shiftsByDateIndex = new Map();
+    shifts.forEach(s => {
+      if (!shiftsByDateIndex.has(s.date)) shiftsByDateIndex.set(s.date, []);
+      shiftsByDateIndex.get(s.date).push(s);
+    });
+  }
+
   // ===================== CONFIG GUARD =====================
 
   function isConfigSaved() {
@@ -1056,9 +1073,13 @@
   }
 
   function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    if (str == null || str === '') return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function generateId(date, missionType, startTime) {
@@ -1137,7 +1158,7 @@
   }
 
   function getMissionType(id) {
-    return missionTypes.find(m => m.id === id);
+    return missionTypeMap.get(id);
   }
 
   function getPersonRole(name) {
@@ -1238,6 +1259,7 @@
           missionTypes = JSON.parse(config.mission_types);
           // Ensure requires_officer field exists (backward compat)
           missionTypes.forEach(mt => { if (mt.requires_officer === undefined) mt.requires_officer = false; if (!mt.fixed_people) mt.fixed_people = []; });
+          buildMissionTypeMap();
         } catch(e) {}
       }
       if (config.personnel_tags) {
@@ -1394,6 +1416,9 @@
     const results = [];
     const warnings = [];
 
+    // Performance: O(1) shift lookup by id
+    const shiftMap = new Map(shifts.map(s => [s.id, s]));
+
     // Build history for fairness: name -> { totalHours, missionCounts, lastEnd, consecutiveDays }
     const history = {};
     if (calendarData) {
@@ -1404,7 +1429,7 @@
 
     // Process existing assignments into history
     allAssignments.forEach(a => {
-      const shift = shifts.find(s => s.id === a.shift_id);
+      const shift = shiftMap.get(a.shift_id);
       if (!shift || !history[a.name]) return;
       const dur = getEffectiveDuration(shift);
       history[a.name].totalHours += dur;
@@ -1426,8 +1451,15 @@
     });
 
     const sortedDates = Object.keys(shiftsByDate).sort();
-    // Track assignments made in this run: name -> [{ date, start, end, shiftId }]
+    // Track assignments made in this run: name -> { byDate: Map<date, entries[]>, all: entries[] }
     const newAssignments = {};
+
+    function addNewAssignment(name, entry) {
+      if (!newAssignments[name]) newAssignments[name] = { byDate: new Map(), all: [] };
+      newAssignments[name].all.push(entry);
+      if (!newAssignments[name].byDate.has(entry.date)) newAssignments[name].byDate.set(entry.date, []);
+      newAssignments[name].byDate.get(entry.date).push(entry);
+    }
 
     // Pre-seed newAssignments with ALL manual assignments across ALL target shifts
     // so manually-pinned people are excluded from being auto-assigned to other shifts
@@ -1437,9 +1469,8 @@
         (shift.assignments || [])
           .filter(a => a.is_manual === 'TRUE')
           .forEach(a => {
-            if (!newAssignments[a.name]) newAssignments[a.name] = [];
             const effRange = getEffectiveShiftRange(shift);
-            newAssignments[a.name].push({ date, start: effRange.start, end: effRange.end, shiftId: shift.id });
+            addNewAssignment(a.name, { date, start: effRange.start, end: effRange.end, shiftId: shift.id });
           });
       }
     }
@@ -1489,6 +1520,7 @@
         const manualAssigned = (shift.assignments || [])
           .filter(a => a.is_manual === 'TRUE')
           .map(a => a.name);
+        const manualSet = new Set(manualAssigned);
 
         const needed = minTeam - manualAssigned.length;
         if (needed <= 0) {
@@ -1499,23 +1531,23 @@
 
         // Filter candidates
         const candidates = available.filter(name => {
-          if (manualAssigned.includes(name)) return false;
+          if (manualSet.has(name)) return false;
 
           // Exclusion check
           if (exclusions[name] && exclusions[name].includes(shift.mission_type)) return false;
 
           // Already assigned to overlapping or too-close shift today?
-          const myAssignments = newAssignments[name] || [];
+          const myRec = newAssignments[name];
+          const myDayAssignments = myRec ? (myRec.byDate.get(date) || []) : [];
           const restMinutes = schedulingParams.min_rest_hours * 60;
           const sRange = getEffectiveShiftRange(shift);
-          const hasConflict = myAssignments.some(a => {
-            if (a.date !== date) return false;
+          let sStart = timeToMinutes(sRange.start);
+          let sEnd = timeToMinutes(sRange.end);
+          if (sEnd <= sStart) sEnd += 1440;
+          const hasConflict = myDayAssignments.some(a => {
             let aStart = timeToMinutes(a.start);
             let aEnd = timeToMinutes(a.end);
-            let sStart = timeToMinutes(sRange.start);
-            let sEnd = timeToMinutes(sRange.end);
             if (aEnd <= aStart) aEnd += 1440;
-            if (sEnd <= sStart) sEnd += 1440;
             // Check overlap
             if (sStart < aEnd && sEnd > aStart) return true;
             // Check insufficient rest gap
@@ -1541,7 +1573,8 @@
             if (rule.type !== 'must_not') return false;
             const partner = rule.person1 === name ? rule.person2 : (rule.person2 === name ? rule.person1 : null);
             if (!partner) return false;
-            const partnerAssigned = (newAssignments[partner] || []).some(a => a.shiftId === shift.id);
+            const partnerRec = newAssignments[partner];
+            const partnerAssigned = partnerRec ? partnerRec.all.some(a => a.shiftId === shift.id) : false;
             return partnerAssigned;
           });
           if (buddyConflict) return false;
@@ -1550,6 +1583,7 @@
         });
 
         // Score candidates
+        const candidateSet = new Set(candidates);
         const scored = candidates.map(name => {
           const h = history[name] || { totalHours: 0, missionCounts: {}, consecutiveDays: 0 };
           let score = 0;
@@ -1571,7 +1605,7 @@
             if (rule.type !== 'must') return false;
             const partner = rule.person1 === name ? rule.person2 : (rule.person2 === name ? rule.person1 : null);
             if (!partner) return false;
-            return candidates.includes(partner);
+            return candidateSet.has(partner);
           });
           if (buddyBonus) score += 30;
 
@@ -1656,9 +1690,8 @@
           if (!a.is_manual) {
             results.push({ shift_id: shift.id, name: a.name, role: a.role, is_manual: false });
           }
-          if (!newAssignments[a.name]) newAssignments[a.name] = [];
           const effR = getEffectiveShiftRange(shift);
-          newAssignments[a.name].push({ date, start: effR.start, end: effR.end, shiftId: shift.id });
+          addNewAssignment(a.name, { date, start: effR.start, end: effR.end, shiftId: shift.id });
 
           // Update history
           if (history[a.name]) {
@@ -1839,22 +1872,22 @@
 
     if (panel.style.display === 'none') return; // only render if visible
 
-    let html = `<div class="alerts-panel">
+    const parts = [`<div class="alerts-panel">
       <div class="alerts-panel__header">
         <span>התראות (${alertsList.length})</span>
         <button class="btn btn--sm" onclick="document.getElementById('alertsPanel').style.display='none'">סגור</button>
       </div>
-      <div class="alerts-panel__list">`;
+      <div class="alerts-panel__list">`];
 
     alertsList.forEach(a => {
-      html += `<div class="alert-item">
+      parts.push(`<div class="alert-item">
         <span class="alert-item__icon">${a.icon}</span>
         <span class="alert-item__text">${escapeHtml(a.text)}</span>
-      </div>`;
+      </div>`);
     });
 
-    html += '</div></div>';
-    panel.innerHTML = html;
+    parts.push('</div></div>');
+    panel.innerHTML = parts.join('');
   }
 
   // ===================== RENDERING — DAY VIEW =====================
@@ -1862,7 +1895,7 @@
   function renderDayView() {
     const container = document.getElementById('mainContent');
     const dateStr = formatDateStr(currentDate);
-    const dayShifts = shifts.filter(s => s.date === dateStr);
+    const dayShifts = (shiftsByDateIndex.get(dateStr) || []).slice();
 
     // Sort by mission type, then start_time
     sortShiftsByTypeAndTime(dayShifts);
@@ -1878,12 +1911,11 @@
           <div class="empty-state__text">אין משמרות ליום זה</div>
           <button class="btn btn--primary" id="btnCreateShifts">צור משמרות מתבנית</button>
         </div>`;
-      const btn = document.getElementById('btnCreateShifts');
-      if (btn) btn.addEventListener('click', () => promptCreateShifts());
+      // btnCreateShifts click handled by delegated listener in init()
       return;
     }
 
-    let html = '<div class="shifts-container">';
+    const parts = ['<div class="shifts-container">'];
 
     dayShifts.forEach((shift, idx) => {
       const mt = getMissionType(shift.mission_type);
@@ -1901,7 +1933,7 @@
         : `${shift.start_time}-${shift.end_time}`;
       const alldaySelectHtml = isAllDay ? `<select class="shift-card__allday-select" data-shift-id="${shift.id}"><option value="">יום שלם + מנוחה</option><option value="14:00"${shift.actual_end_time === '14:00' ? ' selected' : ''}>06:00-14:00 (פנוי בבוקר)</option></select>` : '';
 
-      html += `<div class="shift-card" style="animation-delay:${idx * 0.05}s; border-right: 3px solid ${color};">
+      parts.push(`<div class="shift-card" style="animation-delay:${idx * 0.05}s; border-right: 3px solid ${color};">
         <div class="shift-card__header">
           <div style="display:flex;align-items:center;gap:0.75rem;">
             <span class="shift-card__type">
@@ -1926,60 +1958,32 @@
             </div>
           </div>
         </div>
-        <div class="shift-card__body">`;
+        <div class="shift-card__body">`);
 
       if (assigned.length === 0) {
-        html += '<div class="shift-card__empty">לא שובצו אנשים</div>';
+        parts.push('<div class="shift-card__empty">לא שובצו אנשים</div>');
       } else {
         assigned.forEach(a => {
           const roleLabel = ROLE_LABELS[a.role] || '';
           const manualClass = a.is_manual === 'TRUE' ? ' shift-card__person--manual' : '';
-          html += `<div class="shift-card__person${manualClass}">
+          parts.push(`<div class="shift-card__person${manualClass}">
             <span class="shift-card__person-name">${escapeHtml(a.name)}</span>
             ${a.role !== 'member' ? `<span class="shift-card__person-role">${roleLabel}</span>` : ''}
-          </div>`;
+          </div>`);
         });
       }
 
       if (shift.note) {
-        html += `<div class="shift-card__note">${escapeHtml(shift.note)}</div>`;
+        parts.push(`<div class="shift-card__note">${escapeHtml(shift.note)}</div>`);
       }
 
-      html += '</div></div>';
+      parts.push('</div></div>');
     });
 
-    html += '</div>';
-    container.innerHTML = html;
+    parts.push('</div>');
+    container.innerHTML = parts.join('');
 
-    // Event delegation for action buttons
-    container.querySelectorAll('.shift-card__action-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const action = btn.dataset.action;
-        const shiftId = btn.dataset.shiftId;
-        if (action === 'delete') {
-          if (confirm('למחוק את המשמרת?')) deleteShift(shiftId);
-        } else if (action === 'note') {
-          promptShiftNote(shiftId);
-        } else if (action === 'manual') {
-          promptManualAssign(shiftId);
-        }
-      });
-    });
-
-    // All-day shift rest option change handler
-    container.querySelectorAll('.shift-card__allday-select').forEach(sel => {
-      sel.addEventListener('change', async () => {
-        const shiftId = sel.dataset.shiftId;
-        const shift = shifts.find(s => s.id === shiftId);
-        if (!shift) return;
-        shift.actual_end_time = sel.value || '';
-        try {
-          await callAppsScript({ action: 'saveRosterShifts', shifts: [shift] });
-          showToast('עודכן בהצלחה', 'success');
-          renderDayView();
-        } catch (err) {}
-      });
-    });
+    // Action buttons and allday-select are handled by delegated listener in init()
 
     // Tooltip for person names (3-day history)
     container.querySelectorAll('.shift-card__person-name').forEach(nameEl => {
@@ -2044,7 +2048,13 @@
     const endStr = formatDateStr(weekDates[6]);
     const todayStr = formatDateStr(new Date());
 
-    const weekShifts = shifts.filter(s => s.date >= startStr && s.date <= endStr);
+    // Build weekShifts from index instead of filtering entire array
+    const weekShifts = [];
+    weekDates.forEach(date => {
+      const dateStr = formatDateStr(date);
+      const ds = shiftsByDateIndex.get(dateStr);
+      if (ds) weekShifts.push(...ds);
+    });
 
     // Compute alerts for entire week
     alertsList = computeAlerts(weekShifts);
@@ -2057,8 +2067,7 @@
           <div class="empty-state__text">אין משמרות לשבוע זה</div>
           <button class="btn btn--primary" id="btnCreateShifts">צור משמרות מתבנית</button>
         </div>`;
-      const btn = document.getElementById('btnCreateShifts');
-      if (btn) btn.addEventListener('click', () => promptCreateShifts());
+      // btnCreateShifts click handled by delegated listener in init()
       return;
     }
 
@@ -2067,23 +2076,23 @@
     const activeMts = activeMtIds.map(id => getMissionType(id)).filter(Boolean);
 
     // Build summary table
-    let html = '<div class="week-summary"><table class="week-summary__table"><thead><tr>';
-    html += '<th>יום</th>';
+    const parts = ['<div class="week-summary"><table class="week-summary__table"><thead><tr>'];
+    parts.push('<th>יום</th>');
     activeMts.forEach(mt => {
-      html += `<th><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${mt.color};margin-left:4px;vertical-align:middle;"></span> ${escapeHtml(mt.name)}</th>`;
+      parts.push(`<th><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${mt.color};margin-left:4px;vertical-align:middle;"></span> ${escapeHtml(mt.name)}</th>`);
     });
-    html += '<th style="border-inline-start:2px solid var(--clr-border);">סה״כ</th>';
-    html += '</tr></thead><tbody>';
+    parts.push('<th style="border-inline-start:2px solid var(--clr-border);">סה״כ</th>');
+    parts.push('</tr></thead><tbody>');
 
     weekDates.forEach(date => {
       const dateStr = formatDateStr(date);
-      const dayShifts = weekShifts.filter(s => s.date === dateStr);
+      const dayShifts = shiftsByDateIndex.get(dateStr) || [];
       const dayName = DAY_NAMES[date.getDay()];
       const dayNum = date.getDate();
       const isToday = dateStr === todayStr;
 
-      html += `<tr class="week-summary__day-row ${isToday ? 'week-summary__today' : ''}" data-date="${dateStr}">`;
-      html += `<td class="week-summary__day-label">${dayName} ${dayNum}</td>`;
+      parts.push(`<tr class="week-summary__day-row ${isToday ? 'week-summary__today' : ''}" data-date="${dateStr}">`);
+      parts.push(`<td class="week-summary__day-label">${dayName} ${dayNum}</td>`);
 
       let dayTotalAssigned = 0;
       let dayTotalRequired = 0;
@@ -2091,15 +2100,12 @@
       activeMts.forEach(mt => {
         const mtShifts = dayShifts.filter(s => s.mission_type === mt.id);
         if (mtShifts.length === 0) {
-          html += '<td class="week-summary__cell week-summary__cell--none">—</td>';
+          parts.push('<td class="week-summary__cell week-summary__cell--none">—</td>');
           return;
         }
 
         const totalAssigned = mtShifts.reduce((sum, s) => sum + (s.assignments || []).length, 0);
-        const totalRequired = mtShifts.reduce((sum, s) => {
-          const m = getMissionType(s.mission_type);
-          return sum + (m ? m.min_team : 1);
-        }, 0);
+        const totalRequired = mtShifts.length * mt.min_team;
 
         dayTotalAssigned += totalAssigned;
         dayTotalRequired += totalRequired;
@@ -2108,7 +2114,7 @@
         if (totalAssigned >= totalRequired) cellClass = 'week-summary__cell--full';
         else if (totalAssigned > 0) cellClass = 'week-summary__cell--partial';
 
-        html += `<td class="week-summary__cell ${cellClass}">${totalAssigned}/${totalRequired}</td>`;
+        parts.push(`<td class="week-summary__cell ${cellClass}">${totalAssigned}/${totalRequired}</td>`);
       });
 
       // Day total column
@@ -2117,26 +2123,15 @@
       else if (dayTotalAssigned >= dayTotalRequired) totalClass = 'week-summary__cell--full';
       else if (dayTotalAssigned > 0) totalClass = 'week-summary__cell--partial';
 
-      html += `<td class="week-summary__cell ${totalClass}" style="border-inline-start:2px solid var(--clr-border);font-weight:700;">${dayTotalAssigned}/${dayTotalRequired}</td>`;
+      parts.push(`<td class="week-summary__cell ${totalClass}" style="border-inline-start:2px solid var(--clr-border);font-weight:700;">${dayTotalAssigned}/${dayTotalRequired}</td>`);
 
-      html += '</tr>';
+      parts.push('</tr>');
     });
 
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
+    parts.push('</tbody></table></div>');
+    container.innerHTML = parts.join('');
 
-    // Click handler: navigate to day view on row click
-    container.querySelectorAll('.week-summary__day-row').forEach(row => {
-      row.addEventListener('click', () => {
-        const dateStr = row.dataset.date;
-        currentDate = parseDateStr(dateStr);
-        currentView = 'day';
-        document.getElementById('btnDayView').classList.add('view-toggle__btn--active');
-        document.getElementById('btnWeekView').classList.remove('view-toggle__btn--active');
-        updateDateDisplay();
-        refreshView();
-      });
-    });
+    // Week row click is handled by delegated listener in init()
   }
 
   // ===================== MODALS =====================
@@ -2378,6 +2373,7 @@
           if (!name) { showToast('יש להזין שם משימה', 'error'); return; }
           const id = name.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now();
           missionTypes.push({ id, name, duration_hours: dur, min_team: team, requires_commander: false, requires_driver: false, requires_officer: false, color, fixed_people: [] });
+          buildMissionTypeMap();
           overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
           rebindTabs();
           rebindPanels();
@@ -2389,6 +2385,7 @@
         btn.addEventListener('click', () => {
           const id = btn.dataset.id;
           missionTypes = missionTypes.filter(m => m.id !== id);
+          buildMissionTypeMap();
           overlay.querySelector('.modal__body').innerHTML = renderConfigBody();
           rebindTabs();
           rebindPanels();
@@ -3038,6 +3035,7 @@
 
       recentShifts = allLoaded.filter(s => s.date < startDate);
       shifts = allLoaded.filter(s => s.date >= startDate && s.date <= endDate);
+      buildShiftsByDateIndex();
 
       if (currentView === 'day') {
         renderDayView();
@@ -3129,7 +3127,7 @@
 
   function exportPdf() {
     const dateStr = formatDateStr(currentDate);
-    const dayShifts = shifts.filter(s => s.date === dateStr);
+    const dayShifts = (shiftsByDateIndex.get(dateStr) || []).slice();
 
     if (dayShifts.length === 0) {
       showToast('אין משמרות לייצוא ביום זה', 'info');
@@ -3278,6 +3276,57 @@
       renderAlerts();
     });
 
+    // Delegated event listeners on #mainContent (replaces per-element listeners in render functions)
+    const mainContent = document.getElementById('mainContent');
+
+    mainContent.addEventListener('click', (e) => {
+      // Shift card action buttons (day view)
+      const btn = e.target.closest('.shift-card__action-btn');
+      if (btn) {
+        const action = btn.dataset.action;
+        const shiftId = btn.dataset.shiftId;
+        if (action === 'delete') {
+          if (confirm('למחוק את המשמרת?')) deleteShift(shiftId);
+        } else if (action === 'note') {
+          promptShiftNote(shiftId);
+        } else if (action === 'manual') {
+          promptManualAssign(shiftId);
+        }
+        return;
+      }
+
+      // Week summary day row click (week view)
+      const row = e.target.closest('.week-summary__day-row');
+      if (row) {
+        currentDate = parseDateStr(row.dataset.date);
+        currentView = 'day';
+        document.getElementById('btnDayView').classList.add('view-toggle__btn--active');
+        document.getElementById('btnWeekView').classList.remove('view-toggle__btn--active');
+        updateDateDisplay();
+        refreshView();
+        return;
+      }
+
+      // Empty state create-shifts button
+      if (e.target.id === 'btnCreateShifts' || e.target.closest('#btnCreateShifts')) {
+        promptCreateShifts();
+      }
+    });
+
+    mainContent.addEventListener('change', (e) => {
+      // All-day shift rest option select (day view)
+      const sel = e.target.closest('.shift-card__allday-select');
+      if (sel) {
+        const shiftId = sel.dataset.shiftId;
+        const shift = shifts.find(s => s.id === shiftId);
+        if (!shift) return;
+        shift.actual_end_time = sel.value || '';
+        callAppsScript({ action: 'saveRosterShifts', shifts: [shift] })
+          .then(() => { showToast('עודכן בהצלחה', 'success'); renderDayView(); })
+          .catch(() => {});
+      }
+    });
+
     // View toggle
     document.getElementById('btnDayView').addEventListener('click', () => {
       if (currentView === 'day') return;
@@ -3313,9 +3362,7 @@
       e.target.classList.remove('date-nav__input--visible');
     });
 
-    // Create shifts button in empty state
-    const createBtn = document.getElementById('btnCreateShifts');
-    if (createBtn) createBtn.addEventListener('click', () => promptCreateShifts());
+    // btnCreateShifts click handled by delegated listener above
 
     // Load data
     showLoading();
