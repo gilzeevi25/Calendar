@@ -758,6 +758,24 @@
   .toast--error { background: #dc2626; }
   .toast--info { background: #2563eb; }
   .toast--warning { background: #d97706; }
+  .toast--action { display: flex; align-items: center; gap: 0.75rem; }
+  .toast__undo-btn { background: rgba(255,255,255,0.25); color: #fff; border: 1px solid rgba(255,255,255,0.4); padding: 0.2rem 0.6rem; border-radius: 4px; cursor: pointer; font-family: var(--font-body); font-size: 0.8rem; }
+  .toast__undo-btn:hover { background: rgba(255,255,255,0.4); }
+
+  .calendar-data-banner {
+    background: var(--clr-warning-bg);
+    color: #92400e;
+    border: 1px solid var(--clr-warning);
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  .conflict-badge { color: var(--clr-danger); cursor: help; font-size: 0.85rem; margin-right: 0.2rem; }
+
+  .confirm-modal__message { font-size: 0.95rem; line-height: 1.6; color: var(--clr-text-secondary); margin-bottom: 0.5rem; }
 
   /* Loading spinner */
   .loading-overlay {
@@ -1019,6 +1037,8 @@
   let calendarData = null; // { map, names }
   let alertsList = [];
   let isLoading = false;
+  let isBusy = false;
+  let calendarDataFailed = false;
 
   // Performance: Map for O(1) mission type lookups
   let missionTypeMap = new Map();
@@ -1089,6 +1109,17 @@
   function timeToMinutes(t) {
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
+  }
+
+  function shiftsOverlap(a, b) {
+    if (a.date !== b.date) return false;
+    // All-day shifts always overlap
+    if (a.start_time === a.end_time || b.start_time === b.end_time) return true;
+    let aStart = timeToMinutes(a.start_time), aEnd = timeToMinutes(a.end_time);
+    let bStart = timeToMinutes(b.start_time), bEnd = timeToMinutes(b.end_time);
+    if (aEnd <= aStart) aEnd += 1440;
+    if (bEnd <= bStart) bEnd += 1440;
+    return aStart < bEnd && bStart < aEnd;
   }
 
   function shiftDurationHours(start, end) {
@@ -1195,13 +1226,23 @@
 
   // ===================== TOAST =====================
 
-  function showToast(message, type, duration) {
+  function showToast(message, type, duration, actionLabel, actionCallback) {
     type = type || 'info';
     duration = duration || 3000;
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = 'toast toast--' + type;
-    toast.textContent = message;
+    if (actionLabel && actionCallback) {
+      toast.classList.add('toast--action');
+      toast.textContent = message;
+      const btn = document.createElement('button');
+      btn.className = 'toast__undo-btn';
+      btn.textContent = actionLabel;
+      btn.addEventListener('click', () => { toast.remove(); actionCallback(); });
+      toast.appendChild(btn);
+    } else {
+      toast.textContent = message;
+    }
     container.appendChild(toast);
     setTimeout(() => {
       toast.style.animation = 'toastOut 0.3s ease-in forwards';
@@ -1234,6 +1275,7 @@
   function showLoading() {
     if (isLoading) return;
     isLoading = true;
+    isBusy = true;
     const el = document.createElement('div');
     el.id = 'loadingOverlay';
     el.className = 'loading-overlay';
@@ -1243,6 +1285,7 @@
 
   function hideLoading() {
     isLoading = false;
+    isBusy = false;
     const el = document.getElementById('loadingOverlay');
     if (el) el.remove();
   }
@@ -1260,22 +1303,22 @@
           // Ensure requires_officer field exists (backward compat)
           missionTypes.forEach(mt => { if (mt.requires_officer === undefined) mt.requires_officer = false; if (!mt.fixed_people) mt.fixed_people = []; });
           buildMissionTypeMap();
-        } catch(e) {}
+        } catch(e) { showToast('שגיאת טעינת הגדרות: סוגי משימות, נטענו ברירות מחדל', 'error', 5000); }
       }
       if (config.personnel_tags) {
-        try { personnelTags = JSON.parse(config.personnel_tags); } catch(e) {}
+        try { personnelTags = JSON.parse(config.personnel_tags); } catch(e) { showToast('שגיאת טעינת הגדרות: תגיות כוח אדם, נטענו ברירות מחדל', 'error', 5000); }
       }
       if (config.exclusions) {
-        try { exclusions = JSON.parse(config.exclusions); } catch(e) {}
+        try { exclusions = JSON.parse(config.exclusions); } catch(e) { showToast('שגיאת טעינת הגדרות: החרגות, נטענו ברירות מחדל', 'error', 5000); }
       }
       if (config.buddy_rules) {
-        try { buddyRules = JSON.parse(config.buddy_rules); } catch(e) {}
+        try { buddyRules = JSON.parse(config.buddy_rules); } catch(e) { showToast('שגיאת טעינת הגדרות: כללי צמד, נטענו ברירות מחדל', 'error', 5000); }
       }
       if (config.scheduling_params) {
-        try { schedulingParams = { ...DEFAULT_SCHEDULING_PARAMS, ...JSON.parse(config.scheduling_params) }; } catch(e) {}
+        try { schedulingParams = { ...DEFAULT_SCHEDULING_PARAMS, ...JSON.parse(config.scheduling_params) }; } catch(e) { showToast('שגיאת טעינת הגדרות: פרמטרי שיבוץ, נטענו ברירות מחדל', 'error', 5000); }
       }
       if (config.shift_templates) {
-        try { shiftTemplates = JSON.parse(config.shift_templates); } catch(e) {}
+        try { shiftTemplates = JSON.parse(config.shift_templates); } catch(e) { showToast('שגיאת טעינת הגדרות: תבניות משמרת, נטענו ברירות מחדל', 'error', 5000); }
       }
     } catch (err) {
       console.warn('Failed to load roster config, using defaults');
@@ -1297,6 +1340,7 @@
       });
       return result.shifts || [];
     } catch (err) {
+      showToast('שגיאה בטעינת משמרות', 'error');
       return [];
     }
   }
@@ -1317,7 +1361,8 @@
       });
       calendarData = { map, names: [...namesSet] };
     } catch (err) {
-      console.warn('Failed to load calendar data');
+      calendarDataFailed = true;
+      showToast('שגיאה בטעינת נתוני לוח שנה — ייתכן שהזמינות לא מדויקת', 'error', 6000);
       calendarData = { map: {}, names: [] };
     }
   }
@@ -1388,6 +1433,7 @@
   }
 
   async function deleteShift(shiftId) {
+    if (isBusy) { showToast('פעולה בתהליך, נא להמתין', 'info'); return; }
     showLoading();
     try {
       await callAppsScript({ action: 'deleteRosterShifts', ids: [shiftId] });
@@ -1403,11 +1449,15 @@
   async function saveShiftNote(shiftId, note) {
     const shift = shifts.find(s => s.id === shiftId);
     if (!shift) return;
+    const oldNote = shift.note;
     shift.note = note;
     try {
       await callAppsScript({ action: 'saveRosterShifts', shifts: [shift] });
+      buildShiftsByDateIndex();
       showToast('ההערה נשמרה', 'success');
-    } catch (err) {}
+    } catch (err) {
+      shift.note = oldNote;
+    }
   }
 
   // ===================== AUTO-SCHEDULING ALGORITHM =====================
@@ -1731,6 +1781,7 @@
   }
 
   async function runAutoSchedule() {
+    if (isBusy) { showToast('פעולה בתהליך, נא להמתין', 'info'); return; }
     if (!requireConfig()) return;
     if (!calendarData) {
       showToast('נתוני לוח השנה טרם נטענו', 'error');
@@ -1776,6 +1827,11 @@
         return sum + (s.assignments || []).filter(a => a.is_manual === 'TRUE').length;
       }, 0);
 
+      // Snapshot existing auto-assignments for undo
+      const autoSnapshot = targetShifts.flatMap(s =>
+        (s.assignments || []).filter(a => a.is_manual !== 'TRUE')
+      );
+
       // Clear non-manual assignments for target shifts
       const targetIds = targetShifts.map(s => s.id);
       await callAppsScript({ action: 'clearRosterAssignments', shiftIds: targetIds, clearManual: false });
@@ -1796,7 +1852,25 @@
       if (manualCount > 0) {
         showToast(`שיבוץ אוטומטי: שומר ${manualCount} שיבוצים ידניים ומשלים את השאר`, 'info', 4000);
       }
-      showToast(`שובצו ${assignments.length} אנשים בהצלחה`, 'success');
+
+      // Undo function
+      const undoAutoSchedule = async () => {
+        showLoading();
+        try {
+          await callAppsScript({ action: 'clearRosterAssignments', shiftIds: targetIds, clearManual: false });
+          if (autoSnapshot.length > 0) {
+            await callAppsScript({ action: 'saveRosterAssignments', assignments: autoSnapshot });
+          }
+          showToast('השיבוץ האוטומטי בוטל', 'success');
+          await refreshView();
+        } catch (err) {
+          // toast shown by callAppsScript
+        } finally {
+          hideLoading();
+        }
+      };
+
+      showToast(`שובצו ${assignments.length} אנשים בהצלחה`, 'success', 15000, 'ביטול', undoAutoSchedule);
 
       await refreshView();
     } catch (err) {
@@ -1904,8 +1978,10 @@
     alertsList = computeAlerts(dayShifts);
     renderAlerts();
 
+    const calendarBanner = calendarDataFailed ? '<div class="calendar-data-banner">שגיאה בטעינת נתוני לוח שנה — ייתכן שהזמינות לא מדויקת</div>' : '';
+
     if (dayShifts.length === 0) {
-      container.innerHTML = `
+      container.innerHTML = calendarBanner + `
         <div class="empty-state">
           <div class="empty-state__icon">📋</div>
           <div class="empty-state__text">אין משמרות ליום זה</div>
@@ -1915,7 +1991,7 @@
       return;
     }
 
-    const parts = ['<div class="shifts-container">'];
+    const parts = [calendarBanner + '<div class="shifts-container">'];
 
     dayShifts.forEach((shift, idx) => {
       const mt = getMissionType(shift.mission_type);
@@ -2060,8 +2136,10 @@
     alertsList = computeAlerts(weekShifts);
     renderAlerts();
 
+    const calendarBanner = calendarDataFailed ? '<div class="calendar-data-banner">שגיאה בטעינת נתוני לוח שנה — ייתכן שהזמינות לא מדויקת</div>' : '';
+
     if (weekShifts.length === 0) {
-      container.innerHTML = `
+      container.innerHTML = calendarBanner + `
         <div class="empty-state">
           <div class="empty-state__icon">📋</div>
           <div class="empty-state__text">אין משמרות לשבוע זה</div>
@@ -2076,7 +2154,7 @@
     const activeMts = activeMtIds.map(id => getMissionType(id)).filter(Boolean);
 
     // Build summary table
-    const parts = ['<div class="week-summary"><table class="week-summary__table"><thead><tr>'];
+    const parts = [calendarBanner + '<div class="week-summary"><table class="week-summary__table"><thead><tr>'];
     parts.push('<th>יום</th>');
     activeMts.forEach(mt => {
       parts.push(`<th><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${mt.color};margin-left:4px;vertical-align:middle;"></span> ${escapeHtml(mt.name)}</th>`);
@@ -2163,6 +2241,16 @@
     return { overlay, close: closeModal };
   }
 
+  function confirmModal(title, message, confirmText, onConfirm) {
+    const { overlay, close } = createModal(title,
+      `<div class="confirm-modal__message">${escapeHtml(message)}</div>`,
+      `<button class="btn btn--danger" id="modalConfirmYes">${escapeHtml(confirmText)}</button>
+       <button class="btn" id="modalConfirmNo">ביטול</button>`
+    );
+    overlay.querySelector('#modalConfirmYes').addEventListener('click', () => { close(); onConfirm(); });
+    overlay.querySelector('#modalConfirmNo').addEventListener('click', close);
+  }
+
   function promptShiftNote(shiftId) {
     const shift = shifts.find(s => s.id === shiftId);
     if (!shift) return;
@@ -2187,6 +2275,7 @@
   }
 
   function promptManualAssign(shiftId) {
+    if (isBusy) { showToast('פעולה בתהליך, נא להמתין', 'info'); return; }
     if (!requireConfig()) return;
     const shift = shifts.find(s => s.id === shiftId);
     if (!shift) return;
@@ -2200,6 +2289,23 @@
     const allNames = calendarData ? calendarData.names : [];
     const currentManual = (shift.assignments || []).filter(a => a.is_manual === 'TRUE');
     const currentManualNames = new Set(currentManual.map(a => a.name));
+
+    // Build conflict map: name -> list of overlapping shifts (excluding current shift)
+    const dayShifts = (shiftsByDateIndex.get(shift.date) || []).filter(s => s.id !== shiftId);
+    const conflictMap = {};
+    allNames.forEach(name => {
+      const conflicts = [];
+      dayShifts.forEach(other => {
+        if (!shiftsOverlap(shift, other)) return;
+        if ((other.assignments || []).some(a => a.name === name)) {
+          const otherMt = getMissionType(other.mission_type);
+          const otherName = otherMt ? otherMt.name : other.mission_type;
+          const otherTime = other.start_time === other.end_time ? 'יום שלם' : `${other.start_time}-${other.end_time}`;
+          conflicts.push(`${otherName} ${otherTime}`);
+        }
+      });
+      if (conflicts.length) conflictMap[name] = conflicts;
+    });
 
     // Build person list — available people first, then rest (greyed out)
     let checkboxHtml = '<div style="margin-bottom:0.75rem;font-size:0.8rem;color:var(--clr-text-tertiary);">סמן את האנשים שישובצו ידנית. שיבוץ ידני נעול — השיבוץ האוטומטי לא יגע בהם ולא ישבץ אותם למשמרות אחרות.</div>';
@@ -2220,11 +2326,14 @@
       const existingRole = isChecked ? (currentManual.find(a => a.name === name)?.role || 'member') : 'member';
       const opacity = isOnBase ? '1' : '0.45';
       const hint = isOnBase ? '' : ' (לא במוצב)';
+      const conflictBadge = conflictMap[name]
+        ? `<span class="conflict-badge" title="חפיפה עם ${escapeHtml(conflictMap[name].join(', '))}">&#9888;&#65039;</span>`
+        : '';
 
       checkboxHtml += `<label style="opacity:${opacity};flex-direction:column;align-items:flex-start;gap:0.15rem;">
         <div style="display:flex;align-items:center;gap:0.4rem;">
           <input type="checkbox" class="manual-cb" data-name="${escapeHtml(name)}" ${isChecked ? 'checked' : ''}>
-          <span>${escapeHtml(name)}${hint}</span>
+          <span>${escapeHtml(name)}${hint}${conflictBadge}</span>
         </div>
         <div style="padding-right:1.2rem;">
           ${roleOptions.replace('__NAME__', escapeHtml(name)).replace(`value="${existingRole}"`, `value="${existingRole}" selected`)}
@@ -2256,21 +2365,37 @@
         });
       });
 
+      const originalAssignments = [...(shift.assignments || [])];
       showLoading();
       try {
         // Clear ALL existing assignments for this shift (both manual and auto)
         await callAppsScript({ action: 'clearRosterAssignments', shiftIds: [shiftId], clearManual: true });
 
         // Save the new manual assignments
-        if (newAssignments.length > 0) {
-          await callAppsScript({ action: 'saveRosterAssignments', assignments: newAssignments });
+        try {
+          if (newAssignments.length > 0) {
+            await callAppsScript({ action: 'saveRosterAssignments', assignments: newAssignments });
+          }
+        } catch (saveErr) {
+          // Save failed after clear — attempt to restore original assignments
+          showToast('שגיאה בשמירת שיבוצים חדשים — מנסה לשחזר את הקודמים', 'error', 5000);
+          if (originalAssignments.length > 0) {
+            try {
+              await callAppsScript({ action: 'saveRosterAssignments', assignments: originalAssignments });
+              showToast('השיבוצים הקודמים שוחזרו', 'info');
+            } catch (restoreErr) {
+              showToast('שגיאה בשחזור — יש לרענן ולבדוק את הנתונים', 'error', 6000);
+            }
+          }
+          await refreshView();
+          return;
         }
 
         showToast(`שובצו ${newAssignments.length} אנשים ידנית`, 'success');
         close();
         await refreshView();
       } catch (err) {
-        // toast shown
+        // toast shown by callAppsScript
       } finally {
         hideLoading();
       }
@@ -2280,6 +2405,7 @@
   }
 
   function promptCreateShifts() {
+    if (isBusy) { showToast('פעולה בתהליך, נא להמתין', 'info'); return; }
     if (!requireConfig()) return;
     const today = formatDateStr(currentDate);
     const { overlay, close } = createModal('יצירת משמרות מתבנית', `
@@ -3050,6 +3176,7 @@
   // ===================== DELETE SHIFTS (DATE RANGE) =====================
 
   function promptDeleteShifts() {
+    if (isBusy) { showToast('פעולה בתהליך, נא להמתין', 'info'); return; }
     const today = formatDateStr(currentDate);
     const { overlay, close } = createModal('מחיקת משמרות', `
       <div class="form-group">
@@ -3286,7 +3413,7 @@
         const action = btn.dataset.action;
         const shiftId = btn.dataset.shiftId;
         if (action === 'delete') {
-          if (confirm('למחוק את המשמרת?')) deleteShift(shiftId);
+          confirmModal('מחיקת משמרת', 'למחוק את המשמרת?', 'מחק', () => deleteShift(shiftId));
         } else if (action === 'note') {
           promptShiftNote(shiftId);
         } else if (action === 'manual') {
@@ -3320,10 +3447,11 @@
         const shiftId = sel.dataset.shiftId;
         const shift = shifts.find(s => s.id === shiftId);
         if (!shift) return;
+        const oldValue = shift.actual_end_time;
         shift.actual_end_time = sel.value || '';
         callAppsScript({ action: 'saveRosterShifts', shifts: [shift] })
-          .then(() => { showToast('עודכן בהצלחה', 'success'); renderDayView(); })
-          .catch(() => {});
+          .then(() => { buildShiftsByDateIndex(); showToast('עודכן בהצלחה', 'success'); renderDayView(); })
+          .catch(() => { shift.actual_end_time = oldValue; sel.value = oldValue || ''; });
       }
     });
 
