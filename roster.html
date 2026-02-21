@@ -372,6 +372,22 @@
     font-size: 0.7rem;
     margin-inline-start: 0.25rem;
   }
+  .shift-card__person--duplicate {
+    position: relative;
+  }
+  .shift-card__person--duplicate::before {
+    content: '⚠';
+    font-size: 0.72rem;
+    margin-inline-end: 0.2rem;
+    color: var(--clr-warning);
+  }
+  .shift-card__person--duplicate .shift-card__person-name {
+    color: var(--clr-warning);
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--clr-warning);
+  }
 
   .shift-card__note {
     margin-top: 0.5rem;
@@ -388,6 +404,22 @@
     font-size: 0.82rem;
     color: var(--clr-text-tertiary);
     font-style: italic;
+  }
+
+  .shift-card--unassigned {
+    border: 1.5px dashed var(--clr-border);
+    border-right: 3px dashed var(--clr-text-tertiary);
+    background: var(--clr-bg);
+    opacity: 0.85;
+  }
+  .shift-card--unassigned .shift-card__header {
+    border-bottom: 1px dashed var(--clr-border);
+  }
+  .shift-card--unassigned .shift-card__type-dot {
+    background: var(--clr-text-tertiary) !important;
+  }
+  .shift-card--unassigned .shift-card__person-name {
+    color: var(--clr-text-secondary);
   }
 
   /* Week / Gantt view */
@@ -816,7 +848,7 @@
 
   /* Print */
   @media print {
-    .controls, .theme-toggle, .toast-container, .btn, .header__nav-link { display: none !important; }
+    .controls, .theme-toggle, .toast-container, .btn, .header__nav-link, .shift-card--unassigned { display: none !important; }
     .app { padding: 0; }
     .shift-card { break-inside: avoid; }
   }
@@ -1160,6 +1192,36 @@
     });
     entries.sort(function(a, b) { return a.date.localeCompare(b.date); });
     return entries;
+  }
+
+  function getDuplicateNames(dateStr) {
+    const dayShifts = shiftsByDateIndex.get(dateStr) || [];
+    const nameCount = {};
+    dayShifts.forEach(function(shift) {
+      (shift.assignments || []).forEach(function(a) {
+        nameCount[a.name] = (nameCount[a.name] || 0) + 1;
+      });
+    });
+    const duplicates = new Set();
+    Object.keys(nameCount).forEach(function(name) {
+      if (nameCount[name] > 1) duplicates.add(name);
+    });
+    return duplicates;
+  }
+
+  function getUnassignedPersonnel(dateStr) {
+    const available = getAvailablePersonnel(dateStr);
+    if (available.length === 0) return [];
+    const dayShifts = shiftsByDateIndex.get(dateStr) || [];
+    const assignedNames = new Set();
+    dayShifts.forEach(function(shift) {
+      (shift.assignments || []).forEach(function(a) {
+        assignedNames.add(a.name);
+      });
+    });
+    return available.filter(function(name) {
+      return !assignedNames.has(name);
+    });
   }
 
   function getMissionType(id) {
@@ -1912,6 +1974,27 @@
       }
     });
 
+    // Detect duplicate assignments
+    const nameOccurrences = {};
+    dayShifts.forEach(shift => {
+      const mt = getMissionType(shift.mission_type);
+      const mtName = mt ? mt.name : shift.mission_type;
+      const timeLabel = shift.start_time + '-' + shift.end_time;
+      (shift.assignments || []).forEach(a => {
+        if (!nameOccurrences[a.name]) nameOccurrences[a.name] = [];
+        nameOccurrences[a.name].push(mtName + ' ' + timeLabel);
+      });
+    });
+    Object.keys(nameOccurrences).forEach(name => {
+      if (nameOccurrences[name].length > 1) {
+        alerts.push({
+          type: 'duplicate',
+          icon: '🟡',
+          text: `${name} משובץ/ת ב-${nameOccurrences[name].length} משמרות: ${nameOccurrences[name].join(', ')}`
+        });
+      }
+    });
+
     return alerts;
   }
 
@@ -1961,6 +2044,8 @@
     // Compute alerts
     alertsList = computeAlerts(dayShifts);
     renderAlerts();
+
+    const duplicateNames = getDuplicateNames(dateStr);
 
     const calendarBanner = calendarDataFailed ? '<div class="calendar-data-banner">שגיאה בטעינת נתוני לוח שנה — ייתכן שהזמינות לא מדויקת</div>' : '';
 
@@ -2020,7 +2105,8 @@
         assigned.forEach(a => {
           const roleLabel = ROLE_LABELS[a.role] || '';
           const manualClass = a.is_manual === 'TRUE' ? ' shift-card__person--manual' : '';
-          parts.push(`<div class="shift-card__person${manualClass}">
+          const dupClass = duplicateNames.has(a.name) ? ' shift-card__person--duplicate' : '';
+          parts.push(`<div class="shift-card__person${manualClass}${dupClass}">
             <span class="shift-card__person-name">${escapeHtml(a.name)}</span>
             ${a.role !== 'member' ? `<span class="shift-card__person-role">${roleLabel}</span>` : ''}
           </div>`);
@@ -2033,6 +2119,31 @@
 
       parts.push('</div></div>');
     });
+
+    // Pseudo-shift: unassigned available personnel
+    const unassigned = getUnassignedPersonnel(dateStr);
+    if (unassigned.length > 0) {
+      parts.push(`<div class="shift-card shift-card--unassigned" style="animation-delay:${dayShifts.length * 0.05}s;">
+        <div class="shift-card__header">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span class="shift-card__type">
+              <span class="shift-card__type-dot"></span>
+              לא משובצים
+            </span>
+            <span class="shift-card__time">זמינים ללא שיבוץ</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span class="shift-card__badge shift-card__badge--partial">${unassigned.length}</span>
+          </div>
+        </div>
+        <div class="shift-card__body">`);
+      unassigned.forEach(name => {
+        parts.push(`<div class="shift-card__person">
+          <span class="shift-card__person-name">${escapeHtml(name)}</span>
+        </div>`);
+      });
+      parts.push('</div></div>');
+    }
 
     parts.push('</div>');
     container.innerHTML = parts.join('');
@@ -3279,6 +3390,7 @@
     }
 
     sortShiftsByTypeAndTime(dayShifts);
+    const pdfDuplicates = getDuplicateNames(dateStr);
 
     const dateLabel = formatDateHebrew(currentDate);
 
@@ -3300,6 +3412,8 @@
   .mission-header { background: #faf8f5; font-weight: 700; font-size: 0.95rem; }
   .mission-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 0.4rem; vertical-align: middle; }
   .role-badge { display: inline-block; font-size: 0.72rem; padding: 0.1rem 0.4rem; border-radius: 4px; background: #f0edf5; color: #5b21b6; margin-right: 0.3rem; }
+  .dup { color: #d97706; }
+  .footnotes { margin-top: 1rem; padding: 0.6rem 0.8rem; border-top: 1px solid #e8e2da; font-size: 0.8rem; color: #92400e; }
   .note-row td { background: #fef9c3; font-size: 0.8rem; color: #92400e; font-style: italic; }
   .footer { text-align: center; font-size: 0.75rem; color: #9c8f82; margin-top: 2rem; border-top: 1px solid #e8e2da; padding-top: 0.75rem; }
   @media print { body { padding: 1rem; } }
@@ -3333,8 +3447,8 @@
         ? assigned.map(a => {
             const roleLabel = ROLE_LABELS[a.role] || '';
             const badge = a.role !== 'member' ? `<span class="role-badge">${roleLabel}</span>` : '';
-            const pin = a.is_manual === 'TRUE' ? ' 📌' : '';
-            return `${escapeHtml(a.name)}${badge}${pin}`;
+            const nameHtml = pdfDuplicates.has(a.name) ? `<span class="dup">⚠ ${escapeHtml(a.name)}</span>` : escapeHtml(a.name);
+            return `${nameHtml}${badge}`;
           }).join('<br>')
         : '<span style="color:#9c8f82;">—</span>';
 
@@ -3352,7 +3466,13 @@
 
     html += `
 </tbody>
-</table>
+</table>`;
+
+    if (pdfDuplicates.size > 0) {
+      html += '<div class="footnotes">⚠ — משובץ/ת ליותר ממשימה אחת</div>';
+    }
+
+    html += `
 <div class="footer">שבצ״ק — פלוגה ב | הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</div>
 </body>
 </html>`;
