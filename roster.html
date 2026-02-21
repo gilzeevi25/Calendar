@@ -1900,6 +1900,12 @@
           const h = history[name] || { totalHours: 0, missionCounts: {}, consecutiveDays: 0 };
           let score = 0;
 
+          // Same-day assignment penalty: heavily penalize people who already
+          // have shifts today so unassigned people are strongly preferred.
+          const myRec = newAssignments[name];
+          const dayCount = myRec ? (myRec.byDate.get(date) || []).length : 0;
+          score -= dayCount * 50000;
+
           // Fairness: fewer hours → higher score
           score += (1000 - h.totalHours) * 100;
 
