@@ -1773,19 +1773,9 @@
         }
 
         // 4) Fill remaining slots by fairness score
-        // De-prioritize specialists (drivers, officers) for generic slots so they
-        // stay available for future shifts that actually require their specialty.
         if (slotsLeft > 0) {
-          const rest = scored.filter(s => !pickedSet.has(s.name));
-          rest.sort((a, b) => {
-            const aTags = personnelTags[a.name] || [];
-            const bTags = personnelTags[b.name] || [];
-            const aSpec = (aTags.includes('driver') || aTags.includes('officer')) ? 1 : 0;
-            const bSpec = (bTags.includes('driver') || bTags.includes('officer')) ? 1 : 0;
-            if (aSpec !== bSpec) return aSpec - bSpec; // non-specialists first
-            return b.score - a.score; // then by fairness
-          });
-          rest.slice(0, slotsLeft).forEach(s => {
+          const rest = scored.filter(s => !pickedSet.has(s.name)).slice(0, slotsLeft);
+          rest.forEach(s => {
             const tags = personnelTags[s.name] || [];
             let role = 'member';
             if (tags.includes('officer')) role = 'commander';
