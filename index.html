@@ -194,6 +194,11 @@
   [data-theme="dark"] .freshness-badge--cached { background: rgba(234,179,8,0.1); color: #fbbf24; }
   [data-theme="dark"] .freshness-badge--fallback { background: rgba(248,113,113,0.1); color: #f87171; }
 
+  .freshness-badge--mock { background: rgba(168,85,247,0.08); color: #7c3aed; }
+  .freshness-badge--mock .freshness-badge__dot { background: #7c3aed; }
+  [data-theme="dark"] .freshness-badge--mock { background: rgba(168,85,247,0.1); color: #c084fc; }
+  [data-theme="dark"] .freshness-badge--mock .freshness-badge__dot { background: #c084fc; }
+
   .header__sheet-link {
     display: inline-flex;
     align-items: center;
@@ -2497,7 +2502,7 @@
       </div>
       <button class="toolbar__btn toolbar__btn--add-people" id="btnAddPeople">➕ הוסף אנשים</button>
       <button class="toolbar__btn toolbar__btn--fairness" id="btnFairness">📊 סיכום</button>
-      <a href="roster.html" class="toolbar__btn toolbar__btn--roster" title="שבצ״ק">📋 שבצ״ק</a>
+      <a id="rosterLink" href="roster.html" class="toolbar__btn toolbar__btn--roster" title="שבצ״ק">📋 שבצ״ק</a>
     </div>
     <div class="legend">
       <span class="legend__item"><span class="legend__dot legend__dot--activity"></span>במוצב</span>
@@ -2622,6 +2627,9 @@
     3: 'אפריל', 4: 'מאי', 5: 'יוני'
   };
 
+  // ---- Mock mode ----
+  const IS_MOCK = new URLSearchParams(window.location.search).get('mock') === 'true';
+
   // ---- Editing state ----
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tIx9awHDsdXZ0y01QElrDNv4F9sy_7ENDFVlHPOns7H-KhRrHLGJG5zhpuVBZ_YV0A/exec';
   const DATE_START = '2026-04-26';
@@ -2682,6 +2690,31 @@
   // ---- Apps Script API ----
 
   async function callAppsScript(payload) {
+    // Mock mode: intercept all API calls
+    if (IS_MOCK) {
+      if (payload.action === 'updateCells') {
+        const count = payload.updates ? payload.updates.length : 0;
+        showToast('עודכנו ' + count + ' תאים (מוק)', 'success');
+        return { success: true, updated: count, skipped: 0 };
+      }
+      if (payload.action === 'addPeople') {
+        showToast('הוספת אנשים לא זמינה במצב דמו', 'error', 4000);
+        throw new Error('Not available in mock mode');
+      }
+      if (payload.action === 'getData') {
+        try {
+          const resp = await fetch('mock-data.csv');
+          if (!resp.ok) throw new Error('fetch failed');
+          const text = await resp.text();
+          const rows = parseCSV(text);
+          if (rows.length > 0) return { success: true, rows };
+        } catch (e) { /* fall through to generateFallbackData */ }
+        return { success: true, rows: generateFallbackData() };
+      }
+      showToast('פעולה זו לא זמינה במצב דמו', 'error', 4000);
+      throw new Error('Not available in mock mode');
+    }
+
     if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
       showToast('יש להגדיר את כתובת Apps Script', 'error', 4000);
       throw new Error('Apps Script URL not configured');
@@ -4482,7 +4515,24 @@
   // ---- Fallback data ----
 
   function generateFallbackData() {
-    const names = ['גיל זאבי','אבירן גרין','לרה','מיה ידידה','עמית וייס','שרון כהן','אלון גלפרין','כרמל אלימלך','יואב אשד','שני לאונוב','אליזבת','שי יפרח','שנהב'];
+    const people = IS_MOCK ? [
+      { name: 'מפקד פלוגה', association: 'מפקדה' },
+      { name: 'סגן מפקד פלוגה', association: 'מפקדה' },
+      { name: 'מפקד מחלקה 1', association: 'מחלקה 1' },
+      { name: 'מ.כ 1.1', association: 'מחלקה 1' }, { name: 'מ.כ 1.2', association: 'מחלקה 1' }, { name: 'מ.כ 1.3', association: 'מחלקה 1' },
+      { name: 'נהג 1.4', association: 'מחלקה 1' }, { name: 'נהג 1.5', association: 'מחלקה 1' }, { name: 'נהג 1.6', association: 'מחלקה 1' },
+      { name: 'חייל 1.7', association: 'מחלקה 1' }, { name: 'חייל 1.8', association: 'מחלקה 1' }, { name: 'חייל 1.9', association: 'מחלקה 1' }, { name: 'חייל 1.10', association: 'מחלקה 1' }, { name: 'חייל 1.11', association: 'מחלקה 1' }, { name: 'חייל 1.12', association: 'מחלקה 1' }, { name: 'חייל 1.13', association: 'מחלקה 1' },
+      { name: 'מפקד מחלקה 2', association: 'מחלקה 2' },
+      { name: 'מ.כ 2.1', association: 'מחלקה 2' }, { name: 'מ.כ 2.2', association: 'מחלקה 2' }, { name: 'מ.כ 2.3', association: 'מחלקה 2' },
+      { name: 'נהג 2.4', association: 'מחלקה 2' }, { name: 'נהג 2.5', association: 'מחלקה 2' }, { name: 'נהג 2.6', association: 'מחלקה 2' },
+      { name: 'חייל 2.7', association: 'מחלקה 2' }, { name: 'חייל 2.8', association: 'מחלקה 2' }, { name: 'חייל 2.9', association: 'מחלקה 2' }, { name: 'חייל 2.10', association: 'מחלקה 2' }, { name: 'חייל 2.11', association: 'מחלקה 2' }, { name: 'חייל 2.12', association: 'מחלקה 2' }, { name: 'חייל 2.13', association: 'מחלקה 2' }, { name: 'חייל 2.14', association: 'מחלקה 2' },
+      { name: 'מפקד מחלקה 3', association: 'מחלקה 3' },
+      { name: 'מ.כ 3.1', association: 'מחלקה 3' }, { name: 'מ.כ 3.2', association: 'מחלקה 3' }, { name: 'מ.כ 3.3', association: 'מחלקה 3' },
+      { name: 'נהג 3.4', association: 'מחלקה 3' }, { name: 'נהג 3.5', association: 'מחלקה 3' }, { name: 'נהג 3.6', association: 'מחלקה 3' },
+      { name: 'חייל 3.7', association: 'מחלקה 3' }, { name: 'חייל 3.8', association: 'מחלקה 3' }, { name: 'חייל 3.9', association: 'מחלקה 3' }, { name: 'חייל 3.10', association: 'מחלקה 3' }, { name: 'חייל 3.11', association: 'מחלקה 3' }, { name: 'חייל 3.12', association: 'מחלקה 3' }
+    ] : [
+      'גיל זאבי','אבירן גרין','לרה','מיה ידידה','עמית וייס','שרון כהן','אלון גלפרין','כרמל אלימלך','יואב אשד','שני לאונוב','אליזבת','שי יפרח','שנהב'
+    ].map(n => ({ name: n, association: '' }));
     const rows = [];
     const d = new Date(2026, 3, 26);
     const end = new Date(2026, 5, 18);
@@ -4493,9 +4543,9 @@
     }
     while (d <= end) {
       const key = formatDate(d);
-      names.forEach(name => {
+      people.forEach(p => {
         const r = pseudoRandom();
-        rows.push({ name, date: key, status: r > 0.6 ? 'activity' : r > 0.15 ? 'home' : (r > 0.075 ? 'switch-home' : 'switch-base') });
+        rows.push({ name: p.name, date: key, status: r > 0.6 ? 'activity' : r > 0.15 ? 'home' : (r > 0.075 ? 'switch-home' : 'switch-base'), association: p.association });
       });
       d.setDate(d.getDate() + 1);
     }
@@ -4509,7 +4559,8 @@
     const labels = {
       live: 'נתונים מעודכנים',
       cached: 'נתונים מקובץ CSV',
-      fallback: 'נתוני דוגמה (לא מקוון)'
+      fallback: 'נתוני דוגמה (לא מקוון)',
+      mock: 'נתוני דמו (מוק)'
     };
     badge.className = 'freshness-badge freshness-badge--' + source;
     badge.innerHTML = '<span class="freshness-badge__dot"></span>' + labels[source];
@@ -4522,6 +4573,21 @@
     let dataSource = 'fallback';
     const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRh9ERHvLzkE2yu1cWs7_zMpYo17Hok-w7Eb3m3IfJFxh_Nk-UQJ31CUDz2B-yV5GeDIhb5bUx5RcyJ/pub?output=csv';
 
+    if (IS_MOCK) {
+      // Mock mode: load mock-data.csv, skip all real data sources
+      try {
+        const resp = await fetch('mock-data.csv');
+        if (!resp.ok) throw new Error('mock CSV fetch failed');
+        const text = await resp.text();
+        rows = parseCSV(text);
+        if (rows.length === 0) throw new Error('empty mock CSV');
+        dataSource = 'mock';
+      } catch (e) {
+        console.warn('Mock CSV failed, using fallback data:', e);
+        rows = generateFallbackData();
+        dataSource = 'fallback';
+      }
+    } else {
     // Try Apps Script API first (always fresh data)
     try {
       const resp = await fetch(APPS_SCRIPT_URL, {
@@ -4559,8 +4625,15 @@
         }
       }
     }
+    } // end !IS_MOCK
 
     updateFreshnessBadge(dataSource);
+
+    // Preserve mock param on roster link
+    if (IS_MOCK) {
+      const rosterLink = document.getElementById('rosterLink');
+      if (rosterLink) rosterLink.href = 'roster.html?mock=true';
+    }
 
     const { map, notesMap, names, associationMap } = buildDataMap(rows);
 
@@ -4571,7 +4644,7 @@
     currentAssociationMap = associationMap;
 
     const select = document.getElementById('personFilter');
-    const commander = 'גיל זאבי';
+    const commander = IS_MOCK ? 'מפקד פלוגה' : 'גיל זאבי';
     const sortedNames = [commander, ...names.filter(n => n !== commander)];
     sortedNames.forEach(name => {
       const opt = document.createElement('option');

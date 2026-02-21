@@ -928,7 +928,7 @@
     <h1 class="header__title">שבצ״ק — פלוגה ב</h1>
     <p class="header__subtitle" id="headerSubtitle"></p>
     <div class="header__line"></div>
-    <a class="header__nav-link" href="index.html">
+    <a class="header__nav-link" id="calendarLink" href="index.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       לוח שנה
     </a>
@@ -990,6 +990,8 @@
   'use strict';
 
   // ===================== CONSTANTS =====================
+
+  const IS_MOCK = new URLSearchParams(window.location.search).get('mock') === 'true';
 
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tIx9awHDsdXZ0y01QElrDNv4F9sy_7ENDFVlHPOns7H-KhRrHLGJG5zhpuVBZ_YV0A/exec';
   const DATE_START = '2026-04-26';
@@ -1075,6 +1077,113 @@
       return false;
     }
     return true;
+  }
+
+  // ===================== CSV PARSING =====================
+
+  function parseCSV(text) {
+    text = text.replace(/^\uFEFF/, '');
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const header = lines[0].split(',').map(h => h.trim());
+    const nameIdx = header.indexOf('name');
+    const dateIdx = header.indexOf('date');
+    const statusIdx = header.indexOf('status');
+    const noteIdx = header.indexOf('note');
+    const assocIdx = header.indexOf('association');
+    if (nameIdx === -1 || dateIdx === -1 || statusIdx === -1) return [];
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 3) continue;
+      rows.push({
+        name: parts[nameIdx].trim(),
+        date: parts[dateIdx].trim(),
+        status: parts[statusIdx].trim(),
+        note: noteIdx !== -1 && parts[noteIdx] ? parts[noteIdx].trim() : '',
+        association: assocIdx !== -1 && parts[assocIdx] ? parts[assocIdx].trim() : ''
+      });
+    }
+    return rows;
+  }
+
+  // ===================== MOCK STORE =====================
+
+  const MOCK_STORAGE_KEY = 'roster_mock_store';
+  let mockStore = { shifts: [], assignments: [], config: {}, nextShiftId: 1 };
+
+  function initMockStore() {
+    if (!IS_MOCK) return;
+    try {
+      const saved = localStorage.getItem(MOCK_STORAGE_KEY);
+      if (saved) {
+        mockStore = JSON.parse(saved);
+        if (!mockStore.nextShiftId) mockStore.nextShiftId = 1;
+      }
+    } catch (e) { console.warn('Failed to load mock store:', e); }
+  }
+
+  function saveMockStore() {
+    if (!IS_MOCK) return;
+    try {
+      localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(mockStore));
+    } catch (e) { console.warn('Failed to save mock store:', e); }
+  }
+
+  function mockGenerateId() {
+    return 'mock_' + (mockStore.nextShiftId++);
+  }
+
+  // ===================== MOCK FALLBACK DATA =====================
+
+  const MOCK_PEOPLE = [
+    { name: 'מפקד פלוגה', association: 'מפקדה' },
+    { name: 'סגן מפקד פלוגה', association: 'מפקדה' },
+    { name: 'מפקד מחלקה 1', association: 'מחלקה 1' },
+    { name: 'מ.כ 1.1', association: 'מחלקה 1' }, { name: 'מ.כ 1.2', association: 'מחלקה 1' }, { name: 'מ.כ 1.3', association: 'מחלקה 1' },
+    { name: 'נהג 1.4', association: 'מחלקה 1' }, { name: 'נהג 1.5', association: 'מחלקה 1' }, { name: 'נהג 1.6', association: 'מחלקה 1' },
+    { name: 'חייל 1.7', association: 'מחלקה 1' }, { name: 'חייל 1.8', association: 'מחלקה 1' }, { name: 'חייל 1.9', association: 'מחלקה 1' }, { name: 'חייל 1.10', association: 'מחלקה 1' }, { name: 'חייל 1.11', association: 'מחלקה 1' }, { name: 'חייל 1.12', association: 'מחלקה 1' }, { name: 'חייל 1.13', association: 'מחלקה 1' },
+    { name: 'מפקד מחלקה 2', association: 'מחלקה 2' },
+    { name: 'מ.כ 2.1', association: 'מחלקה 2' }, { name: 'מ.כ 2.2', association: 'מחלקה 2' }, { name: 'מ.כ 2.3', association: 'מחלקה 2' },
+    { name: 'נהג 2.4', association: 'מחלקה 2' }, { name: 'נהג 2.5', association: 'מחלקה 2' }, { name: 'נהג 2.6', association: 'מחלקה 2' },
+    { name: 'חייל 2.7', association: 'מחלקה 2' }, { name: 'חייל 2.8', association: 'מחלקה 2' }, { name: 'חייל 2.9', association: 'מחלקה 2' }, { name: 'חייל 2.10', association: 'מחלקה 2' }, { name: 'חייל 2.11', association: 'מחלקה 2' }, { name: 'חייל 2.12', association: 'מחלקה 2' }, { name: 'חייל 2.13', association: 'מחלקה 2' }, { name: 'חייל 2.14', association: 'מחלקה 2' },
+    { name: 'מפקד מחלקה 3', association: 'מחלקה 3' },
+    { name: 'מ.כ 3.1', association: 'מחלקה 3' }, { name: 'מ.כ 3.2', association: 'מחלקה 3' }, { name: 'מ.כ 3.3', association: 'מחלקה 3' },
+    { name: 'נהג 3.4', association: 'מחלקה 3' }, { name: 'נהג 3.5', association: 'מחלקה 3' }, { name: 'נהג 3.6', association: 'מחלקה 3' },
+    { name: 'חייל 3.7', association: 'מחלקה 3' }, { name: 'חייל 3.8', association: 'מחלקה 3' }, { name: 'חייל 3.9', association: 'מחלקה 3' }, { name: 'חייל 3.10', association: 'מחלקה 3' }, { name: 'חייל 3.11', association: 'מחלקה 3' }, { name: 'חייל 3.12', association: 'מחלקה 3' }
+  ];
+
+  function generateMockFallbackRows() {
+    const rows = [];
+    const d = new Date(2026, 3, 26);
+    const end = new Date(2026, 5, 18);
+    let seed = 42;
+    function prng() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    function fmt(dt) {
+      return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+    }
+    while (d <= end) {
+      const key = fmt(d);
+      MOCK_PEOPLE.forEach(p => {
+        const r = prng();
+        rows.push({ name: p.name, date: key, status: r > 0.6 ? 'activity' : r > 0.15 ? 'home' : (r > 0.075 ? 'switch-home' : 'switch-base'), note: '', association: p.association });
+      });
+      d.setDate(d.getDate() + 1);
+    }
+    return rows;
+  }
+
+  async function fetchMockRows() {
+    try {
+      const resp = await fetch('mock-data.csv');
+      if (!resp.ok) throw new Error('fetch failed');
+      const text = await resp.text();
+      const rows = parseCSV(text);
+      if (rows.length > 0) return rows;
+    } catch (e) {
+      console.warn('mock-data.csv fetch failed, using inline fallback:', e);
+    }
+    return generateMockFallbackRows();
   }
 
   // ===================== UTILITIES =====================
@@ -1289,6 +1398,11 @@
   // ===================== API =====================
 
   async function callAppsScript(payload) {
+    // Mock mode: intercept all API calls against local mockStore
+    if (IS_MOCK) {
+      return handleMockAction(payload);
+    }
+
     if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
       showToast('יש להגדיר את כתובת Apps Script', 'error', 4000);
       throw new Error('Apps Script URL not configured');
@@ -1306,6 +1420,86 @@
       showToast('שגיאה: ' + err.message, 'error', 5000);
       throw err;
     }
+  }
+
+  async function handleMockAction(payload) {
+    const action = payload.action;
+
+    if (action === 'getRosterConfig') {
+      return { success: true, config: mockStore.config };
+    }
+
+    if (action === 'saveRosterConfig') {
+      mockStore.config[payload.key] = payload.value;
+      saveMockStore();
+      return { success: true };
+    }
+
+    if (action === 'getRosterShifts') {
+      const start = payload.startDate;
+      const end = payload.endDate;
+      const filtered = mockStore.shifts.filter(s => s.date >= start && s.date <= end);
+      // Attach assignments to each shift
+      filtered.forEach(s => {
+        s.assignments = mockStore.assignments.filter(a => a.shift_id === s.id);
+      });
+      return { success: true, shifts: filtered };
+    }
+
+    if (action === 'saveRosterShifts') {
+      const newShifts = payload.shifts || [];
+      newShifts.forEach(s => {
+        if (!s.id) s.id = mockGenerateId();
+        const idx = mockStore.shifts.findIndex(x => x.id === s.id);
+        if (idx >= 0) {
+          mockStore.shifts[idx] = { ...mockStore.shifts[idx], ...s };
+        } else {
+          mockStore.shifts.push(s);
+        }
+      });
+      saveMockStore();
+      return { success: true, shifts: newShifts };
+    }
+
+    if (action === 'deleteRosterShifts') {
+      const ids = new Set(payload.ids || []);
+      mockStore.shifts = mockStore.shifts.filter(s => !ids.has(s.id));
+      mockStore.assignments = mockStore.assignments.filter(a => !ids.has(a.shift_id));
+      saveMockStore();
+      return { success: true };
+    }
+
+    if (action === 'saveRosterAssignments') {
+      const assignments = payload.assignments || [];
+      assignments.forEach(a => {
+        // Remove existing assignment for same shift+name
+        mockStore.assignments = mockStore.assignments.filter(
+          x => !(x.shift_id === a.shift_id && x.name === a.name)
+        );
+        mockStore.assignments.push(a);
+      });
+      saveMockStore();
+      return { success: true };
+    }
+
+    if (action === 'clearRosterAssignments') {
+      const shiftIds = new Set(payload.shiftIds || []);
+      const clearManual = payload.clearManual;
+      mockStore.assignments = mockStore.assignments.filter(a => {
+        if (!shiftIds.has(a.shift_id)) return true;
+        if (!clearManual && a.is_manual === 'TRUE') return true;
+        return false;
+      });
+      saveMockStore();
+      return { success: true };
+    }
+
+    if (action === 'getData') {
+      return { success: true, rows: await fetchMockRows() };
+    }
+
+    showToast('פעולה לא מוכרת במצב דמו: ' + action, 'error', 4000);
+    throw new Error('Unknown mock action: ' + action);
   }
 
   function showLoading() {
@@ -1391,8 +1585,13 @@
 
   async function loadCalendarData() {
     try {
-      const result = await callAppsScript({ action: 'getData' });
-      const rows = result.rows || [];
+      let rows;
+      if (IS_MOCK) {
+        rows = await fetchMockRows();
+      } else {
+        const result = await callAppsScript({ action: 'getData' });
+        rows = result.rows || [];
+      }
       const map = {};
       const namesSet = new Set();
       rows.forEach(r => {
@@ -1404,6 +1603,23 @@
         map[date][name] = status;
       });
       calendarData = { map, names: [...namesSet] };
+
+      // In mock mode: auto-populate personnelTags from name patterns
+      if (IS_MOCK && Object.keys(personnelTags).length === 0) {
+        calendarData.names.forEach(name => {
+          if (name === 'מפקד פלוגה' || name === 'סגן מפקד פלוגה') {
+            personnelTags[name] = ['officer'];
+          } else if (name.startsWith('מפקד מחלקה')) {
+            personnelTags[name] = ['commander'];
+          } else if (name.startsWith('מ.כ')) {
+            personnelTags[name] = ['commander'];
+          } else if (name.startsWith('נהג')) {
+            personnelTags[name] = ['driver'];
+          } else {
+            personnelTags[name] = ['member'];
+          }
+        });
+      }
     } catch (err) {
       calendarDataFailed = true;
       showToast('שגיאה בטעינת נתוני לוח שנה — ייתכן שהזמינות לא מדויקת', 'error', 6000);
@@ -3509,6 +3725,13 @@
 
   async function init() {
     initTheme();
+    initMockStore();
+
+    // Preserve mock param on calendar link
+    if (IS_MOCK) {
+      const calLink = document.getElementById('calendarLink');
+      if (calLink) calLink.href = 'index.html?mock=true';
+    }
 
     // Set initial date to today if in range, else to DATE_START
     const today = new Date();
