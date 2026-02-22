@@ -3474,6 +3474,95 @@
         <div style="margin-top:1.5rem;padding:0.75rem;background:var(--clr-accent-bg);border-radius:8px;font-size:0.82rem;">
           <strong>טיפ:</strong> לחצו על התאריך בסרגל העליון כדי לפתוח בורר תאריכים ולקפוץ ליום ספציפי.
         </div>
+
+        <h3 style="font-size:1.05rem;font-weight:700;margin:1.5rem 0 0.5rem;color:var(--clr-accent);">אלגוריתם השיבוץ — מבט מעמיק</h3>
+        <p>האלגוריתם עובד בגישת <strong>מילוי חמדני (Greedy)</strong> עם ניקוד הוגנות. הוא עובר על התאריכים לפי סדר כרונולוגי ומשבץ אנשים למשמרות תוך שמירה על אילוצים והוגנות.</p>
+
+        <h4 style="font-size:0.95rem;font-weight:600;margin:0.8rem 0 0.4rem;color:var(--clr-text);">שלב 1: הכנה</h4>
+        <ul style="padding-right:1.2rem;">
+          <li>בניית היסטוריה לכל אדם: סה״כ שעות, ספירת משימות לפי סוג, זמן סיום אחרון, וימים רצופים.</li>
+          <li>שיבוצים ידניים (📌) נטענים מראש — האלגוריתם לא ישנה אותם לעולם.</li>
+        </ul>
+
+        <h4 style="font-size:0.95rem;font-weight:600;margin:0.8rem 0 0.4rem;color:var(--clr-text);">שלב 2: סדר עדיפות למשמרות</h4>
+        <p>בכל יום, המשמרות ממוינות לפי <strong>רמת האילוץ</strong> — המשמרות עם הדרישות הקשות ביותר מטופלות ראשונות:</p>
+        <table style="width:100%;border-collapse:collapse;margin:0.5rem 0;font-size:0.82rem;">
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">דורשת קצין</td>
+            <td style="padding:0.4rem 0.6rem;">+20 נקודות עדיפות</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">דורשת מפקד</td>
+            <td style="padding:0.4rem 0.6rem;">+10 נקודות עדיפות</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">דורשת נהג</td>
+            <td style="padding:0.4rem 0.6rem;">+10 נקודות עדיפות</td>
+          </tr>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">מינימום אנשים</td>
+            <td style="padding:0.4rem 0.6rem;">+1 נקודה לכל אדם נדרש</td>
+          </tr>
+        </table>
+        <p style="font-size:0.82rem;">כך משמרת שדורשת קצין + נהג + 4 אנשים תטופל לפני משמרת שדורשת רק 3 חיילים. זה מבטיח שהאנשים המתאימים ביותר (קצינים, נהגים) ישובצו קודם למשמרות שצריכות אותם.</p>
+
+        <h4 style="font-size:0.95rem;font-weight:600;margin:0.8rem 0 0.4rem;color:var(--clr-text);">שלב 3: סינון מועמדים (אילוצים קשיחים)</h4>
+        <p>לכל משמרת, האלגוריתם מסנן אנשים שלא יכולים להשתבץ:</p>
+        <ul style="padding-right:1.2rem;">
+          <li><strong>לא במוצב</strong> — רק אנשים עם סטטוס "במוצב" זמינים.</li>
+          <li><strong>כבר משובץ ידנית</strong> — מי שמשובץ ידנית למשמרת הזו לא ייבחר שוב.</li>
+          <li><strong>פטור מהמשימה</strong> — אנשים שמוגדרים כפטורים מסוג המשימה.</li>
+          <li><strong>חפיפת זמנים</strong> — אם כבר משובץ למשמרת שחופפת באותו יום.</li>
+          <li><strong>מנוחה לא מספיקה</strong> — אם לא עברו מספיק שעות מנוחה מאז המשמרת הקודמת (לפי הגדרות הפרמטרים).</li>
+          <li><strong>כלל "אסור יחד"</strong> — אם השותף שלו כבר משובץ למשמרת הזו.</li>
+        </ul>
+
+        <h4 style="font-size:0.95rem;font-weight:600;margin:0.8rem 0 0.4rem;color:var(--clr-text);">שלב 4: ניקוד מועמדים</h4>
+        <p>כל מועמד שעובר את הסינון מקבל ניקוד. ככל שהניקוד גבוה יותר — כך הוא מועדף יותר:</p>
+        <table style="width:100%;border-collapse:collapse;margin:0.5rem 0;font-size:0.82rem;">
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">כבר משובץ היום</td>
+            <td style="padding:0.4rem 0.6rem;">−50,000 לכל משמרת קיימת. מונע שיבוץ כפול באותו יום כמעט בכל מצב.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">הוגנות שעות</td>
+            <td style="padding:0.4rem 0.6rem;">מי שעבד פחות שעות בסה״כ — מקבל ניקוד גבוה יותר. הגורם המשמעותי ביותר.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">גיוון משימות</td>
+            <td style="padding:0.4rem 0.6rem;">מי שעשה פחות פעמים את סוג המשימה הספציפי הזה — מועדף.</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--clr-border);">
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">ימים רצופים</td>
+            <td style="padding:0.4rem 0.6rem;">מי שעבד פחות ימים ברצף — מועדף (רק אם מופעל בהגדרות).</td>
+          </tr>
+          <tr>
+            <td style="padding:0.4rem 0.6rem;font-weight:600;">כלל "חייב יחד"</td>
+            <td style="padding:0.4rem 0.6rem;">בונוס קטן אם לשותף שלו יש כלל "חייב יחד" והוא גם זמין.</td>
+          </tr>
+        </table>
+
+        <h4 style="font-size:0.95rem;font-weight:600;margin:0.8rem 0 0.4rem;color:var(--clr-text);">שלב 5: מילוי תפקידים</h4>
+        <p>לאחר הניקוד, המערכת ממלאת את המשמרת בסדר הבא:</p>
+        <ol style="padding-right:1.2rem;">
+          <li><strong>קצין</strong> — אם המשימה דורשת קצין, נבחר הקצין בעל הניקוד הגבוה ביותר. אם קצין ממלא את התפקיד, דרישת המפקד גם מתמלאת אוטומטית.</li>
+          <li><strong>מפקד</strong> — אם עדיין נדרש מפקד (ולא מולא ע״י קצין), נבחר מפקד או קצין לפי ניקוד.</li>
+          <li><strong>נהג</strong> — אם נדרש נהג, נבחר נהג מתויג לפי ניקוד.</li>
+          <li><strong>שאר המקומות</strong> — מתמלאים לפי ניקוד הוגנות (הגבוה ביותר ראשון). קצין שמשובץ כחייל רגיל יקבל תמיד תפקיד מפקד.</li>
+        </ol>
+
+        <h4 style="font-size:0.95rem;font-weight:600;margin:0.8rem 0 0.4rem;color:var(--clr-text);">התראות</h4>
+        <p>בסוף התהליך, המערכת מייצרת התראות על:</p>
+        <ul style="padding-right:1.2rem;">
+          <li>משמרות שלא מולאו עד המינימום הנדרש</li>
+          <li>משמרות שדורשות קצין אך לא נמצא קצין זמין</li>
+          <li>משמרות שדורשות מפקד אך לא נמצא מפקד זמין</li>
+          <li>משמרות שדורשות נהג אך לא נמצא נהג זמין</li>
+        </ul>
+
+        <div style="margin-top:0.75rem;padding:0.75rem;background:var(--clr-accent-bg);border-radius:8px;font-size:0.82rem;">
+          <strong>בקיצור:</strong> האלגוריתם מתעדף משמרות קשות, מכבד את כל האילוצים הקשיחים, ואז בוחר את האנשים הכי מתאימים לפי הוגנות — מי שעבד הכי פחות שעות ועשה הכי פחות מהמשימה הספציפית מקבל עדיפות.
+        </div>
       </div>
     `;
 
