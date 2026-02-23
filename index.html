@@ -2436,10 +2436,135 @@
     .filter-select { border: 1px solid #999; box-shadow: none; }
     .examples-fab, .examples-overlay, .examples-panel { display: none; }
     .toolbar, .save-bar, .toast-container, #notePopup, #addPeopleModal, #fairnessModal, #rotationModal, .view-toggle, .timeline-tooltip, .week-jump-bar, .person-search { display: none; }
+    .user-info-bar { display: none; }
   }
+
+  /* Auth UI */
+  .user-info-bar {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem;
+    background: var(--clr-surface);
+    border-bottom: 1px solid var(--clr-border);
+    font-size: 0.85rem;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .user-info-bar__content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .user-info-bar__avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+  }
+  .user-info-bar__name {
+    font-weight: 500;
+  }
+  .user-info-bar__org {
+    color: var(--clr-text-secondary);
+    padding-inline-start: 0.5rem;
+    border-inline-start: 1px solid var(--clr-border);
+  }
+  .user-info-bar__logout {
+    margin-inline-start: auto;
+    background: none;
+    border: 1px solid var(--clr-border);
+    border-radius: 6px;
+    padding: 0.25rem 0.75rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+  }
+  .user-info-bar__logout:hover {
+    border-color: var(--clr-text-secondary);
+  }
+  .org-modal__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+  }
+  .org-modal__box {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+  }
+  .org-modal__title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+  .org-modal__desc {
+    color: var(--clr-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  .org-modal__input {
+    width: 100%;
+    padding: 0.65rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+  }
+  .org-modal__actions { display: flex; gap: 0.5rem; justify-content: center; }
+  .org-modal__btn {
+    padding: 0.55rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .org-modal__btn--primary {
+    background: var(--clr-activity);
+    color: #fff;
+  }
+  .org-modal__status {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: #dc2626;
+  }
+  .org-modal__list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .org-modal__org-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--clr-bg);
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: var(--clr-text);
+  }
+  .org-modal__org-btn:hover { border-color: var(--clr-activity); }
+  .org-modal__role { font-size: 0.8rem; color: var(--clr-text-tertiary); }
 </style>
 </head>
 <body>
+<div class="user-info-bar" id="userInfoBar"></div>
+<div id="orgModal"></div>
 <button class="theme-toggle" id="themeToggle" title="מצב כהה/בהיר" aria-label="החלף ערכת נושא">
   <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
@@ -2577,6 +2702,10 @@
   <div class="examples-panel__body" id="examplesPanelBody"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="supabase-auth.js"></script>
+<script src="supabase-api.js"></script>
 <script>
 // Theme toggle (runs immediately)
 (function() {
@@ -2623,7 +2752,6 @@
   };
 
   // ---- Editing state ----
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tIx9awHDsdXZ0y01QElrDNv4F9sy_7ENDFVlHPOns7H-KhRrHLGJG5zhpuVBZ_YV0A/exec';
   const DATE_START = '2026-04-26';
   const DATE_END = '2026-06-18';
 
@@ -2677,28 +2805,6 @@
       toast.style.animation = 'toastOut 0.3s ease-in forwards';
       toast.addEventListener('animationend', () => toast.remove());
     }, duration);
-  }
-
-  // ---- Apps Script API ----
-
-  async function callAppsScript(payload) {
-    if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
-      showToast('יש להגדיר את כתובת Apps Script', 'error', 4000);
-      throw new Error('Apps Script URL not configured');
-    }
-    try {
-      const resp = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-      });
-      const result = await resp.json();
-      if (!result.success) throw new Error(result.error || 'Unknown error');
-      return result;
-    } catch (err) {
-      showToast('שגיאה: ' + err.message, 'error', 5000);
-      throw err;
-    }
   }
 
   // ---- CSV Parsing ----
@@ -3143,11 +3249,7 @@
       btn.disabled = true;
       btn.textContent = 'שומר...';
       try {
-        await callAppsScript({
-          action: 'updateCells',
-          edits: [],
-          notes: [{ name: person, date: dateKey, note: newNote }]
-        });
+        await updateCalendarCells([], [{ name: person, date: dateKey, note: newNote }]);
         if (!currentNotesMap[dateKey]) currentNotesMap[dateKey] = {};
         if (newNote) {
           currentNotesMap[dateKey][person] = newNote;
@@ -3173,11 +3275,7 @@
         deleteBtn.disabled = true;
         deleteBtn.textContent = 'מוחק...';
         try {
-          await callAppsScript({
-            action: 'updateCells',
-            edits: [],
-            notes: [{ name: person, date: dateKey, note: '' }]
-          });
+          await updateCalendarCells([], [{ name: person, date: dateKey, note: '' }]);
           if (currentNotesMap[dateKey]) delete currentNotesMap[dateKey][person];
           popup.innerHTML = '';
           showToast('ההערה נמחקה', 'success');
@@ -3734,11 +3832,7 @@
     btn.textContent = 'שומר...';
 
     try {
-      const result = await callAppsScript({
-        action: 'updateCells',
-        edits: edits,
-        notes: []
-      });
+      const result = await updateCalendarCells(edits, []);
 
       const skippedKeys = new Set(result.missingKeys || []);
 
@@ -3770,7 +3864,7 @@
         updateSaveDiscardBar();
       }
     } catch (err) {
-      // Error toast shown by callAppsScript
+      // Error handled
     } finally {
       btn.disabled = false;
       btn.textContent = '💾 שמור שינויים';
@@ -3951,13 +4045,7 @@
     const association = assocSelect.value === '__other__' ? assocCustom.value.trim() : assocSelect.value;
 
     try {
-      await callAppsScript({
-        action: 'addPeople',
-        names: newNames,
-        dateRange: { start: DATE_START, end: DATE_END },
-        defaultStatus: 'activity',
-        association: association
-      });
+      await addPeople(newNames, { start: DATE_START, end: DATE_END }, 'activity', association);
 
       document.getElementById('addPeopleModal').innerHTML = '';
       showToast('נוספו ' + newNames.length + ' אנשים בהצלחה. טוען מחדש...', 'success', 3000);
@@ -4520,43 +4608,25 @@
   async function init() {
     let rows;
     let dataSource = 'fallback';
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRh9ERHvLzkE2yu1cWs7_zMpYo17Hok-w7Eb3m3IfJFxh_Nk-UQJ31CUDz2B-yV5GeDIhb5bUx5RcyJ/pub?output=csv';
 
-    // Try Apps Script API first (always fresh data)
+    // Primary: Supabase
     try {
-      const resp = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ action: 'getData' })
-      });
-      const result = await resp.json();
-      if (!result.success || !result.rows || result.rows.length === 0) throw new Error('empty response');
-      rows = result.rows;
+      rows = await fetchCalendarData();
+      if (rows.length === 0) throw new Error('empty response');
       dataSource = 'live';
     } catch (e) {
-      console.warn('Apps Script getData failed, trying published CSV:', e);
-      // Fallback to published CSV
+      console.warn('Supabase getData failed, trying local CSV:', e);
       try {
-        const resp = await fetch(SHEET_URL);
-        if (!resp.ok) throw new Error('fetch failed');
+        const resp = await fetch('data.csv');
+        if (!resp.ok) throw new Error('local fetch failed');
         const text = await resp.text();
         rows = parseCSV(text);
-        if (rows.length === 0) throw new Error('empty CSV');
+        if (rows.length === 0) throw new Error('empty local CSV');
         dataSource = 'cached';
       } catch (e2) {
-        console.warn('Published CSV failed, trying local backup:', e2);
-        try {
-          const resp = await fetch('data.csv');
-          if (!resp.ok) throw new Error('local fetch failed');
-          const text = await resp.text();
-          rows = parseCSV(text);
-          if (rows.length === 0) throw new Error('empty local CSV');
-          dataSource = 'cached';
-        } catch (e3) {
-          console.warn('Local CSV also failed, using fallback data:', e3);
-          rows = generateFallbackData();
-          dataSource = 'fallback';
-        }
+        console.warn('Local CSV also failed, using fallback data:', e2);
+        rows = generateFallbackData();
+        dataSource = 'fallback';
       }
     }
 
@@ -4798,7 +4868,7 @@
     });
   }
 
-  init();
+  checkAuthAndInit(init);
 })();
 
 // Examples popup logic

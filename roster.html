@@ -911,9 +911,94 @@
     .fairness-table { font-size: 0.75rem; }
     .modal { max-width: 95vw; max-height: 90vh; }
   }
+
+  /* Auth UI */
+  .user-info-bar {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem;
+    background: var(--clr-surface);
+    border-bottom: 1px solid var(--clr-border);
+    font-size: 0.85rem;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .user-info-bar__content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .user-info-bar__avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-info-bar__name { font-weight: 500; }
+  .user-info-bar__org {
+    color: var(--clr-text-secondary);
+    padding-inline-start: 0.5rem;
+    border-inline-start: 1px solid var(--clr-border);
+  }
+  .user-info-bar__logout {
+    margin-inline-start: auto;
+    background: none;
+    border: 1px solid var(--clr-border);
+    border-radius: 6px;
+    padding: 0.25rem 0.75rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+  }
+  .user-info-bar__logout:hover { border-color: var(--clr-text-secondary); }
+  .org-modal__overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500;
+  }
+  .org-modal__box {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+  }
+  .org-modal__title { font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 0.5rem; }
+  .org-modal__desc { color: var(--clr-text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .org-modal__input {
+    width: 100%; padding: 0.65rem;
+    border: 1.5px solid var(--clr-border); border-radius: 8px;
+    font-family: var(--font-body); font-size: 0.95rem;
+    text-align: center; margin-bottom: 1rem;
+    background: var(--clr-bg); color: var(--clr-text);
+  }
+  .org-modal__actions { display: flex; gap: 0.5rem; justify-content: center; }
+  .org-modal__btn {
+    padding: 0.55rem 1.5rem; border-radius: 8px; border: none;
+    font-family: var(--font-body); font-size: 0.9rem; cursor: pointer;
+  }
+  .org-modal__btn--primary { background: var(--clr-activity); color: #fff; }
+  .org-modal__status { margin-top: 1rem; font-size: 0.85rem; color: #dc2626; }
+  .org-modal__list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .org-modal__org-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--clr-bg); border: 1.5px solid var(--clr-border); border-radius: 8px;
+    font-family: var(--font-body); font-size: 0.95rem; cursor: pointer;
+    color: var(--clr-text);
+  }
+  .org-modal__org-btn:hover { border-color: var(--clr-activity); }
+  .org-modal__role { font-size: 0.8rem; color: var(--clr-text-tertiary); }
+
+  @media print { .user-info-bar { display: none; } }
 </style>
 </head>
 <body>
+<div class="user-info-bar" id="userInfoBar"></div>
+<div id="orgModal"></div>
 
 <button class="theme-toggle" id="themeToggle" title="מצב כהה/בהיר">
   <svg viewBox="0 0 24 24">
@@ -985,13 +1070,16 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="supabase-auth.js"></script>
+<script src="supabase-api.js"></script>
 <script>
 (function() {
   'use strict';
 
   // ===================== CONSTANTS =====================
 
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tIx9awHDsdXZ0y01QElrDNv4F9sy_7ENDFVlHPOns7H-KhRrHLGJG5zhpuVBZ_YV0A/exec';
   const DATE_START = '2026-04-26';
   const DATE_END = '2026-06-18';
 
@@ -1286,28 +1374,6 @@
     }, duration);
   }
 
-  // ===================== API =====================
-
-  async function callAppsScript(payload) {
-    if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE') {
-      showToast('יש להגדיר את כתובת Apps Script', 'error', 4000);
-      throw new Error('Apps Script URL not configured');
-    }
-    try {
-      const resp = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(payload)
-      });
-      const result = await resp.json();
-      if (!result.success) throw new Error(result.error || 'שגיאה לא ידועה');
-      return result;
-    } catch (err) {
-      showToast('שגיאה: ' + err.message, 'error', 5000);
-      throw err;
-    }
-  }
-
   function showLoading() {
     if (isLoading) return;
     isLoading = true;
@@ -1330,7 +1396,7 @@
 
   async function loadConfig() {
     try {
-      const result = await callAppsScript({ action: 'getRosterConfig' });
+      const result = await fetchRosterConfig();
       config = result.config || {};
 
       if (config.mission_types) {
@@ -1363,26 +1429,17 @@
 
   async function saveConfigKey(key, value) {
     const json = typeof value === 'string' ? value : JSON.stringify(value);
-    await callAppsScript({ action: 'saveRosterConfig', key, value: json });
+    await saveRosterConfigKey(key, json);
     config[key] = json;
   }
 
   async function loadShifts(startDate, endDate) {
     try {
-      const result = await callAppsScript({
-        action: 'getRosterShifts',
-        startDate: startDate || formatDateStr(currentDate),
-        endDate: endDate || formatDateStr(currentDate)
-      });
-      const shifts = result.shifts || [];
-      // Normalize is_manual: Google Sheets may return boolean true which
-      // becomes lowercase "true" via String(), but all comparisons expect 'TRUE'
-      shifts.forEach(s => {
-        (s.assignments || []).forEach(a => {
-          a.is_manual = String(a.is_manual || '').toUpperCase() === 'TRUE' ? 'TRUE' : 'FALSE';
-        });
-      });
-      return shifts;
+      const result = await fetchRosterShifts(
+        startDate || formatDateStr(currentDate),
+        endDate || formatDateStr(currentDate)
+      );
+      return result.shifts || [];
     } catch (err) {
       showToast('שגיאה בטעינת משמרות', 'error');
       return [];
@@ -1391,8 +1448,7 @@
 
   async function loadCalendarData() {
     try {
-      const result = await callAppsScript({ action: 'getData' });
-      const rows = result.rows || [];
+      const rows = await fetchCalendarData();
       const map = {};
       const namesSet = new Set();
       rows.forEach(r => {
@@ -1465,9 +1521,13 @@
 
     showLoading();
     try {
-      await callAppsScript({ action: 'saveRosterShifts', shifts: newShifts });
+      const originalIds = newShifts.map(s => s.id);
+      await saveRosterShifts(newShifts);
+      // Build mapping from old client IDs to new UUIDs
+      const idMap = new Map(originalIds.map((old, i) => [old, newShifts[i].id]));
+      fixedAssignments.forEach(a => { if (idMap.has(a.shift_id)) a.shift_id = idMap.get(a.shift_id); });
       if (fixedAssignments.length > 0) {
-        await callAppsScript({ action: 'saveRosterAssignments', assignments: fixedAssignments });
+        await saveRosterAssignments(fixedAssignments);
       }
       showToast(`נוצרו ${newShifts.length} משמרות בהצלחה`, 'success');
       await refreshView();
@@ -1482,7 +1542,7 @@
     if (isBusy) { showToast('פעולה בתהליך, נא להמתין', 'info'); return; }
     showLoading();
     try {
-      await callAppsScript({ action: 'deleteRosterShifts', ids: [shiftId] });
+      await deleteRosterShifts([shiftId]);
       showToast('המשמרת נמחקה', 'success');
       await refreshView();
     } catch (err) {
@@ -1498,7 +1558,7 @@
     const oldNote = shift.note;
     shift.note = note;
     try {
-      await callAppsScript({ action: 'saveRosterShifts', shifts: [shift] });
+      await saveRosterShifts([shift]);
       buildShiftsByDateIndex();
       showToast('ההערה נשמרה', 'success');
     } catch (err) {
@@ -1886,7 +1946,7 @@
 
       // Clear non-manual assignments for target shifts
       const targetIds = targetShifts.map(s => s.id);
-      await callAppsScript({ action: 'clearRosterAssignments', shiftIds: targetIds, clearManual: false });
+      await clearRosterAssignments(targetIds, false);
 
       // Run solver
       const { assignments, warnings } = autoSchedule(targetShifts, existingAssignments);
@@ -1898,7 +1958,7 @@
       }
 
       // Save assignments
-      await callAppsScript({ action: 'saveRosterAssignments', assignments });
+      await saveRosterAssignments(assignments);
 
       warnings.forEach(w => showToast(w, 'warning', 5000));
       if (manualCount > 0) {
@@ -1909,14 +1969,14 @@
       const undoAutoSchedule = async () => {
         showLoading();
         try {
-          await callAppsScript({ action: 'clearRosterAssignments', shiftIds: targetIds, clearManual: false });
+          await clearRosterAssignments(targetIds, false);
           if (autoSnapshot.length > 0) {
-            await callAppsScript({ action: 'saveRosterAssignments', assignments: autoSnapshot });
+            await saveRosterAssignments(autoSnapshot);
           }
           showToast('השיבוץ האוטומטי בוטל', 'success');
           await refreshView();
         } catch (err) {
-          // toast shown by callAppsScript
+          // error handled
         } finally {
           hideLoading();
         }
@@ -2468,19 +2528,19 @@
       showLoading();
       try {
         // Clear ALL existing assignments for this shift (both manual and auto)
-        await callAppsScript({ action: 'clearRosterAssignments', shiftIds: [shiftId], clearManual: true });
+        await clearRosterAssignments([shiftId], true);
 
         // Save the new manual assignments
         try {
           if (newAssignments.length > 0) {
-            await callAppsScript({ action: 'saveRosterAssignments', assignments: newAssignments });
+            await saveRosterAssignments(newAssignments);
           }
         } catch (saveErr) {
           // Save failed after clear — attempt to restore original assignments
           showToast('שגיאה בשמירת שיבוצים חדשים — מנסה לשחזר את הקודמים', 'error', 5000);
           if (originalAssignments.length > 0) {
             try {
-              await callAppsScript({ action: 'saveRosterAssignments', assignments: originalAssignments });
+              await saveRosterAssignments(originalAssignments);
               showToast('השיבוצים הקודמים שוחזרו', 'info');
             } catch (restoreErr) {
               showToast('שגיאה בשחזור — יש לרענן ולבדוק את הנתונים', 'error', 6000);
@@ -2494,7 +2554,7 @@
         close();
         await refreshView();
       } catch (err) {
-        // toast shown by callAppsScript
+        // error handled
       } finally {
         hideLoading();
       }
@@ -3460,7 +3520,7 @@
           return;
         }
         const ids = rangeShifts.map(s => s.id);
-        await callAppsScript({ action: 'deleteRosterShifts', ids });
+        await deleteRosterShifts(ids);
         showToast(`נמחקו ${ids.length} משמרות`, 'success');
         await refreshView();
       } catch (err) {
@@ -3722,7 +3782,7 @@
   }
 
   // Start
-  init();
+  checkAuthAndInit(init);
 
 })();
 </script>
