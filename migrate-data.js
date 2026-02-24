@@ -1,13 +1,13 @@
 /**
  * migrate-data.js — One-time data migration from Google Apps Script to Supabase
  *
- * USAGE:
+ * STATUS: COMPLETED — Migration was successfully executed.
+ * This file is kept for reference only. Do not re-run.
+ *
+ * Original usage:
  *   1. Log in via auth.html and create your organization
  *   2. Open browser console on index.html (you should be logged in)
  *   3. Paste this script and call:  migrate()
- *
- * Uses your authenticated session — no secret keys needed.
- * You must be logged in and have an organization selected.
  */
 
 async function migrate() {
@@ -24,7 +24,8 @@ async function migrate() {
   console.log('Authenticated as:', session.user.email);
 
   const ORG_NAME = 'פלוגה ב';
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx7tIx9awHDsdXZ0y01QElrDNv4F9sy_7ENDFVlHPOns7H-KhRrHLGJG5zhpuVBZ_YV0A/exec';
+  // Apps Script URL removed — migration completed, no longer needed
+  const APPS_SCRIPT_URL = null;
 
   async function callAppsScript(payload) {
     const resp = await fetch(APPS_SCRIPT_URL, {

@@ -475,3 +475,106 @@ async function clearRosterAssignments(shiftIds, clearManual) {
   if (error) throw error;
   return { success: true };
 }
+
+// ===================== ADMIN: PEOPLE MANAGEMENT =====================
+
+/**
+ * Fetch all people for current org (for admin table)
+ */
+async function fetchPeople() {
+  const orgId = getCurrentOrgId();
+  const { data, error } = await supabase
+    .from('people')
+    .select('id, name, association')
+    .eq('org_id', orgId)
+    .order('name');
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Update a person's name or association
+ */
+async function updatePerson(personId, fields) {
+  const payload = { updated_at: new Date().toISOString() };
+  if (fields.name !== undefined) payload.name = fields.name;
+  if (fields.association !== undefined) payload.association = fields.association;
+
+  const { error } = await supabase
+    .from('people')
+    .update(payload)
+    .eq('id', personId);
+  if (error) throw error;
+  _invalidatePeopleCache();
+  return { success: true };
+}
+
+/**
+ * Delete a person (cascades to calendar_entries, shift_assignments via FK)
+ */
+async function deletePerson(personId) {
+  const { error } = await supabase
+    .from('people')
+    .delete()
+    .eq('id', personId);
+  if (error) throw error;
+  _invalidatePeopleCache();
+  return { success: true };
+}
+
+// ===================== ADMIN: ORG MEMBERS =====================
+
+/**
+ * Fetch org members with profile info.
+ * No direct FK between organization_members and profiles, so we query separately.
+ */
+async function fetchOrgMembers() {
+  const orgId = getCurrentOrgId();
+  const { data: members, error: memErr } = await supabase
+    .from('organization_members')
+    .select('id, user_id, role')
+    .eq('org_id', orgId);
+  if (memErr) throw memErr;
+  if (!members || members.length === 0) return [];
+
+  const userIds = members.map(m => m.user_id);
+  const { data: profiles, error: profErr } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, avatar_url')
+    .in('id', userIds);
+  if (profErr) throw profErr;
+
+  const profileMap = new Map();
+  (profiles || []).forEach(p => profileMap.set(p.id, p));
+
+  return members.map(m => ({
+    id: m.id,
+    user_id: m.user_id,
+    role: m.role,
+    profiles: profileMap.get(m.user_id) || null
+  }));
+}
+
+/**
+ * Update a member's role
+ */
+async function updateMemberRole(membershipId, newRole) {
+  const { error } = await supabase
+    .from('organization_members')
+    .update({ role: newRole })
+    .eq('id', membershipId);
+  if (error) throw error;
+  return { success: true };
+}
+
+/**
+ * Remove a member from the org
+ */
+async function removeMember(membershipId) {
+  const { error } = await supabase
+    .from('organization_members')
+    .delete()
+    .eq('id', membershipId);
+  if (error) throw error;
+  return { success: true };
+}

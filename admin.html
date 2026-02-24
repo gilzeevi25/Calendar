@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול — פלוגה ב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Frank+Ruhl+Libre:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --clr-bg: #faf8f5;
+    --clr-surface: #ffffff;
+    --clr-border: #e8e2da;
+    --clr-text: #1a1612;
+    --clr-text-secondary: #6b5e52;
+    --clr-text-tertiary: #9c8f82;
+    --clr-activity: #16a34a;
+    --clr-activity-bg: #dcfce7;
+    --clr-home: #2563eb;
+    --clr-home-bg: #dbeafe;
+    --clr-danger: #dc2626;
+    --clr-danger-bg: #fef2f2;
+    --clr-warning: #d97706;
+    --radius: 10px;
+    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06);
+    --shadow-md: 0 4px 16px rgba(26,22,18,0.08);
+    --font-body: 'Heebo', sans-serif;
+    --font-display: 'Frank Ruhl Libre', serif;
+  }
+
+  [data-theme="dark"] {
+    --clr-bg: #1a1714;
+    --clr-surface: #242019;
+    --clr-border: #3d362c;
+    --clr-text: #e8e2da;
+    --clr-text-secondary: #a89e92;
+    --clr-text-tertiary: #7a7068;
+    --clr-activity-bg: #1a2e1a;
+    --clr-home-bg: #1a2340;
+    --clr-danger-bg: #2a1414;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.25);
+  }
+
+  [data-theme="dark"] body::before { opacity: 0.04; }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.6s ease-out;
+  }
+
+  .header__title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    color: var(--clr-text);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+  }
+
+  .header__subtitle {
+    font-weight: 300;
+    font-size: 1.05rem;
+    color: var(--clr-text-secondary);
+  }
+
+  .header__line {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--clr-activity), var(--clr-home));
+    border-radius: 3px;
+    margin: 1rem auto 0;
+  }
+
+  .header__nav-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-top: 0.75rem;
+  }
+
+  .header__nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--clr-text-tertiary);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .header__nav-link:hover { color: var(--clr-text-secondary); }
+  .header__nav-link svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 999;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--clr-border);
+    background: var(--clr-surface);
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+  .theme-toggle:hover { border-color: #c4b8aa; transform: scale(1.08); }
+  .theme-toggle:active { transform: scale(0.95); }
+  .theme-toggle svg { width: 18px; height: 18px; transition: transform 0.3s; }
+  [data-theme="dark"] .theme-toggle svg { transform: rotate(180deg); }
+
+  /* User info bar */
+  .user-info-bar {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1.5rem;
+    background: var(--clr-surface);
+    border-bottom: 1px solid var(--clr-border);
+    font-size: 0.85rem;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+  .user-info-bar__content { display: flex; align-items: center; gap: 0.75rem; max-width: 900px; margin: 0 auto; width: 100%; }
+  .user-info-bar__avatar { width: 28px; height: 28px; border-radius: 50%; }
+  .user-info-bar__name { font-weight: 500; }
+  .user-info-bar__org { color: var(--clr-text-secondary); padding-inline-start: 0.5rem; border-inline-start: 1px solid var(--clr-border); }
+  .user-info-bar__logout {
+    margin-inline-start: auto;
+    background: none;
+    border: 1px solid var(--clr-border);
+    border-radius: 6px;
+    padding: 0.25rem 0.75rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+  }
+  .user-info-bar__logout:hover { border-color: var(--clr-text-secondary); }
+
+  /* Org modal */
+  .org-modal__overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 500; }
+  .org-modal__box { background: var(--clr-surface); border-radius: var(--radius); padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
+  .org-modal__title { font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 0.5rem; }
+  .org-modal__desc { color: var(--clr-text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .org-modal__input { width: 100%; padding: 0.65rem; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; text-align: center; margin-bottom: 1rem; background: var(--clr-bg); color: var(--clr-text); }
+  .org-modal__actions { display: flex; gap: 0.5rem; justify-content: center; }
+  .org-modal__btn { padding: 0.55rem 1.5rem; border-radius: 8px; border: none; font-family: var(--font-body); font-size: 0.9rem; cursor: pointer; }
+  .org-modal__btn--primary { background: var(--clr-activity); color: #fff; }
+  .org-modal__status { margin-top: 1rem; font-size: 0.85rem; color: #dc2626; }
+  .org-modal__list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .org-modal__org-btn { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--clr-bg); border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size: 0.95rem; cursor: pointer; color: var(--clr-text); }
+  .org-modal__org-btn:hover { border-color: var(--clr-activity); }
+  .org-modal__role { font-size: 0.8rem; color: var(--clr-text-tertiary); }
+
+  /* Section card */
+  .section {
+    background: var(--clr-surface);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 0.5s ease-out both;
+  }
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.2s; }
+
+  .section__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .section__title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--clr-text);
+  }
+
+  .section__count {
+    font-size: 0.8rem;
+    color: var(--clr-text-tertiary);
+    background: var(--clr-bg);
+    padding: 0.2rem 0.65rem;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+
+  /* Search input */
+  .search-input {
+    width: 100%;
+    padding: 0.55rem 0.85rem;
+    padding-inline-start: 2.2rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { outline: none; border-color: var(--clr-activity); }
+  [data-theme="dark"] .search-input { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+  [data-theme="dark"] .search-input:focus { border-color: var(--clr-activity); }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 0.75rem;
+  }
+  .search-wrap svg {
+    position: absolute;
+    right: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: var(--clr-text-tertiary);
+    pointer-events: none;
+  }
+
+  /* Sort controls */
+  .sort-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+  }
+  .sort-btn {
+    background: none;
+    border: 1px solid var(--clr-border);
+    border-radius: 6px;
+    padding: 0.2rem 0.6rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .sort-btn:hover { border-color: var(--clr-text-secondary); }
+  .sort-btn--active {
+    background: var(--clr-activity-bg);
+    border-color: var(--clr-activity);
+    color: var(--clr-activity);
+    font-weight: 500;
+  }
+  [data-theme="dark"] .sort-btn--active { background: #1a2e1a; color: #4ade80; border-color: #4ade80; }
+
+  /* People table */
+  .people-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .people-table th {
+    text-align: right;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: var(--clr-text-tertiary);
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1.5px solid var(--clr-border);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .people-table td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--clr-border);
+    font-size: 0.9rem;
+    vertical-align: middle;
+  }
+  .people-table tr:last-child td { border-bottom: none; }
+  .people-table tr:hover td { background: var(--clr-bg); }
+  [data-theme="dark"] .people-table tr:hover td { background: #1e1b16; }
+
+  .editable-cell {
+    cursor: pointer;
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+    transition: background 0.15s;
+    min-width: 60px;
+    display: inline-block;
+  }
+  .editable-cell:hover { background: var(--clr-activity-bg); }
+  [data-theme="dark"] .editable-cell:hover { background: #1a2e1a; }
+
+  .editable-cell input {
+    width: 100%;
+    border: 1.5px solid var(--clr-activity);
+    border-radius: 4px;
+    padding: 0.2rem 0.35rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    outline: none;
+  }
+
+  /* Action buttons */
+  .btn {
+    padding: 0.4rem 0.85rem;
+    border-radius: 7px;
+    border: none;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn--primary { background: var(--clr-activity); color: #fff; }
+  .btn--danger { background: none; color: var(--clr-danger); border: 1px solid var(--clr-danger); padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+  .btn--danger:hover { background: var(--clr-danger-bg); opacity: 1; }
+  .btn--ghost { background: none; color: var(--clr-text-secondary); border: 1px solid var(--clr-border); }
+  .btn--ghost:hover { border-color: var(--clr-text-secondary); opacity: 1; }
+  .btn--small { padding: 0.25rem 0.55rem; font-size: 0.78rem; }
+  .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* Add people form */
+  .add-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .add-form__row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  .add-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 140px;
+  }
+  .add-form__label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--clr-text-secondary);
+  }
+  .add-form__input,
+  .add-form__select {
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    transition: border-color 0.2s;
+  }
+  .add-form__input:focus,
+  .add-form__select:focus { outline: none; border-color: var(--clr-activity); }
+  [data-theme="dark"] .add-form__input,
+  [data-theme="dark"] .add-form__select { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+
+  .add-form__textarea {
+    padding: 0.55rem 0.75rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    resize: vertical;
+    min-height: 70px;
+    transition: border-color 0.2s;
+  }
+  .add-form__textarea:focus { outline: none; border-color: var(--clr-activity); }
+  [data-theme="dark"] .add-form__textarea { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+
+  .add-form__hint {
+    font-size: 0.78rem;
+    color: var(--clr-text-tertiary);
+  }
+
+  .bulk-toggle {
+    font-size: 0.82rem;
+    color: var(--clr-home);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+    text-decoration: underline;
+    padding: 0;
+  }
+  .bulk-toggle:hover { color: var(--clr-text-secondary); }
+
+  /* Members list */
+  .member-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--clr-border);
+    flex-wrap: wrap;
+  }
+  .member-row:last-child { border-bottom: none; }
+
+  .member-row__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--clr-bg);
+    flex-shrink: 0;
+  }
+
+  .member-row__info {
+    flex: 1;
+    min-width: 120px;
+  }
+  .member-row__name {
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
+  .member-row__email {
+    font-size: 0.78rem;
+    color: var(--clr-text-tertiary);
+  }
+
+  .role-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.15rem 0.55rem;
+    border-radius: 10px;
+  }
+  .role-badge--owner { background: var(--clr-activity-bg); color: var(--clr-activity); }
+  .role-badge--admin { background: var(--clr-home-bg); color: var(--clr-home); }
+  .role-badge--member { background: var(--clr-bg); color: var(--clr-text-secondary); border: 1px solid var(--clr-border); }
+  .role-badge--viewer { background: var(--clr-bg); color: var(--clr-text-tertiary); border: 1px solid var(--clr-border); }
+  [data-theme="dark"] .role-badge--owner { background: #1a2e1a; color: #4ade80; }
+  [data-theme="dark"] .role-badge--admin { background: #1a2340; color: #60a5fa; }
+
+  .role-select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--clr-border);
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    background: var(--clr-bg);
+    color: var(--clr-text);
+    cursor: pointer;
+  }
+  [data-theme="dark"] .role-select { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+
+  .member-row__actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-inline-start: auto;
+  }
+
+  /* Invite section */
+  .invite-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--clr-bg);
+    border-radius: 8px;
+    border: 1px dashed var(--clr-border);
+  }
+  .invite-box__url {
+    flex: 1;
+    font-size: 0.8rem;
+    color: var(--clr-text-secondary);
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* Confirm dialog */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 600;
+    animation: fadeIn 0.15s ease-out;
+  }
+  .confirm-box {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+  }
+  .confirm-box__title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+  }
+  .confirm-box__msg {
+    font-size: 0.9rem;
+    color: var(--clr-text-secondary);
+    margin-bottom: 1.25rem;
+  }
+  .confirm-box__actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  /* Toast */
+  .toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .toast {
+    padding: 0.65rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    box-shadow: var(--shadow-md);
+    animation: toastIn 0.3s ease-out;
+    white-space: nowrap;
+  }
+  .toast--success { background: var(--clr-activity); color: #fff; }
+  .toast--error { background: var(--clr-danger); color: #fff; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--clr-text-tertiary);
+    font-size: 0.9rem;
+  }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--clr-text-tertiary);
+  }
+
+  /* Animations */
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Print */
+  @media print {
+    .user-info-bar, .theme-toggle, .toast-container, .header__nav-links { display: none !important; }
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .app { padding: 1rem 0.75rem 3rem; }
+    .section { padding: 1rem; }
+    .add-form__row { flex-direction: column; }
+    .member-row { font-size: 0.85rem; }
+    .people-table th, .people-table td { padding: 0.4rem 0.5rem; font-size: 0.83rem; }
+  }
+</style>
+</head>
+<body>
+<div class="user-info-bar" id="userInfoBar"></div>
+<div id="orgModal"></div>
+<button class="theme-toggle" id="themeToggle" title="מצב כהה/בהיר" aria-label="החלף ערכת נושא">
+  <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+</button>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<div class="app">
+  <header class="header">
+    <h1 class="header__title">ניהול</h1>
+    <p class="header__subtitle">ניהול אנשים וחברי ארגון</p>
+    <div class="header__line"></div>
+    <div class="header__nav-links">
+      <a class="header__nav-link" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        לוח שנה
+      </a>
+      <a class="header__nav-link" href="roster.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        שבצ״ק
+      </a>
+    </div>
+  </header>
+
+  <!-- Section A: People Management -->
+  <div class="section" id="sectionPeople">
+    <div class="section__header">
+      <h2 class="section__title">אנשים</h2>
+      <span class="section__count" id="peopleCount"></span>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" class="search-input" id="peopleSearch" placeholder="חיפוש לפי שם...">
+    </div>
+    <div class="sort-controls">
+      <span style="color: var(--clr-text-tertiary); font-size: 0.8rem;">מיון:</span>
+      <button class="sort-btn sort-btn--active" data-sort="name" id="sortName">שם</button>
+      <button class="sort-btn" data-sort="association" id="sortAssoc">שיוך</button>
+    </div>
+    <div id="peopleTableWrap">
+      <div class="loading">טוען...</div>
+    </div>
+  </div>
+
+  <!-- Section B: Add People -->
+  <div class="section" id="sectionAdd">
+    <div class="section__header">
+      <h2 class="section__title">הוספת אנשים</h2>
+      <button class="bulk-toggle" id="bulkToggle">הוספה מרובה</button>
+    </div>
+    <div class="add-form" id="addForm">
+      <div class="add-form__row" id="singleAddRow">
+        <div class="add-form__field">
+          <label class="add-form__label" for="addName">שם</label>
+          <input class="add-form__input" id="addName" type="text" placeholder="שם מלא">
+        </div>
+        <div class="add-form__field" style="max-width: 180px;">
+          <label class="add-form__label" for="addAssoc">שיוך</label>
+          <select class="add-form__select" id="addAssoc">
+            <option value="">ללא</option>
+          </select>
+        </div>
+        <button class="btn btn--primary" id="btnAddSingle" style="align-self: flex-end;">הוסף</button>
+      </div>
+      <div id="bulkAddRow" style="display:none;">
+        <div class="add-form__field">
+          <label class="add-form__label" for="bulkNames">שמות (כל שם בשורה חדשה או מופרד בפסיק)</label>
+          <textarea class="add-form__textarea" id="bulkNames" placeholder="ישראל ישראלי&#10;דוד כהן&#10;שרה לוי"></textarea>
+        </div>
+        <div class="add-form__row" style="margin-top: 0.5rem;">
+          <div class="add-form__field" style="max-width: 180px;">
+            <label class="add-form__label" for="bulkAssoc">שיוך</label>
+            <select class="add-form__select" id="bulkAssoc">
+              <option value="">ללא</option>
+            </select>
+          </div>
+          <button class="btn btn--primary" id="btnAddBulk" style="align-self: flex-end;">הוסף הכל</button>
+        </div>
+      </div>
+      <div class="add-form__hint" id="addOtherWrap" style="display:none;">
+        <label class="add-form__label" for="addOtherAssoc">שיוך חדש:</label>
+        <input class="add-form__input" id="addOtherAssoc" type="text" placeholder="הזן שיוך חדש" style="margin-top: 0.25rem;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Section C: Organization Members -->
+  <div class="section" id="sectionMembers">
+    <div class="section__header">
+      <h2 class="section__title">חברי ארגון</h2>
+      <span class="section__count" id="membersCount"></span>
+    </div>
+    <div id="membersListWrap">
+      <div class="loading">טוען...</div>
+    </div>
+    <div class="invite-box" id="inviteBox">
+      <button class="btn btn--ghost btn--small" id="btnCopyInvite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        העתק קישור הזמנה
+      </button>
+      <span class="invite-box__url" id="inviteUrl"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog container -->
+<div id="confirmDialog"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<script src="supabase-auth.js"></script>
+<script src="supabase-api.js"></script>
+<script>
+// Theme toggle
+(function() {
+  var moonSvg = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  var sunSvg = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+
+  function applyTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    var icon = document.getElementById('themeIcon');
+    if (icon) icon.innerHTML = dark ? moonSvg : sunSvg;
+  }
+
+  var stored = localStorage.getItem('theme');
+  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var isDark = stored ? stored === 'dark' : prefersDark;
+  applyTheme(isDark);
+
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    isDark = !isDark;
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    applyTheme(isDark);
+  });
+})();
+
+// Admin app
+(function() {
+  var people = [];
+  var members = [];
+  var sortField = 'name';
+  var sortAsc = true;
+  var searchQuery = '';
+  var associations = [];
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function showToast(msg, type) {
+    var container = document.getElementById('toastContainer');
+    var el = document.createElement('div');
+    el.className = 'toast toast--' + (type || 'success');
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(function() { el.remove(); }, 3000);
+  }
+
+  function showConfirm(title, msg, onConfirm) {
+    var wrap = document.getElementById('confirmDialog');
+    wrap.innerHTML =
+      '<div class="confirm-overlay" id="confirmOverlay">' +
+        '<div class="confirm-box">' +
+          '<div class="confirm-box__title">' + escapeHtml(title) + '</div>' +
+          '<div class="confirm-box__msg">' + escapeHtml(msg) + '</div>' +
+          '<div class="confirm-box__actions">' +
+            '<button class="btn btn--danger" id="confirmYes">מחק</button>' +
+            '<button class="btn btn--ghost" id="confirmNo">ביטול</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    document.getElementById('confirmYes').addEventListener('click', function() {
+      wrap.innerHTML = '';
+      onConfirm();
+    });
+    document.getElementById('confirmNo').addEventListener('click', function() {
+      wrap.innerHTML = '';
+    });
+    document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+      if (e.target === this) wrap.innerHTML = '';
+    });
+  }
+
+  // Populate association dropdowns
+  function updateAssociationDropdowns() {
+    var uniqueAssocs = [];
+    people.forEach(function(p) {
+      if (p.association && uniqueAssocs.indexOf(p.association) === -1) {
+        uniqueAssocs.push(p.association);
+      }
+    });
+    uniqueAssocs.sort();
+    associations = uniqueAssocs;
+
+    ['addAssoc', 'bulkAssoc'].forEach(function(id) {
+      var sel = document.getElementById(id);
+      var currentVal = sel.value;
+      sel.innerHTML = '<option value="">ללא</option>';
+      uniqueAssocs.forEach(function(a) {
+        sel.innerHTML += '<option value="' + escapeHtml(a) + '">' + escapeHtml(a) + '</option>';
+      });
+      sel.innerHTML += '<option value="__other__">אחר...</option>';
+      sel.value = currentVal;
+    });
+  }
+
+  // Render people table
+  function renderPeople() {
+    var filtered = people.filter(function(p) {
+      if (!searchQuery) return true;
+      return p.name.indexOf(searchQuery) !== -1 || (p.association || '').indexOf(searchQuery) !== -1;
+    });
+
+    filtered.sort(function(a, b) {
+      var va = (sortField === 'name' ? a.name : (a.association || '')) || '';
+      var vb = (sortField === 'name' ? b.name : (b.association || '')) || '';
+      var cmp = va.localeCompare(vb, 'he');
+      return sortAsc ? cmp : -cmp;
+    });
+
+    document.getElementById('peopleCount').textContent = people.length + ' אנשים' + (filtered.length !== people.length ? ' (' + filtered.length + ' מוצגים)' : '');
+
+    if (filtered.length === 0) {
+      document.getElementById('peopleTableWrap').innerHTML =
+        '<div class="empty-state">' + (people.length === 0 ? 'אין אנשים עדיין. הוסף אנשים למטה.' : 'לא נמצאו תוצאות.') + '</div>';
+      return;
+    }
+
+    var html = '<table class="people-table"><thead><tr><th>שם</th><th>שיוך</th><th style="width:70px;"></th></tr></thead><tbody>';
+    filtered.forEach(function(p) {
+      html += '<tr data-id="' + p.id + '">' +
+        '<td><span class="editable-cell" data-field="name" data-id="' + p.id + '">' + escapeHtml(p.name) + '</span></td>' +
+        '<td><span class="editable-cell" data-field="association" data-id="' + p.id + '">' + escapeHtml(p.association || '—') + '</span></td>' +
+        '<td><button class="btn btn--danger btn--small" data-delete="' + p.id + '" data-name="' + escapeHtml(p.name) + '">מחק</button></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('peopleTableWrap').innerHTML = html;
+
+    // Bind inline edit
+    document.querySelectorAll('.editable-cell').forEach(function(cell) {
+      cell.addEventListener('click', function() {
+        if (cell.querySelector('input')) return;
+        var field = cell.dataset.field;
+        var personId = cell.dataset.id;
+        var person = people.find(function(p) { return p.id === personId; });
+        if (!person) return;
+
+        var current = field === 'name' ? person.name : (person.association || '');
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.value = current;
+        cell.textContent = '';
+        cell.appendChild(input);
+        input.focus();
+        input.select();
+
+        function save() {
+          var newVal = input.value.trim();
+          if (!newVal && field === 'name') {
+            cell.textContent = current;
+            return;
+          }
+          if (newVal === current) {
+            cell.textContent = field === 'name' ? current : (current || '—');
+            return;
+          }
+          var update = {};
+          update[field] = newVal || null;
+          updatePerson(personId, update).then(function() {
+            person[field] = newVal || null;
+            cell.textContent = newVal || '—';
+            updateAssociationDropdowns();
+            showToast('עודכן בהצלחה');
+          }).catch(function(err) {
+            cell.textContent = field === 'name' ? current : (current || '—');
+            showToast('שגיאה: ' + err.message, 'error');
+          });
+        }
+
+        input.addEventListener('blur', save);
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { input.blur(); }
+          if (e.key === 'Escape') { cell.textContent = field === 'name' ? current : (current || '—'); }
+        });
+      });
+    });
+
+    // Bind delete
+    document.querySelectorAll('[data-delete]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var personId = btn.dataset.delete;
+        var personName = btn.dataset.name;
+        showConfirm(
+          'מחיקת ' + personName,
+          'פעולה זו תמחק את האדם ואת כל הנתונים המשויכים אליו (ימי לוח, משמרות). האם להמשיך?',
+          function() {
+            deletePerson(personId).then(function() {
+              people = people.filter(function(p) { return p.id !== personId; });
+              renderPeople();
+              updateAssociationDropdowns();
+              showToast(personName + ' נמחק');
+            }).catch(function(err) {
+              showToast('שגיאה: ' + err.message, 'error');
+            });
+          }
+        );
+      });
+    });
+  }
+
+  // Render members
+  function renderMembers() {
+    document.getElementById('membersCount').textContent = members.length + ' חברים';
+
+    if (members.length === 0) {
+      document.getElementById('membersListWrap').innerHTML = '<div class="empty-state">אין חברים בארגון.</div>';
+      return;
+    }
+
+    var isOwner = currentOrgRole === 'owner';
+    var isAdmin = currentOrgRole === 'admin' || isOwner;
+    var html = '';
+
+    members.forEach(function(m) {
+      var profile = m.profiles || {};
+      var name = profile.full_name || profile.email || '(ללא שם)';
+      var email = profile.email || '';
+      var avatar = profile.avatar_url || '';
+      var role = m.role;
+      var roleLabel = { owner: 'בעלים', admin: 'מנהל', member: 'חבר', viewer: 'צופה' }[role] || role;
+      var isSelf = currentUser && m.user_id === currentUser.id;
+
+      html += '<div class="member-row">';
+      if (avatar) {
+        html += '<img class="member-row__avatar" src="' + escapeHtml(avatar) + '" alt="">';
+      } else {
+        html += '<div class="member-row__avatar"></div>';
+      }
+      html += '<div class="member-row__info">' +
+        '<div class="member-row__name">' + escapeHtml(name) + (isSelf ? ' (אתה)' : '') + '</div>' +
+        '<div class="member-row__email">' + escapeHtml(email) + '</div>' +
+        '</div>';
+
+      if (isAdmin && !isSelf) {
+        html += '<div class="member-row__actions">' +
+          '<select class="role-select" data-member-id="' + m.id + '">' +
+          (isOwner ? '<option value="owner"' + (role === 'owner' ? ' selected' : '') + '>בעלים</option>' : '') +
+          '<option value="admin"' + (role === 'admin' ? ' selected' : '') + '>מנהל</option>' +
+          '<option value="member"' + (role === 'member' ? ' selected' : '') + '>חבר</option>' +
+          '<option value="viewer"' + (role === 'viewer' ? ' selected' : '') + '>צופה</option>' +
+          '</select>' +
+          '<button class="btn btn--danger btn--small" data-remove-member="' + m.id + '" data-member-name="' + escapeHtml(name) + '">הסר</button>' +
+          '</div>';
+      } else {
+        html += '<span class="role-badge role-badge--' + role + '">' + escapeHtml(roleLabel) + '</span>';
+      }
+
+      html += '</div>';
+    });
+
+    document.getElementById('membersListWrap').innerHTML = html;
+
+    // Bind role change
+    document.querySelectorAll('.role-select').forEach(function(sel) {
+      sel.addEventListener('change', function() {
+        var memberId = sel.dataset.memberId;
+        var newRole = sel.value;
+        updateMemberRole(memberId, newRole).then(function() {
+          var member = members.find(function(m) { return m.id === memberId; });
+          if (member) member.role = newRole;
+          showToast('התפקיד עודכן');
+        }).catch(function(err) {
+          showToast('שגיאה: ' + err.message, 'error');
+          renderMembers();
+        });
+      });
+    });
+
+    // Bind remove member
+    document.querySelectorAll('[data-remove-member]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var memberId = btn.dataset.removeMember;
+        var memberName = btn.dataset.memberName;
+        showConfirm('הסרת ' + memberName, 'האם להסיר את ' + memberName + ' מהארגון?', function() {
+          removeMember(memberId).then(function() {
+            members = members.filter(function(m) { return m.id !== memberId; });
+            renderMembers();
+            showToast(memberName + ' הוסר');
+          }).catch(function(err) {
+            showToast('שגיאה: ' + err.message, 'error');
+          });
+        });
+      });
+    });
+  }
+
+  // Search
+  document.getElementById('peopleSearch').addEventListener('input', function(e) {
+    searchQuery = e.target.value.trim();
+    renderPeople();
+  });
+
+  // Sort
+  document.getElementById('sortName').addEventListener('click', function() {
+    if (sortField === 'name') { sortAsc = !sortAsc; } else { sortField = 'name'; sortAsc = true; }
+    document.getElementById('sortName').classList.add('sort-btn--active');
+    document.getElementById('sortAssoc').classList.remove('sort-btn--active');
+    renderPeople();
+  });
+  document.getElementById('sortAssoc').addEventListener('click', function() {
+    if (sortField === 'association') { sortAsc = !sortAsc; } else { sortField = 'association'; sortAsc = true; }
+    document.getElementById('sortAssoc').classList.add('sort-btn--active');
+    document.getElementById('sortName').classList.remove('sort-btn--active');
+    renderPeople();
+  });
+
+  // Bulk toggle
+  var bulkMode = false;
+  document.getElementById('bulkToggle').addEventListener('click', function() {
+    bulkMode = !bulkMode;
+    document.getElementById('singleAddRow').style.display = bulkMode ? 'none' : '';
+    document.getElementById('bulkAddRow').style.display = bulkMode ? '' : 'none';
+    this.textContent = bulkMode ? 'הוספה בודדת' : 'הוספה מרובה';
+  });
+
+  // Association "Other" handler
+  function handleAssocChange(selectId) {
+    document.getElementById(selectId).addEventListener('change', function() {
+      var otherWrap = document.getElementById('addOtherWrap');
+      if (this.value === '__other__') {
+        otherWrap.style.display = '';
+        document.getElementById('addOtherAssoc').focus();
+      } else {
+        otherWrap.style.display = 'none';
+      }
+    });
+  }
+  handleAssocChange('addAssoc');
+  handleAssocChange('bulkAssoc');
+
+  function getSelectedAssociation() {
+    var sel = bulkMode ? document.getElementById('bulkAssoc') : document.getElementById('addAssoc');
+    if (sel.value === '__other__') {
+      return document.getElementById('addOtherAssoc').value.trim();
+    }
+    return sel.value;
+  }
+
+  // Add single person
+  document.getElementById('btnAddSingle').addEventListener('click', function() {
+    var name = document.getElementById('addName').value.trim();
+    if (!name) { showToast('יש להזין שם', 'error'); return; }
+    var assoc = getSelectedAssociation();
+    doAdd([name], assoc);
+  });
+
+  // Add bulk
+  document.getElementById('btnAddBulk').addEventListener('click', function() {
+    var raw = document.getElementById('bulkNames').value.trim();
+    if (!raw) { showToast('יש להזין שמות', 'error'); return; }
+    var names = raw.split(/[,\n]+/).map(function(n) { return n.trim(); }).filter(Boolean);
+    if (names.length === 0) { showToast('יש להזין שמות', 'error'); return; }
+    var assoc = getSelectedAssociation();
+    doAdd(names, assoc);
+  });
+
+  function doAdd(names, association) {
+    var btn = bulkMode ? document.getElementById('btnAddBulk') : document.getElementById('btnAddSingle');
+    btn.disabled = true;
+    btn.textContent = 'מוסיף...';
+
+    addPeople(names, { start: '2026-04-26', end: '2026-06-18' }, 'activity', association || null)
+      .then(function() {
+        return fetchPeople();
+      })
+      .then(function(data) {
+        people = data;
+        renderPeople();
+        updateAssociationDropdowns();
+        document.getElementById('addName').value = '';
+        document.getElementById('bulkNames').value = '';
+        document.getElementById('addOtherAssoc').value = '';
+        document.getElementById('addOtherWrap').style.display = 'none';
+        showToast(names.length + ' אנשים נוספו');
+      })
+      .catch(function(err) {
+        showToast('שגיאה: ' + err.message, 'error');
+      })
+      .finally(function() {
+        btn.disabled = false;
+        btn.textContent = bulkMode ? 'הוסף הכל' : 'הוסף';
+      });
+  }
+
+  // Invite link
+  document.getElementById('btnCopyInvite').addEventListener('click', function() {
+    var orgId = getCurrentOrgId();
+    if (!orgId) { showToast('לא נמצא ארגון', 'error'); return; }
+    var url = window.location.origin + window.location.pathname.replace('admin.html', 'index.html') + '?invite=' + orgId;
+    document.getElementById('inviteUrl').textContent = url;
+    navigator.clipboard.writeText(url).then(function() {
+      showToast('הקישור הועתק');
+    }).catch(function() {
+      showToast('לא ניתן להעתיק — העתק ידנית', 'error');
+    });
+  });
+
+  // Init
+  async function initAdmin() {
+    // Check role — only admins/owners can access
+    if (currentOrgRole !== 'owner' && currentOrgRole !== 'admin') {
+      document.querySelector('.app').innerHTML =
+        '<div class="header" style="text-align:center;padding:3rem;">' +
+        '<h1 class="header__title" style="font-size:1.5rem;">אין הרשאה</h1>' +
+        '<p class="header__subtitle">רק מנהלים ובעלי ארגון יכולים לגשת לעמוד זה.</p>' +
+        '<a class="header__nav-link" href="index.html" style="margin-top:1rem;display:inline-flex;">חזרה ללוח שנה</a>' +
+        '</div>';
+      return;
+    }
+
+    // Set invite URL
+    var orgId = getCurrentOrgId();
+    var inviteUrl = window.location.origin + window.location.pathname.replace('admin.html', 'index.html') + '?invite=' + orgId;
+    document.getElementById('inviteUrl').textContent = inviteUrl;
+
+    try {
+      // Load people and members in parallel
+      var results = await Promise.all([fetchPeople(), fetchOrgMembers()]);
+      people = results[0];
+      members = results[1];
+      updateAssociationDropdowns();
+      renderPeople();
+      renderMembers();
+    } catch (err) {
+      showToast('שגיאה בטעינת נתונים: ' + err.message, 'error');
+      console.error('Init error:', err);
+    }
+  }
+
+  checkAuthAndInit(initAdmin);
+})();
+</script>
+</body>
+</html>
