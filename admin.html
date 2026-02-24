@@ -1110,7 +1110,7 @@
     btn.disabled = true;
     btn.textContent = 'מוסיף...';
 
-    addPeople(names, { start: '2026-04-26', end: '2026-06-18' }, 'activity', association || null)
+    addPeople(names, { start: DATE_START, end: DATE_END }, 'activity', association || null)
       .then(function() {
         return fetchPeople();
       })

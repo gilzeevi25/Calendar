@@ -160,12 +160,8 @@ async function updateCalendarCells(edits, notes) {
 
     const { error } = await supabase
       .from('calendar_entries')
-      .upsert({
-        org_id: orgId,
-        person_id: personId,
-        date: n.date,
-        note: n.note || null
-      }, { onConflict: 'org_id,person_id,date' });
+      .update({ note: n.note || null })
+      .match({ org_id: orgId, person_id: personId, date: n.date });
 
     if (error) {
       skipped++;
