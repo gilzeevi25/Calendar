@@ -15,6 +15,16 @@ function getCurrentOrgId() {
 // --- Entry point for each page ---
 async function checkAuthAndInit(initAppFn) {
   try {
+    // Store invite param in localStorage so it survives the auth redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteOrgId = urlParams.get('invite');
+    if (inviteOrgId) {
+      localStorage.setItem('sb_pending_invite', inviteOrgId);
+      // Clean the URL without reloading
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState(null, '', cleanUrl);
+    }
+
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) throw error;
 
@@ -26,6 +36,18 @@ async function checkAuthAndInit(initAppFn) {
 
     currentUser = session.user;
     updateUserInfoBar();
+
+    // Process pending invite before loading orgs
+    const pendingInvite = localStorage.getItem('sb_pending_invite');
+    if (pendingInvite) {
+      localStorage.removeItem('sb_pending_invite');
+      try {
+        await acceptInvite(pendingInvite);
+        setCurrentOrg({ id: pendingInvite }, 'member');
+      } catch (inviteErr) {
+        console.warn('Invite accept failed:', inviteErr.message);
+      }
+    }
 
     // Load org memberships
     const orgs = await loadUserOrganizations();

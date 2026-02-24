@@ -584,3 +584,13 @@ async function removeMember(membershipId) {
   if (error) throw error;
   return { success: true };
 }
+
+// ===================== INVITE =====================
+
+/**
+ * Accept an organization invite via server-side RPC (bypasses RLS).
+ */
+async function acceptInvite(orgId) {
+  const { error } = await supabase.rpc('accept_invite', { invite_org_id: orgId });
+  if (error) throw error;
+}
