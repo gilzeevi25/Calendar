@@ -1893,6 +1893,55 @@
 
   .add-people-modal__btn--cancel:hover { background: #ede8e1; }
 
+  .add-people-modal__btn--remove {
+    background: #dc2626;
+    color: #fff;
+  }
+  .add-people-modal__btn--remove:hover { background: #b91c1c; }
+
+  .remove-people-footer {
+    text-align: center;
+    padding: 2rem 0 0;
+    margin-top: 1rem;
+    border-top: 1px solid var(--clr-border);
+    opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+  .remove-people-footer:hover { opacity: 0.7; }
+  .remove-people-link {
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    color: var(--clr-text-tertiary);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+  }
+  .remove-people-link:hover { color: #dc2626; }
+
+  .remove-people-list {
+    max-height: 250px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--clr-border);
+    border-radius: 8px;
+    background: var(--clr-bg);
+  }
+  .remove-people-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.25rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .remove-people-item:hover { background: var(--clr-border); }
+
   .add-people-modal__field { margin-bottom: 0.75rem; }
   .add-people-modal__field-label {
     display: block;
@@ -2678,6 +2727,10 @@
   <div id="addPeopleModal"></div>
   <div id="fairnessModal"></div>
   <div id="rotationModal"></div>
+
+  <div class="remove-people-footer">
+    <button class="remove-people-link" id="btnRemovePeople">הסר אנשים</button>
+  </div>
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
@@ -4057,6 +4110,69 @@
     }
   }
 
+  // ---- Remove People Modal ----
+
+  function showRemovePeopleModal() {
+    const modal = document.getElementById('addPeopleModal');
+    let html = '<div class="add-people-overlay" id="removePeopleOverlay">';
+    html += '<div class="add-people-modal">';
+    html += '<div class="add-people-modal__title">הסרת אנשים</div>';
+    html += '<div class="add-people-modal__desc">בחר אנשים להסרה. פעולה זו תמחק גם את כל הנתונים שלהם.</div>';
+    html += '<div class="remove-people-list" id="removePeopleList">';
+    const sorted = [...currentNames].sort((a, b) => a.localeCompare(b, 'he'));
+    sorted.forEach(name => {
+      html += '<label class="remove-people-item">';
+      html += '<input type="checkbox" value="' + escapeHtml(name) + '"> ';
+      html += escapeHtml(name);
+      html += '</label>';
+    });
+    html += '</div>';
+    html += '<div class="add-people-modal__warning" id="removePeopleWarning" style="display:none;"></div>';
+    html += '<div class="add-people-modal__actions">';
+    html += '<button class="add-people-modal__btn add-people-modal__btn--remove" id="removePeopleSubmit">הסר נבחרים</button>';
+    html += '<button class="add-people-modal__btn add-people-modal__btn--cancel" id="removePeopleCancel">ביטול</button>';
+    html += '</div></div></div>';
+    modal.innerHTML = html;
+
+    document.getElementById('removePeopleCancel').addEventListener('click', () => { modal.innerHTML = ''; });
+    document.getElementById('removePeopleOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) modal.innerHTML = '';
+    });
+    document.getElementById('removePeopleSubmit').addEventListener('click', handleRemovePeople);
+  }
+
+  async function handleRemovePeople() {
+    const checkboxes = document.querySelectorAll('#removePeopleList input:checked');
+    const names = Array.from(checkboxes).map(cb => cb.value);
+    const warning = document.getElementById('removePeopleWarning');
+
+    if (names.length === 0) {
+      warning.textContent = 'יש לבחור לפחות אדם אחד';
+      warning.style.display = 'block';
+      return;
+    }
+
+    if (!confirm('האם אתה בטוח שברצונך להסיר ' + names.length + ' אנשים?\nפעולה זו תמחק את כל הנתונים שלהם ולא ניתנת לביטול.')) {
+      return;
+    }
+
+    const btn = document.getElementById('removePeopleSubmit');
+    btn.disabled = true;
+    btn.textContent = 'מוסר...';
+
+    try {
+      await removePeople(names);
+      document.getElementById('addPeopleModal').innerHTML = '';
+      showToast('הוסרו ' + names.length + ' אנשים בהצלחה. טוען מחדש...', 'success', 3000);
+      setTimeout(() => location.reload(), 2000);
+    } catch (err) {
+      warning.textContent = 'שגיאה: ' + err.message;
+      warning.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'הסר נבחרים';
+    }
+  }
+
   // ---- Toolbar Setup ----
 
   function setupToolbar() {
@@ -4123,6 +4239,9 @@
     btnCancel.addEventListener('touchend', handleCancel);
     btnAddPeople.addEventListener('click', handleAddPeopleOpen);
     btnAddPeople.addEventListener('touchend', handleAddPeopleOpen);
+
+    const btnRemovePeople = document.getElementById('btnRemovePeople');
+    btnRemovePeople.addEventListener('click', (e) => { e.preventDefault(); showRemovePeopleModal(); });
 
     // Rotation pattern button
     const btnRotation = document.getElementById('btnRotation');

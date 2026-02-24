@@ -221,6 +221,32 @@ async function addPeople(names, dateRange, defaultStatus, association) {
   return { success: true, added: names.length };
 }
 
+/**
+ * Delete people and their calendar entries (cascade via FK).
+ * names: array of name strings to remove
+ */
+async function removePeople(names) {
+  const orgId = getCurrentOrgId();
+  await _ensurePeopleCache();
+
+  const ids = names
+    .map(n => _personIdByName(n))
+    .filter(id => id != null);
+
+  if (ids.length === 0) return { success: true, removed: 0 };
+
+  const { error } = await supabase
+    .from('people')
+    .delete()
+    .in('id', ids)
+    .eq('org_id', orgId);
+
+  if (error) throw error;
+
+  _invalidatePeopleCache();
+  return { success: true, removed: ids.length };
+}
+
 // ===================== ROSTER CONFIG FUNCTIONS =====================
 
 /**
