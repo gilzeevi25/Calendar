@@ -78,14 +78,24 @@ async function fetchCalendarData() {
   const orgId = getCurrentOrgId();
   await _ensurePeopleCache();
 
-  const { data, error } = await supabase
-    .from('calendar_entries')
-    .select('date, status, note, person_id')
-    .eq('org_id', orgId);
+  // Supabase default limit is 1000 rows — fetch all entries in pages
+  let allData = [];
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data, error } = await supabase
+      .from('calendar_entries')
+      .select('date, status, note, person_id')
+      .eq('org_id', orgId)
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    allData = allData.concat(data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
 
-  if (error) throw error;
-
-  const rows = (data || []).map(entry => {
+  const rows = allData.map(entry => {
     const person = _peopleCache.byId.get(entry.person_id);
     return {
       name: person ? person.name : '(unknown)',
