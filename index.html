@@ -477,6 +477,61 @@
   [data-theme="dark"] .assoc-filter-popover__btn-reset { background: #2a2520; color: #a89e92; border-color: #3d362c; }
   [data-theme="dark"] .assoc-filter-popover__btn-reset:hover { background: #332e27; }
 
+  /* Rotation People Selector */
+  .rotation-people-selector {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+  }
+  .rotation-people-selector__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    border-bottom: 1px solid var(--clr-border);
+    position: sticky;
+    top: 0;
+    background: var(--clr-surface);
+    z-index: 1;
+  }
+  .rotation-people-selector__header a {
+    color: var(--clr-text-tertiary);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .rotation-people-selector__header a:hover { color: var(--clr-text); text-decoration: underline; }
+  .rotation-people-selector__group-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+    background: var(--clr-bg);
+    cursor: pointer;
+  }
+  .rotation-people-selector__group-title input[type="checkbox"] { accent-color: var(--clr-activity); cursor: pointer; }
+  .rotation-people-selector__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem 0.3rem 1.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .rotation-people-selector__item:hover { background: var(--clr-activity-bg); }
+  .rotation-people-selector__item input[type="checkbox"] { accent-color: var(--clr-activity); cursor: pointer; }
+
+  [data-theme="dark"] .rotation-people-selector { border-color: #3d362c; }
+  [data-theme="dark"] .rotation-people-selector__header { background: var(--clr-surface); border-color: #3d362c; }
+  [data-theme="dark"] .rotation-people-selector__group-title { background: #1e1b16; }
+  [data-theme="dark"] .rotation-people-selector__item:hover { background: #1a2e1a; }
+
   /* Legend */
   .legend {
     display: flex;
@@ -2469,9 +2524,9 @@
       <div class="toolbar__modes" id="toolbarModes" style="display:none;">
         <button class="toolbar__btn" id="btnNote">📝 הערה</button>
         <button class="toolbar__btn" id="btnEdit">✏️ עריכה</button>
-        <button class="toolbar__btn toolbar__btn--rotation" id="btnRotation">🔄 תבנית</button>
         <button class="toolbar__btn toolbar__btn--cancel" id="btnCancel" style="display:none;">❌ ביטול</button>
       </div>
+      <button class="toolbar__btn toolbar__btn--rotation" id="btnRotation">🔄 תבנית</button>
       <button class="toolbar__btn toolbar__btn--add-people" id="btnAddPeople">➕ הוסף אנשים</button>
       <button class="toolbar__btn toolbar__btn--fairness" id="btnFairness">📊 סיכום</button>
       <a href="roster.html" class="toolbar__btn toolbar__btn--roster" title="שבצ״ק">📋 שבצ״ק</a>
@@ -3480,8 +3535,7 @@
     });
   }
 
-  function stageEdit(dateKey, newStatus) {
-    const person = currentSelectedPerson;
+  function stageEditForPerson(person, dateKey, newStatus) {
     const pendingKey = person + '|' + dateKey;
     const origStatus = (currentDataMap[dateKey] && currentDataMap[dateKey][person]) || null;
     const prevPending = pendingEdits[pendingKey];
@@ -3499,7 +3553,13 @@
       pendingEdits[pendingKey] = newStatus;
     }
 
-    updateCellVisual(dateKey, newStatus, newStatus !== origStatus);
+    if (person === currentSelectedPerson) {
+      updateCellVisual(dateKey, newStatus, newStatus !== origStatus);
+    }
+  }
+
+  function stageEdit(dateKey, newStatus) {
+    stageEditForPerson(currentSelectedPerson, dateKey, newStatus);
     updateSaveDiscardBar();
   }
 
@@ -4186,16 +4246,64 @@
 
   function showRotationModal() {
     const person = currentSelectedPerson;
-    if (person === '__all__') return;
+    const filteredNames = getFilteredNames();
+    if (filteredNames.length === 0) {
+      showToast('אין אנשים להצגה', 'error');
+      return;
+    }
 
     const modalEl = document.getElementById('rotationModal');
     let html = '<div class="rotation-overlay" id="rotationOverlay">';
     html += '<div class="rotation-modal">';
     html += '<div class="rotation-modal__header">';
-    html += '<span class="rotation-modal__title">תבנית מחזורית — ' + escapeHtml(person) + '</span>';
+    html += '<span class="rotation-modal__title" id="rotTitle">תבנית מחזורית</span>';
     html += '<button class="rotation-modal__close" id="rotationClose">&times;</button>';
     html += '</div>';
     html += '<div class="rotation-modal__body"><div class="rotation-form">';
+
+    // People selector section
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">אנשים</label>';
+    html += '<div class="rotation-people-selector" id="rotPeopleSelector">';
+    html += '<div class="rotation-people-selector__header">';
+    html += '<a id="rotSelectAll">בחר הכל</a>';
+    html += '<a id="rotClearAll">נקה הכל</a>';
+    html += '</div>';
+
+    // Group names by association
+    const associations = getUniqueAssociations();
+    const hasNoAssoc = filteredNames.some(n => !currentAssociationMap[n]);
+
+    associations.forEach(assoc => {
+      const members = filteredNames.filter(n => currentAssociationMap[n] === assoc);
+      if (members.length === 0) return;
+      html += '<label class="rotation-people-selector__group-title">';
+      html += '<input type="checkbox" data-group="' + escapeHtml(assoc) + '" class="rot-group-cb">';
+      html += '<span>' + escapeHtml(assoc) + '</span></label>';
+      members.forEach(name => {
+        const checked = person === '__all__' || person === name ? ' checked' : '';
+        html += '<label class="rotation-people-selector__item">';
+        html += '<input type="checkbox" class="rot-person-cb" value="' + escapeHtml(name) + '" data-assoc="' + escapeHtml(assoc) + '"' + checked + '>';
+        html += '<span>' + escapeHtml(name) + '</span></label>';
+      });
+    });
+
+    if (hasNoAssoc) {
+      const noAssocMembers = filteredNames.filter(n => !currentAssociationMap[n]);
+      if (noAssocMembers.length > 0) {
+        html += '<label class="rotation-people-selector__group-title">';
+        html += '<input type="checkbox" data-group="" class="rot-group-cb">';
+        html += '<span>(ללא שיוך)</span></label>';
+        noAssocMembers.forEach(name => {
+          const checked = person === '__all__' || person === name ? ' checked' : '';
+          html += '<label class="rotation-people-selector__item">';
+          html += '<input type="checkbox" class="rot-person-cb" value="' + escapeHtml(name) + '" data-assoc=""' + checked + '>';
+          html += '<span>' + escapeHtml(name) + '</span></label>';
+        });
+      }
+    }
+
+    html += '</div></div>';
 
     html += '<div class="rotation-form__row">';
     html += '<div class="rotation-form__field">';
@@ -4229,9 +4337,71 @@
     html += '</div></div></div></div>';
     modalEl.innerHTML = html;
 
+    // People selector logic
+    const selectorEl = document.getElementById('rotPeopleSelector');
+
+    function getSelectedPeople() {
+      return Array.from(selectorEl.querySelectorAll('.rot-person-cb:checked')).map(cb => cb.value);
+    }
+
+    function updateTitle() {
+      const count = getSelectedPeople().length;
+      const titleEl = document.getElementById('rotTitle');
+      titleEl.textContent = count > 0
+        ? 'תבנית מחזורית — ' + count + ' אנשים'
+        : 'תבנית מחזורית';
+    }
+
+    function updateGroupCheckboxes() {
+      selectorEl.querySelectorAll('.rot-group-cb').forEach(gcb => {
+        const group = gcb.dataset.group;
+        const members = selectorEl.querySelectorAll('.rot-person-cb[data-assoc="' + CSS.escape(group) + '"]');
+        const checkedCount = selectorEl.querySelectorAll('.rot-person-cb[data-assoc="' + CSS.escape(group) + '"]:checked').length;
+        gcb.checked = checkedCount === members.length;
+        gcb.indeterminate = checkedCount > 0 && checkedCount < members.length;
+      });
+      updateTitle();
+    }
+
+    // Individual checkbox change → update group checkbox
+    selectorEl.querySelectorAll('.rot-person-cb').forEach(cb => {
+      cb.addEventListener('change', updateGroupCheckboxes);
+    });
+
+    // Group checkbox → toggle all members in group
+    selectorEl.querySelectorAll('.rot-group-cb').forEach(gcb => {
+      gcb.addEventListener('change', () => {
+        const group = gcb.dataset.group;
+        const checked = gcb.checked;
+        selectorEl.querySelectorAll('.rot-person-cb[data-assoc="' + CSS.escape(group) + '"]').forEach(cb => {
+          cb.checked = checked;
+        });
+        updateTitle();
+      });
+    });
+
+    // Select all / Clear all
+    document.getElementById('rotSelectAll').addEventListener('click', () => {
+      selectorEl.querySelectorAll('.rot-person-cb').forEach(cb => cb.checked = true);
+      updateGroupCheckboxes();
+    });
+    document.getElementById('rotClearAll').addEventListener('click', () => {
+      selectorEl.querySelectorAll('.rot-person-cb').forEach(cb => cb.checked = false);
+      updateGroupCheckboxes();
+    });
+
+    // Initialize group checkboxes state
+    updateGroupCheckboxes();
+
     let previewEdits = null;
 
     document.getElementById('rotPreview').addEventListener('click', () => {
+      const selectedPeople = getSelectedPeople();
+      if (selectedPeople.length === 0) {
+        showToast('יש לבחור לפחות אדם אחד', 'error');
+        return;
+      }
+
       const bd = parseInt(document.getElementById('rotBaseDays').value, 10);
       const hd = parseInt(document.getElementById('rotHomeDays').value, 10);
       const sd = document.getElementById('rotStartDate').value;
@@ -4247,15 +4417,24 @@
       }
 
       previewEdits = generateRotationPattern(bd, hd, sd, ed);
-      renderRotationPreview(previewEdits);
+      renderRotationPreview(previewEdits, selectedPeople.length);
       document.getElementById('rotApply').disabled = false;
     });
 
     document.getElementById('rotApply').addEventListener('click', () => {
       if (!previewEdits || previewEdits.length === 0) return;
-      previewEdits.forEach(edit => { stageEdit(edit.date, edit.status); });
+      const selectedPeople = getSelectedPeople();
+      if (selectedPeople.length === 0) return;
+
+      selectedPeople.forEach(p => {
+        previewEdits.forEach(edit => {
+          stageEditForPerson(p, edit.date, edit.status);
+        });
+      });
+
+      const totalChanges = previewEdits.length * selectedPeople.length;
       modalEl.innerHTML = '';
-      showToast(previewEdits.length + ' שינויים הוחלו (טרם נשמרו)', 'success');
+      showToast(totalChanges + ' שינויים הוחלו (טרם נשמרו)', 'success');
       renderCurrentView();
       updateSaveDiscardBar();
     });
@@ -4267,16 +4446,21 @@
     });
   }
 
-  function renderRotationPreview(edits) {
+  function renderRotationPreview(edits, peopleCount) {
     const previewEl = document.getElementById('rotationPreview');
     if (!edits || edits.length === 0) {
       previewEl.style.display = 'none';
       return;
     }
 
+    let countText = edits.length + ' ימים';
+    if (peopleCount && peopleCount > 1) {
+      countText = edits.length + ' ימים × ' + peopleCount + ' אנשים = ' + (edits.length * peopleCount) + ' שינויים';
+    }
+
     let html = '<div class="rotation-preview">';
     html += '<div class="rotation-preview__header"><span>תצוגה מקדימה</span>';
-    html += '<span class="rotation-preview__count">' + edits.length + ' ימים</span></div>';
+    html += '<span class="rotation-preview__count">' + countText + '</span></div>';
     html += '<div class="rotation-preview__list">';
 
     edits.forEach(edit => {
