@@ -224,7 +224,7 @@
     margin-bottom: 1.5rem;
     animation: fadeInUp 0.6s ease-out 0.15s both;
     position: relative;
-    z-index: 10;
+    z-index: 20;
   }
 
   .filter-group {
@@ -525,6 +525,8 @@
     transition: border-color 0.2s;
     animation: fadeInUp 0.6s ease-out 0.22s both;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 20;
   }
 
   .stats-bar:hover {
@@ -590,6 +592,8 @@
     color: var(--clr-text-secondary);
     animation: fadeInUp 0.4s ease-out both;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 20;
   }
 
   .person-stats__name {
@@ -647,6 +651,8 @@
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    position: relative;
+    z-index: 20;
   }
   .week-jump-bar::-webkit-scrollbar { display: none; }
 
@@ -1350,6 +1356,8 @@
     flex-wrap: wrap;
     animation: fadeInUp 0.2s ease-out;
     margin-bottom: 1rem;
+    position: relative;
+    z-index: 20;
   }
 
   .save-bar__count {
@@ -2870,6 +2878,13 @@
     if (_stickyObserver) _stickyObserver.disconnect();
     const calHeaders = document.querySelector('.cal-headers');
     if (!calHeaders) return;
+    // Offset sticky header below the user-info-bar if visible
+    const userBar = document.getElementById('userInfoBar');
+    if (userBar && userBar.offsetHeight > 0) {
+      calHeaders.style.top = userBar.offsetHeight + 'px';
+    } else {
+      calHeaders.style.top = '0';
+    }
     _stickyObserver = new IntersectionObserver(
       ([entry]) => {
         calHeaders.style.boxShadow = entry.intersectionRatio < 1
