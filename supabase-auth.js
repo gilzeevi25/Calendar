@@ -53,7 +53,7 @@ async function checkAuthAndInit(initAppFn) {
     const orgs = await loadUserOrganizations();
 
     if (orgs.length === 0) {
-      showOrgCreateModal();
+      showNoAccessMessage();
       return;
     }
 
@@ -110,25 +110,6 @@ async function loadUserOrganizations() {
   }));
 }
 
-async function createOrganization(name) {
-  // Insert organization
-  const { data: org, error: orgErr } = await supabase
-    .from('organizations')
-    .insert({ name, created_by: currentUser.id })
-    .select()
-    .single();
-
-  if (orgErr) throw orgErr;
-
-  // Add creator as owner
-  const { error: memErr } = await supabase
-    .from('organization_members')
-    .insert({ org_id: org.id, user_id: currentUser.id, role: 'owner' });
-
-  if (memErr) throw memErr;
-
-  return org;
-}
 
 function setCurrentOrg(org, role) {
   currentOrg = org;
@@ -164,52 +145,23 @@ function escapeHtmlAuth(str) {
   return div.innerHTML;
 }
 
-// --- UI: Org Create Modal ---
-function showOrgCreateModal() {
+// --- UI: No Access Message ---
+function showNoAccessMessage() {
   const modal = document.getElementById('orgModal');
   if (!modal) return;
 
   modal.innerHTML =
-    '<div class="org-modal__overlay" id="orgModalOverlay">' +
+    '<div class="org-modal__overlay">' +
       '<div class="org-modal__box">' +
-        '<h3 class="org-modal__title">יצירת ארגון</h3>' +
-        '<p class="org-modal__desc">נראה שאין לך ארגון עדיין. צור ארגון חדש כדי להתחיל.</p>' +
-        '<input class="org-modal__input" id="orgNameInput" placeholder="שם הארגון (למשל: פלוגה ב)" maxlength="100">' +
+        '<h3 class="org-modal__title">אין גישה</h3>' +
+        '<p class="org-modal__desc">אין לך גישה לאף ארגון. בקש מהמנהל שלך קישור הזמנה כדי להצטרף.</p>' +
         '<div class="org-modal__actions">' +
-          '<button class="org-modal__btn org-modal__btn--primary" id="orgCreateBtn">צור ארגון</button>' +
+          '<button class="org-modal__btn org-modal__btn--primary" id="noAccessSignOut">התנתק</button>' +
         '</div>' +
-        '<div class="org-modal__status" id="orgStatus"></div>' +
       '</div>' +
     '</div>';
 
-  const input = document.getElementById('orgNameInput');
-  const btn = document.getElementById('orgCreateBtn');
-  const status = document.getElementById('orgStatus');
-
-  input.focus();
-
-  btn.addEventListener('click', async () => {
-    const name = input.value.trim();
-    if (!name) { status.textContent = 'יש להזין שם ארגון'; return; }
-    btn.disabled = true;
-    btn.textContent = 'יוצר...';
-    try {
-      const org = await createOrganization(name);
-      setCurrentOrg(org, 'owner');
-      modal.innerHTML = '';
-      updateUserInfoBar();
-      // Reload page to trigger full init
-      window.location.reload();
-    } catch (err) {
-      status.textContent = 'שגיאה: ' + err.message;
-      btn.disabled = false;
-      btn.textContent = 'צור ארגון';
-    }
-  });
-
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') btn.click();
-  });
+  document.getElementById('noAccessSignOut').addEventListener('click', signOut);
 }
 
 // --- UI: Org Picker Modal ---
