@@ -3433,7 +3433,6 @@
 
   function repopulatePersonDropdown() {
     const select = document.getElementById('personFilter');
-    const commander = 'גיל זאבי';
     const filteredNames = getFilteredNames();
     const currentVal = select.value;
 
@@ -3446,8 +3445,8 @@
     allOpt.textContent = 'כולם';
     select.appendChild(allOpt);
 
-    // Re-add filtered names (commander first)
-    const sorted = [commander, ...filteredNames.filter(n => n !== commander)].filter(n => filteredNames.includes(n));
+    // Re-add filtered names sorted alphabetically
+    const sorted = [...filteredNames].sort((a, b) => a.localeCompare(b, 'he'));
     sorted.forEach(name => {
       const opt = document.createElement('option');
       opt.value = name;
@@ -4061,7 +4060,6 @@
   // ---- Fairness Dashboard ----
 
   function computeFairnessData(dataMap, names) {
-    const commander = 'גיל זאבי';
     const filteredNames = getFilteredNames();
     const results = [];
     filteredNames.forEach(name => {
@@ -4074,7 +4072,7 @@
       });
       const totalDays = homeDays + baseDays + switchDays;
       const homePct = totalDays > 0 ? (homeDays / totalDays * 100) : 0;
-      results.push({ name, homeDays, baseDays, switchDays, totalDays, homePct, isCommander: name === commander });
+      results.push({ name, homeDays, baseDays, switchDays, totalDays, homePct });
     });
     results.sort((a, b) => b.homeDays - a.homeDays);
     return results;
@@ -4100,8 +4098,8 @@
     html += '</tr></thead><tbody>';
 
     data.forEach((row, idx) => {
-      const rowClass = row.isCommander ? ' class="fairness-table__row--commander"' : '';
-      const nameClass = row.isCommander ? ' fairness-table__name--commander' : '';
+      const rowClass = '';
+      const nameClass = '';
       const actPct = row.totalDays > 0 ? (row.baseDays / row.totalDays * 100).toFixed(1) : 0;
       const homePctBar = row.totalDays > 0 ? (row.homeDays / row.totalDays * 100).toFixed(1) : 0;
       const switchPctBar = row.totalDays > 0 ? (row.switchDays / row.totalDays * 100).toFixed(1) : 0;
@@ -4307,15 +4305,13 @@
 
   function renderTimeline(dataMap, notesMap, names, selectedPerson) {
     const container = document.getElementById('calendarContainer');
-    const commander = 'גיל זאבי';
-
     const allDays = [];
     const d = new Date(2026, 3, 26);
     const end = new Date(2026, 5, 18);
     while (d <= end) { allDays.push(new Date(d)); d.setDate(d.getDate() + 1); }
 
     const filteredForTimeline = getFilteredNames();
-    const displayNames = [commander, ...filteredForTimeline.filter(n => n !== commander)].filter(n => filteredForTimeline.includes(n));
+    const displayNames = [...filteredForTimeline].sort((a, b) => a.localeCompare(b, 'he'));
 
     const colDef = 'minmax(90px, auto) repeat(' + allDays.length + ', auto)';
 
@@ -4346,8 +4342,7 @@
 
     // Data rows: name first (RTL = right side), then day cells
     displayNames.forEach(name => {
-      const isCmd = name === commander;
-      html += '<div class="timeline-name' + (isCmd ? ' timeline-name--commander' : '') + '">' + escapeHtml(name) + '</div>';
+      html += '<div class="timeline-name">' + escapeHtml(name) + '</div>';
 
       allDays.forEach(day => {
         const key = formatDate(day);
@@ -4558,8 +4553,7 @@
     currentAssociationMap = associationMap;
 
     const select = document.getElementById('personFilter');
-    const commander = 'גיל זאבי';
-    const sortedNames = [commander, ...names.filter(n => n !== commander)];
+    const sortedNames = [...names].sort((a, b) => a.localeCompare(b, 'he'));
     sortedNames.forEach(name => {
       const opt = document.createElement('option');
       opt.value = name;
