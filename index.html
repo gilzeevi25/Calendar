@@ -1118,6 +1118,7 @@
 
   /* Responsive */
   @media (max-width: 768px) {
+    .user-info-bar { position: relative; }
     .app { padding: 1rem 0.5rem 3rem; }
     .controls { flex-direction: column; align-items: stretch; }
     .legend { justify-content: center; }
@@ -2877,13 +2878,11 @@
     if (_stickyObserver) _stickyObserver.disconnect();
     const calHeaders = document.querySelector('.cal-headers');
     if (!calHeaders) return;
-    // Offset sticky header below the user-info-bar if visible
+    // Offset sticky header below the user-info-bar if it is sticky
     const userBar = document.getElementById('userInfoBar');
-    if (userBar && userBar.offsetHeight > 0) {
-      calHeaders.style.top = userBar.offsetHeight + 'px';
-    } else {
-      calHeaders.style.top = '0';
-    }
+    const isUserBarSticky = userBar && userBar.offsetHeight > 0
+      && window.getComputedStyle(userBar).position === 'sticky';
+    calHeaders.style.top = isUserBarSticky ? userBar.offsetHeight + 'px' : '0';
     _stickyObserver = new IntersectionObserver(
       ([entry]) => {
         calHeaders.style.boxShadow = entry.intersectionRatio < 1
