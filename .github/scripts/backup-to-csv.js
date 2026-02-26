@@ -50,6 +50,29 @@ async function exportTable(filename, queryFn, columns) {
   }
 }
 
+/**
+ * Fetch all rows from a Supabase query, paginating in chunks of 1000
+ * to bypass the default 1000-row limit.
+ */
+async function fetchAll(table, select, orderCol) {
+  const PAGE_SIZE = 1000;
+  let allRows = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(select)
+      .order(orderCol)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    allRows = allRows.concat(data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  return allRows;
+}
+
 async function main() {
   console.log('Starting Supabase database backup...\n');
 
@@ -67,11 +90,7 @@ async function main() {
 
   // 2. Calendar entries (joined with people for readability)
   await exportTable('calendar_entries.csv', async () => {
-    const { data, error } = await supabase
-      .from('calendar_entries')
-      .select('date, status, note, people(name, association)')
-      .order('date');
-    if (error) throw error;
+    const data = await fetchAll('calendar_entries', 'date, status, note, people(name, association)', 'date');
     return (data || []).map(e => ({
       name: e.people ? e.people.name : '',
       date: e.date,
@@ -83,11 +102,7 @@ async function main() {
 
   // 3. Shifts (joined with mission_types)
   await exportTable('shifts.csv', async () => {
-    const { data, error } = await supabase
-      .from('shifts')
-      .select('date, start_time, end_time, note, mission_types(name)')
-      .order('date');
-    if (error) throw error;
+    const data = await fetchAll('shifts', 'date, start_time, end_time, note, mission_types(name)', 'date');
     return (data || []).map(s => ({
       date: s.date,
       mission_type: s.mission_types ? s.mission_types.name : '',
@@ -99,11 +114,7 @@ async function main() {
 
   // 4. Shift assignments (joined with people and shifts)
   await exportTable('shift_assignments.csv', async () => {
-    const { data, error } = await supabase
-      .from('shift_assignments')
-      .select('role, is_auto, shifts(date, mission_types(name)), people(name)')
-      .order('created_at');
-    if (error) throw error;
+    const data = await fetchAll('shift_assignments', 'role, is_auto, shifts(date, mission_types(name)), people(name)', 'created_at');
     return (data || []).map(a => ({
       shift_date: a.shifts ? a.shifts.date : '',
       mission_type: (a.shifts && a.shifts.mission_types) ? a.shifts.mission_types.name : '',
