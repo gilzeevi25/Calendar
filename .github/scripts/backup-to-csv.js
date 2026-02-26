@@ -123,7 +123,42 @@ async function main() {
     }));
   }, ['key', 'value']);
 
-  // 6. Organization members (no direct FK to profiles, so query separately)
+  // 6. Organizations
+  await exportTable('organizations.csv', async () => {
+    const { data, error } = await supabase.from('organizations').select('name, created_at');
+    if (error) throw error;
+    return data;
+  }, ['name', 'created_at']);
+
+  // 7. Mission types
+  await exportTable('mission_types.csv', async () => {
+    const { data, error } = await supabase
+      .from('mission_types')
+      .select('name, display_name, color, default_hours, min_people, required_roles, sort_order')
+      .order('sort_order');
+    if (error) throw error;
+    return (data || []).map(mt => ({
+      name: mt.name,
+      display_name: mt.display_name,
+      color: mt.color || '',
+      default_hours: mt.default_hours != null ? mt.default_hours : '',
+      min_people: mt.min_people != null ? mt.min_people : '',
+      required_roles: Array.isArray(mt.required_roles) ? JSON.stringify(mt.required_roles) : '',
+      sort_order: mt.sort_order != null ? mt.sort_order : ''
+    }));
+  }, ['name', 'display_name', 'color', 'default_hours', 'min_people', 'required_roles', 'sort_order']);
+
+  // 8. Calendar config
+  await exportTable('calendar_config.csv', async () => {
+    const { data, error } = await supabase.from('calendar_config').select('key, value');
+    if (error) throw error;
+    return (data || []).map(r => ({
+      key: r.key,
+      value: typeof r.value === 'string' ? r.value : JSON.stringify(r.value)
+    }));
+  }, ['key', 'value']);
+
+  // 9. Organization members (no direct FK to profiles, so query separately)
   await exportTable('organization_members.csv', async () => {
     const { data: members, error: memErr } = await supabase
       .from('organization_members')

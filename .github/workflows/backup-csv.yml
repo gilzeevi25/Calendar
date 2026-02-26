@@ -1,8 +1,13 @@
 name: Daily Supabase Database Backup
 
+# NOTE: Enable GitHub email notifications for failed Actions runs:
+# Repository Settings > Notifications > check "Send notifications for failed workflows only"
+
 on:
   schedule:
-    - cron: '0 3 * * *'   # Every day at 3:00 AM UTC (6:00 AM Israel)
+    - cron: '0 3 * * *'   # 3:00 AM UTC (6:00 AM Israel)
+    - cron: '0 11 * * *'  # 11:00 AM UTC (2:00 PM Israel)
+    - cron: '0 19 * * *'  # 7:00 PM UTC (10:00 PM Israel)
   workflow_dispatch:        # Manual trigger
 
 jobs:
@@ -43,3 +48,19 @@ jobs:
           name: db-backup-${{ github.run_id }}
           path: backups/
           retention-days: 90
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::error::Supabase daily backup FAILED on $(date -u +'%Y-%m-%d %H:%M UTC')"
+          echo ""
+          echo "## Backup Failure Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u +'%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs above for details. Common causes:" >> $GITHUB_STEP_SUMMARY
+          echo "- Supabase project is paused (free tier inactivity)" >> $GITHUB_STEP_SUMMARY
+          echo "- SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY secrets are missing/expired" >> $GITHUB_STEP_SUMMARY
+          echo "- Table schema changed (new/renamed columns)" >> $GITHUB_STEP_SUMMARY
