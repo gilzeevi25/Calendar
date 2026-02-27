@@ -2133,6 +2133,75 @@
   [data-theme="dark"] .toolbar__btn--rotation { border-color: #7c3aed; color: #a78bfa; }
   [data-theme="dark"] .toolbar__btn--rotation:hover { background: #2a2540; }
 
+  /* Rotation modal tabs */
+  .rotation-tabs {
+    display: flex;
+    border-bottom: 2px solid var(--clr-border);
+    padding: 0 1.5rem;
+    gap: 0;
+  }
+  .rotation-tabs__tab {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.65rem 1.2rem;
+    border: none;
+    background: none;
+    color: var(--clr-text-tertiary, #9a8d7f);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .rotation-tabs__tab:hover { color: var(--clr-text-secondary); }
+  .rotation-tabs__tab--active {
+    color: var(--clr-text);
+    border-bottom-color: var(--clr-activity);
+    font-weight: 600;
+  }
+  .rotation-tab-panel { display: none; }
+  .rotation-tab-panel--active { display: block; }
+
+  .copy-source-select {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+    border: 1.5px solid var(--clr-border);
+    border-radius: 8px;
+    direction: rtl;
+    background: var(--clr-surface);
+    color: var(--clr-text);
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .copy-source-select:focus {
+    outline: none;
+    border-color: var(--clr-activity);
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+  }
+
+  .copy-info-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+  .copy-info-banner__icon { font-size: 1rem; flex-shrink: 0; }
+
+  [data-theme="dark"] .rotation-tabs { border-bottom-color: #3d362c; }
+  [data-theme="dark"] .rotation-tabs__tab { color: #7a7068; }
+  [data-theme="dark"] .rotation-tabs__tab:hover { color: #a89e92; }
+  [data-theme="dark"] .rotation-tabs__tab--active { color: #e8e2da; }
+  [data-theme="dark"] .copy-source-select { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
+  [data-theme="dark"] .copy-info-banner { background: #1a2332; border-color: #1e3a5f; color: #93c5fd; }
+
   [data-theme="dark"] .rotation-modal__close:hover { background: #3d362c; }
   [data-theme="dark"] .rotation-form__input { background: #1a1714; border-color: #3d362c; color: #e8e2da; }
   [data-theme="dark"] .rotation-form__btn--cancel { background: #2a2520; border-color: #3d362c; }
@@ -2327,6 +2396,8 @@
     .fairness-table th, .fairness-table td { padding: 0.3rem 0.35rem; }
     .fairness-table__bar-cell { width: 70px; }
     .rotation-modal { max-width: 95vw; }
+    .rotation-tabs { padding: 0 1rem; }
+    .rotation-tabs__tab { font-size: 0.78rem; padding: 0.5rem 0.8rem; }
     .rotation-form__row { flex-direction: column; gap: 0.75rem; }
     .timeline-name, .timeline-corner { min-width: 60px; font-size: 0.62rem; }
     .timeline-cell { min-width: 15px; min-height: 22px; }
@@ -4252,6 +4323,171 @@
     return edits;
   }
 
+  // ---- Shared helpers for rotation / copy schedule tabs ----
+
+  function buildPeopleSelectorHtml(filteredNames, preselectPerson, idPrefix) {
+    let html = '';
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">' + (idPrefix === 'copy' ? 'אנשי יעד' : 'אנשים') + '</label>';
+    html += '<div class="rotation-people-selector" id="' + idPrefix + 'PeopleSelector">';
+    html += '<div class="rotation-people-selector__header">';
+    html += '<a id="' + idPrefix + 'SelectAll">בחר הכל</a>';
+    html += '<a id="' + idPrefix + 'ClearAll">נקה הכל</a>';
+    html += '</div>';
+
+    const associations = getUniqueAssociations();
+    const hasNoAssoc = filteredNames.some(n => !currentAssociationMap[n]);
+
+    associations.forEach(assoc => {
+      const members = filteredNames.filter(n => currentAssociationMap[n] === assoc);
+      if (members.length === 0) return;
+      html += '<label class="rotation-people-selector__group-title">';
+      html += '<input type="checkbox" data-group="' + escapeHtml(assoc) + '" class="' + idPrefix + '-group-cb">';
+      html += '<span>' + escapeHtml(assoc) + '</span></label>';
+      members.forEach(name => {
+        const checked = preselectPerson === '__all__' || preselectPerson === name ? ' checked' : '';
+        html += '<label class="rotation-people-selector__item">';
+        html += '<input type="checkbox" class="' + idPrefix + '-person-cb" value="' + escapeHtml(name) + '" data-assoc="' + escapeHtml(assoc) + '"' + checked + '>';
+        html += '<span>' + escapeHtml(name) + '</span></label>';
+      });
+    });
+
+    if (hasNoAssoc) {
+      const noAssocMembers = filteredNames.filter(n => !currentAssociationMap[n]);
+      if (noAssocMembers.length > 0) {
+        html += '<label class="rotation-people-selector__group-title">';
+        html += '<input type="checkbox" data-group="" class="' + idPrefix + '-group-cb">';
+        html += '<span>(ללא שיוך)</span></label>';
+        noAssocMembers.forEach(name => {
+          const checked = preselectPerson === '__all__' || preselectPerson === name ? ' checked' : '';
+          html += '<label class="rotation-people-selector__item">';
+          html += '<input type="checkbox" class="' + idPrefix + '-person-cb" value="' + escapeHtml(name) + '" data-assoc=""' + checked + '>';
+          html += '<span>' + escapeHtml(name) + '</span></label>';
+        });
+      }
+    }
+
+    html += '</div></div>';
+    return html;
+  }
+
+  function setupPeopleSelectorLogic(idPrefix, onChangeCallback) {
+    const selectorEl = document.getElementById(idPrefix + 'PeopleSelector');
+
+    function getSelectedPeople() {
+      return Array.from(selectorEl.querySelectorAll('.' + idPrefix + '-person-cb:checked')).map(cb => cb.value);
+    }
+
+    function updateGroupCheckboxes() {
+      selectorEl.querySelectorAll('.' + idPrefix + '-group-cb').forEach(gcb => {
+        const group = gcb.dataset.group;
+        const members = selectorEl.querySelectorAll('.' + idPrefix + '-person-cb[data-assoc="' + CSS.escape(group) + '"]');
+        const checkedCount = selectorEl.querySelectorAll('.' + idPrefix + '-person-cb[data-assoc="' + CSS.escape(group) + '"]:checked').length;
+        gcb.checked = checkedCount === members.length;
+        gcb.indeterminate = checkedCount > 0 && checkedCount < members.length;
+      });
+      if (onChangeCallback) onChangeCallback(getSelectedPeople());
+    }
+
+    selectorEl.querySelectorAll('.' + idPrefix + '-person-cb').forEach(cb => {
+      cb.addEventListener('change', updateGroupCheckboxes);
+    });
+
+    selectorEl.querySelectorAll('.' + idPrefix + '-group-cb').forEach(gcb => {
+      gcb.addEventListener('change', () => {
+        const group = gcb.dataset.group;
+        const checked = gcb.checked;
+        selectorEl.querySelectorAll('.' + idPrefix + '-person-cb[data-assoc="' + CSS.escape(group) + '"]').forEach(cb => {
+          cb.checked = checked;
+        });
+        if (onChangeCallback) onChangeCallback(getSelectedPeople());
+      });
+    });
+
+    document.getElementById(idPrefix + 'SelectAll').addEventListener('click', () => {
+      selectorEl.querySelectorAll('.' + idPrefix + '-person-cb').forEach(cb => { if (!cb.disabled) cb.checked = true; });
+      updateGroupCheckboxes();
+    });
+    document.getElementById(idPrefix + 'ClearAll').addEventListener('click', () => {
+      selectorEl.querySelectorAll('.' + idPrefix + '-person-cb').forEach(cb => cb.checked = false);
+      updateGroupCheckboxes();
+    });
+
+    updateGroupCheckboxes();
+
+    return { getSelectedPeople, updateGroupCheckboxes, selectorEl };
+  }
+
+  function getDateRange(startDateStr, endDateStr) {
+    const dates = [];
+    const d = new Date(startDateStr + 'T00:00:00');
+    const end = new Date(endDateStr + 'T00:00:00');
+    while (d <= end) {
+      dates.push(formatDate(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return dates;
+  }
+
+  function computeCopyPreview(sourcePerson, targetPeople, startDate, endDate) {
+    const dates = getDateRange(startDate, endDate);
+    let totalChanges = 0;
+    const perPerson = {};
+
+    for (const target of targetPeople) {
+      if (target === sourcePerson) continue;
+      let changes = 0;
+      for (const date of dates) {
+        const sourcePendingKey = sourcePerson + '|' + date;
+        const sourceStatus = (pendingEdits[sourcePendingKey] !== undefined)
+          ? pendingEdits[sourcePendingKey]
+          : (currentDataMap[date] && currentDataMap[date][sourcePerson]) || null;
+        if (!sourceStatus) continue;
+
+        const targetPendingKey = target + '|' + date;
+        const targetStatus = (pendingEdits[targetPendingKey] !== undefined)
+          ? pendingEdits[targetPendingKey]
+          : (currentDataMap[date] && currentDataMap[date][target]) || null;
+        if (targetStatus === sourceStatus) continue;
+
+        changes++;
+      }
+      if (changes > 0) {
+        perPerson[target] = changes;
+        totalChanges += changes;
+      }
+    }
+
+    return { totalChanges, perPerson, targetCount: Object.keys(perPerson).length };
+  }
+
+  function applyCopySchedule(sourcePerson, targetPeople, startDate, endDate) {
+    const dates = getDateRange(startDate, endDate);
+    let count = 0;
+
+    for (const target of targetPeople) {
+      if (target === sourcePerson) continue;
+      for (const date of dates) {
+        const sourcePendingKey = sourcePerson + '|' + date;
+        const sourceStatus = (pendingEdits[sourcePendingKey] !== undefined)
+          ? pendingEdits[sourcePendingKey]
+          : (currentDataMap[date] && currentDataMap[date][sourcePerson]) || null;
+        if (!sourceStatus) continue;
+
+        const targetPendingKey = target + '|' + date;
+        const targetStatus = (pendingEdits[targetPendingKey] !== undefined)
+          ? pendingEdits[targetPendingKey]
+          : (currentDataMap[date] && currentDataMap[date][target]) || null;
+        if (targetStatus === sourceStatus) continue;
+
+        stageEditForPerson(target, date, sourceStatus);
+        count++;
+      }
+    }
+
+    return count;
+  }
+
   function showRotationModal() {
     const person = currentSelectedPerson;
     const filteredNames = getFilteredNames();
@@ -4264,54 +4500,21 @@
     let html = '<div class="rotation-overlay" id="rotationOverlay">';
     html += '<div class="rotation-modal">';
     html += '<div class="rotation-modal__header">';
-    html += '<span class="rotation-modal__title" id="rotTitle">תבנית מחזורית</span>';
+    html += '<span class="rotation-modal__title" id="rotTitle">תבנית</span>';
     html += '<button class="rotation-modal__close" id="rotationClose">&times;</button>';
     html += '</div>';
-    html += '<div class="rotation-modal__body"><div class="rotation-form">';
 
-    // People selector section
-    html += '<div class="rotation-form__field">';
-    html += '<label class="rotation-form__label">אנשים</label>';
-    html += '<div class="rotation-people-selector" id="rotPeopleSelector">';
-    html += '<div class="rotation-people-selector__header">';
-    html += '<a id="rotSelectAll">בחר הכל</a>';
-    html += '<a id="rotClearAll">נקה הכל</a>';
+    // Tab bar
+    html += '<div class="rotation-tabs">';
+    html += '<button class="rotation-tabs__tab rotation-tabs__tab--active" data-tab="rotation">תבנית מחזורית</button>';
+    html += '<button class="rotation-tabs__tab" data-tab="copy">העתקת לוח</button>';
     html += '</div>';
 
-    // Group names by association
-    const associations = getUniqueAssociations();
-    const hasNoAssoc = filteredNames.some(n => !currentAssociationMap[n]);
+    html += '<div class="rotation-modal__body">';
 
-    associations.forEach(assoc => {
-      const members = filteredNames.filter(n => currentAssociationMap[n] === assoc);
-      if (members.length === 0) return;
-      html += '<label class="rotation-people-selector__group-title">';
-      html += '<input type="checkbox" data-group="' + escapeHtml(assoc) + '" class="rot-group-cb">';
-      html += '<span>' + escapeHtml(assoc) + '</span></label>';
-      members.forEach(name => {
-        const checked = person === '__all__' || person === name ? ' checked' : '';
-        html += '<label class="rotation-people-selector__item">';
-        html += '<input type="checkbox" class="rot-person-cb" value="' + escapeHtml(name) + '" data-assoc="' + escapeHtml(assoc) + '"' + checked + '>';
-        html += '<span>' + escapeHtml(name) + '</span></label>';
-      });
-    });
-
-    if (hasNoAssoc) {
-      const noAssocMembers = filteredNames.filter(n => !currentAssociationMap[n]);
-      if (noAssocMembers.length > 0) {
-        html += '<label class="rotation-people-selector__group-title">';
-        html += '<input type="checkbox" data-group="" class="rot-group-cb">';
-        html += '<span>(ללא שיוך)</span></label>';
-        noAssocMembers.forEach(name => {
-          const checked = person === '__all__' || person === name ? ' checked' : '';
-          html += '<label class="rotation-people-selector__item">';
-          html += '<input type="checkbox" class="rot-person-cb" value="' + escapeHtml(name) + '" data-assoc=""' + checked + '>';
-          html += '<span>' + escapeHtml(name) + '</span></label>';
-        });
-      }
-    }
-
-    html += '</div></div>';
+    // ── Tab 1: Rotation Pattern ──
+    html += '<div class="rotation-tab-panel rotation-tab-panel--active" id="tabRotation"><div class="rotation-form">';
+    html += buildPeopleSelectorHtml(filteredNames, person, 'rot');
 
     html += '<div class="rotation-form__row">';
     html += '<div class="rotation-form__field">';
@@ -4328,7 +4531,6 @@
     html += '<label class="rotation-form__label">תאריך התחלה</label>';
     html += '<input class="rotation-form__input" type="date" id="rotStartDate" min="' + DATE_START + '" max="' + DATE_END + '" value="' + DATE_START + '">';
     html += '</div>';
-
     html += '<div class="rotation-form__field">';
     html += '<label class="rotation-form__label">תאריך סיום</label>';
     html += '<input class="rotation-form__input" type="date" id="rotEndDate" min="' + DATE_START + '" max="' + DATE_END + '" value="' + DATE_END + '">';
@@ -4341,70 +4543,73 @@
     html += '<button class="rotation-form__btn rotation-form__btn--apply" id="rotApply" disabled>החל על הלוח</button>';
     html += '<button class="rotation-form__btn rotation-form__btn--cancel" id="rotCancel">ביטול</button>';
     html += '</div>';
+    html += '</div></div>'; // close rotation-form + tabRotation
 
-    html += '</div></div></div></div>';
+    // ── Tab 2: Copy Schedule ──
+    html += '<div class="rotation-tab-panel" id="tabCopy"><div class="rotation-form">';
+
+    // Source person dropdown
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">העתק מ...</label>';
+    html += '<select class="copy-source-select" id="copySource">';
+    html += '<option value="">— בחר אדם —</option>';
+    filteredNames.forEach(name => {
+      const selected = person !== '__all__' && person === name ? ' selected' : '';
+      html += '<option value="' + escapeHtml(name) + '"' + selected + '>' + escapeHtml(name) + '</option>';
+    });
+    html += '</select>';
+    html += '<div class="copy-info-banner"><span class="copy-info-banner__icon">ℹ️</span><span>רק סטטוסים יועתקו. הערות לא ישתנו.</span></div>';
+    html += '</div>';
+
+    // Target people selector
+    html += buildPeopleSelectorHtml(filteredNames, '__none__', 'copy');
+
+    // Date range
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">תאריך התחלה</label>';
+    html += '<input class="rotation-form__input" type="date" id="copyStartDate" min="' + DATE_START + '" max="' + DATE_END + '" value="' + DATE_START + '">';
+    html += '</div>';
+    html += '<div class="rotation-form__field">';
+    html += '<label class="rotation-form__label">תאריך סיום</label>';
+    html += '<input class="rotation-form__input" type="date" id="copyEndDate" min="' + DATE_START + '" max="' + DATE_END + '" value="' + DATE_END + '">';
+    html += '</div>';
+
+    html += '<div id="copyPreview" style="display:none;"></div>';
+
+    html += '<div class="rotation-form__actions">';
+    html += '<button class="rotation-form__btn rotation-form__btn--preview" id="copyPreviewBtn">תצוגה מקדימה</button>';
+    html += '<button class="rotation-form__btn rotation-form__btn--apply" id="copyApplyBtn" disabled>החל על הלוח</button>';
+    html += '<button class="rotation-form__btn rotation-form__btn--cancel" id="copyCancelBtn">ביטול</button>';
+    html += '</div>';
+    html += '</div></div>'; // close rotation-form + tabCopy
+
+    html += '</div></div></div>'; // close body + modal + overlay
     modalEl.innerHTML = html;
 
-    // People selector logic
-    const selectorEl = document.getElementById('rotPeopleSelector');
+    // ── Tab switching ──
+    const tabBtns = modalEl.querySelectorAll('.rotation-tabs__tab');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('rotation-tabs__tab--active'));
+        btn.classList.add('rotation-tabs__tab--active');
+        const tabId = btn.dataset.tab;
+        modalEl.querySelector('#tabRotation').classList.toggle('rotation-tab-panel--active', tabId === 'rotation');
+        modalEl.querySelector('#tabCopy').classList.toggle('rotation-tab-panel--active', tabId === 'copy');
+      });
+    });
 
-    function getSelectedPeople() {
-      return Array.from(selectorEl.querySelectorAll('.rot-person-cb:checked')).map(cb => cb.value);
-    }
-
-    function updateTitle() {
-      const count = getSelectedPeople().length;
+    // ── Rotation tab: people selector logic ──
+    const rotPeopleCtrl = setupPeopleSelectorLogic('rot', function(selectedPeople) {
       const titleEl = document.getElementById('rotTitle');
-      titleEl.textContent = count > 0
-        ? 'תבנית מחזורית — ' + count + ' אנשים'
-        : 'תבנית מחזורית';
-    }
-
-    function updateGroupCheckboxes() {
-      selectorEl.querySelectorAll('.rot-group-cb').forEach(gcb => {
-        const group = gcb.dataset.group;
-        const members = selectorEl.querySelectorAll('.rot-person-cb[data-assoc="' + CSS.escape(group) + '"]');
-        const checkedCount = selectorEl.querySelectorAll('.rot-person-cb[data-assoc="' + CSS.escape(group) + '"]:checked').length;
-        gcb.checked = checkedCount === members.length;
-        gcb.indeterminate = checkedCount > 0 && checkedCount < members.length;
-      });
-      updateTitle();
-    }
-
-    // Individual checkbox change → update group checkbox
-    selectorEl.querySelectorAll('.rot-person-cb').forEach(cb => {
-      cb.addEventListener('change', updateGroupCheckboxes);
+      titleEl.textContent = selectedPeople.length > 0
+        ? 'תבנית — ' + selectedPeople.length + ' אנשים'
+        : 'תבנית';
     });
-
-    // Group checkbox → toggle all members in group
-    selectorEl.querySelectorAll('.rot-group-cb').forEach(gcb => {
-      gcb.addEventListener('change', () => {
-        const group = gcb.dataset.group;
-        const checked = gcb.checked;
-        selectorEl.querySelectorAll('.rot-person-cb[data-assoc="' + CSS.escape(group) + '"]').forEach(cb => {
-          cb.checked = checked;
-        });
-        updateTitle();
-      });
-    });
-
-    // Select all / Clear all
-    document.getElementById('rotSelectAll').addEventListener('click', () => {
-      selectorEl.querySelectorAll('.rot-person-cb').forEach(cb => cb.checked = true);
-      updateGroupCheckboxes();
-    });
-    document.getElementById('rotClearAll').addEventListener('click', () => {
-      selectorEl.querySelectorAll('.rot-person-cb').forEach(cb => cb.checked = false);
-      updateGroupCheckboxes();
-    });
-
-    // Initialize group checkboxes state
-    updateGroupCheckboxes();
 
     let previewEdits = null;
 
     document.getElementById('rotPreview').addEventListener('click', () => {
-      const selectedPeople = getSelectedPeople();
+      const selectedPeople = rotPeopleCtrl.getSelectedPeople();
       if (selectedPeople.length === 0) {
         showToast('יש לבחור לפחות אדם אחד', 'error');
         return;
@@ -4431,7 +4636,7 @@
 
     document.getElementById('rotApply').addEventListener('click', () => {
       if (!previewEdits || previewEdits.length === 0) return;
-      const selectedPeople = getSelectedPeople();
+      const selectedPeople = rotPeopleCtrl.getSelectedPeople();
       if (selectedPeople.length === 0) return;
 
       selectedPeople.forEach(p => {
@@ -4448,6 +4653,121 @@
     });
 
     document.getElementById('rotCancel').addEventListener('click', () => { modalEl.innerHTML = ''; });
+
+    // ── Copy tab: people selector + source logic ──
+    const copyPeopleCtrl = setupPeopleSelectorLogic('copy', function() {
+      document.getElementById('copyPreview').style.display = 'none';
+      document.getElementById('copyApplyBtn').disabled = true;
+    });
+
+    const copySourceSelect = document.getElementById('copySource');
+
+    // Source person change: auto-exclude from targets
+    function updateSourceExclusion() {
+      const source = copySourceSelect.value;
+      const selectorEl = copyPeopleCtrl.selectorEl;
+
+      // Re-enable all checkboxes first
+      selectorEl.querySelectorAll('.copy-person-cb').forEach(cb => {
+        cb.disabled = false;
+        cb.closest('.rotation-people-selector__item').style.opacity = '';
+      });
+
+      // Disable + uncheck the source person in target list
+      if (source) {
+        const sourceCb = selectorEl.querySelector('.copy-person-cb[value="' + CSS.escape(source) + '"]');
+        if (sourceCb) {
+          sourceCb.checked = false;
+          sourceCb.disabled = true;
+          sourceCb.closest('.rotation-people-selector__item').style.opacity = '0.4';
+        }
+      }
+
+      copyPeopleCtrl.updateGroupCheckboxes();
+      document.getElementById('copyPreview').style.display = 'none';
+      document.getElementById('copyApplyBtn').disabled = true;
+    }
+
+    copySourceSelect.addEventListener('change', updateSourceExclusion);
+
+    // Preview
+    document.getElementById('copyPreviewBtn').addEventListener('click', () => {
+      const source = copySourceSelect.value;
+      if (!source) {
+        showToast('יש לבחור אדם מקור', 'error');
+        return;
+      }
+
+      const targets = copyPeopleCtrl.getSelectedPeople().filter(p => p !== source);
+      if (targets.length === 0) {
+        showToast('יש לבחור לפחות אדם יעד אחד', 'error');
+        return;
+      }
+
+      const sd = document.getElementById('copyStartDate').value;
+      const ed = document.getElementById('copyEndDate').value || DATE_END;
+      if (sd > ed) {
+        showToast('תאריך התחלה חייב להיות לפני תאריך סיום', 'error');
+        return;
+      }
+
+      const preview = computeCopyPreview(source, targets, sd, ed);
+      const previewEl = document.getElementById('copyPreview');
+
+      if (preview.totalChanges === 0) {
+        previewEl.innerHTML = '<div class="rotation-preview"><div class="rotation-preview__header"><span>תצוגה מקדימה</span><span class="rotation-preview__count">אין שינויים</span></div></div>';
+        previewEl.style.display = '';
+        document.getElementById('copyApplyBtn').disabled = true;
+        return;
+      }
+
+      let ph = '<div class="rotation-preview">';
+      ph += '<div class="rotation-preview__header"><span>תצוגה מקדימה</span>';
+      ph += '<span class="rotation-preview__count">' + preview.totalChanges + ' שינויים על ' + preview.targetCount + ' אנשים</span></div>';
+      ph += '<div class="rotation-preview__list">';
+      Object.entries(preview.perPerson).forEach(([name, changes]) => {
+        ph += '<div class="rotation-preview__item">';
+        ph += '<span>' + escapeHtml(name) + '</span>';
+        ph += '<span class="rotation-preview__count"> — ' + changes + ' שינויים</span>';
+        ph += '</div>';
+      });
+      ph += '</div></div>';
+      previewEl.innerHTML = ph;
+      previewEl.style.display = '';
+      document.getElementById('copyApplyBtn').disabled = false;
+    });
+
+    // Apply
+    document.getElementById('copyApplyBtn').addEventListener('click', () => {
+      const source = copySourceSelect.value;
+      if (!source) return;
+
+      const targets = copyPeopleCtrl.getSelectedPeople().filter(p => p !== source);
+      if (targets.length === 0) return;
+
+      const sd = document.getElementById('copyStartDate').value;
+      const ed = document.getElementById('copyEndDate').value || DATE_END;
+
+      const count = applyCopySchedule(source, targets, sd, ed);
+
+      modalEl.innerHTML = '';
+      showToast(count + ' שינויים הוחלו על ' + targets.length + ' אנשים (טרם נשמרו)', 'success');
+      renderCurrentView();
+      updateSaveDiscardBar();
+    });
+
+    document.getElementById('copyCancelBtn').addEventListener('click', () => { modalEl.innerHTML = ''; });
+
+    // ── Smart default tab: if a person is selected, open on Copy tab ──
+    if (person !== '__all__') {
+      tabBtns.forEach(b => b.classList.remove('rotation-tabs__tab--active'));
+      modalEl.querySelector('.rotation-tabs__tab[data-tab="copy"]').classList.add('rotation-tabs__tab--active');
+      modalEl.querySelector('#tabRotation').classList.remove('rotation-tab-panel--active');
+      modalEl.querySelector('#tabCopy').classList.add('rotation-tab-panel--active');
+      updateSourceExclusion();
+    }
+
+    // ── Shared close handlers ──
     document.getElementById('rotationClose').addEventListener('click', () => { modalEl.innerHTML = ''; });
     document.getElementById('rotationOverlay').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) modalEl.innerHTML = '';
