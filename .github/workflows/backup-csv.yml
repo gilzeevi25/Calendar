@@ -44,11 +44,16 @@ jobs:
           BACKUP_DIR: backups
         run: python -m pytest test_backup_validation.py -v
 
+      - name: Get Israel timestamp
+        if: always()
+        id: timestamp
+        run: echo "israel_time=$(TZ='Asia/Jerusalem' date +'%d-%m-%Y-%H%M')" >> "$GITHUB_OUTPUT"
+
       - name: Upload backup artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: db-backup-${{ github.run_id }}
+          name: db-backup-${{ steps.timestamp.outputs.israel_time }}
           path: backups/
           retention-days: 90
 
