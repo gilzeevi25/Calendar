@@ -3761,9 +3761,13 @@
         showToast('נשמרו ' + result.updated + ' שינויים בהצלחה', 'success');
       }
       renderCurrentView();
-      // Hide save bar only if no skipped edits remain
+      // Hide save bar and exit edit mode if no skipped edits remain
       if (Object.keys(pendingEdits).length === 0) {
         document.getElementById('saveBar').style.display = 'none';
+        currentMode = null;
+        document.getElementById('btnEdit').classList.remove('toolbar__btn--active');
+        document.getElementById('btnCancel').style.display = 'none';
+        removeStatusPicker();
       } else {
         updateSaveDiscardBar();
       }
@@ -3810,6 +3814,10 @@
     undoStack = [];
     renderCurrentView();
     document.getElementById('saveBar').style.display = 'none';
+    currentMode = null;
+    document.getElementById('btnEdit').classList.remove('toolbar__btn--active');
+    document.getElementById('btnCancel').style.display = 'none';
+    removeStatusPicker();
     showToast('כל השינויים בוטלו', 'info');
   }
 
