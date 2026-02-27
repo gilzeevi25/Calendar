@@ -197,6 +197,16 @@ async function main() {
     });
   }, ['email', 'full_name', 'role']);
 
+  // 10. Profiles
+  await exportTable('profiles.csv', async () => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, avatar_url, created_at, updated_at')
+      .order('created_at');
+    if (error) throw error;
+    return data;
+  }, ['id', 'email', 'full_name', 'avatar_url', 'created_at', 'updated_at']);
+
   console.log('\nBackup complete! Files saved to backups/');
 }
 

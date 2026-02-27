@@ -414,7 +414,7 @@ async function main() {
   // ------------------------------------------------------------------
   // Done
   // ------------------------------------------------------------------
-  console.log('\n--- organization_members skipped (requires auth.users UUIDs) ---');
+  console.log('\n--- profiles & organization_members skipped (requires auth.users UUIDs) ---');
 
   if (dryRun) {
     console.log('\nDry run complete. No data was written.');

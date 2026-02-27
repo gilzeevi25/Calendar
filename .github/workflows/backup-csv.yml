@@ -31,18 +31,21 @@ jobs:
       - name: Export database tables to CSV
         run: node .github/scripts/backup-to-csv.js
 
-      - name: Validate backup
-        run: |
-          for f in backups/*.csv; do
-            lines=$(wc -l < "$f")
-            echo "$f: $lines lines"
-            if [ "$lines" -lt 1 ]; then
-              echo "ERROR: $f is empty"
-              exit 1
-            fi
-          done
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python test dependencies
+        run: pip install pytest requests
+
+      - name: Validate backup against live database
+        env:
+          BACKUP_DIR: backups
+        run: python -m pytest test_backup_validation.py -v
 
       - name: Upload backup artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: db-backup-${{ github.run_id }}
