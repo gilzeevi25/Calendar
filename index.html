@@ -5162,11 +5162,10 @@
     select.addEventListener('change', () => {
       currentSelectedPerson = select.value;
       currentMode = null;
-      pendingEdits = {};
       undoStack = [];
       focusedDateKey = null;
       toolbarCtrl.setMode(null);
-      document.getElementById('saveBar').style.display = 'none';
+      updateSaveDiscardBar();
       // Timeline and summary only available for everyone view
       const viewToggle = document.getElementById('viewToggle');
       const btnFairnessEl = document.getElementById('btnFairness');
