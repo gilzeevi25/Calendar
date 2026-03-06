@@ -3899,7 +3899,19 @@
     }
 
     const last = undoStack.pop();
-    if (last.type === 'edit') {
+    if (last.type === 'batch') {
+      // Undo all edits in a batch operation (e.g. schedule copy) in reverse order
+      for (let i = last.edits.length - 1; i >= 0; i--) {
+        const edit = last.edits[i];
+        const origStatus = (currentDataMap[edit.dateKey] && currentDataMap[edit.dateKey][edit.person]) || null;
+        if (edit.oldValue === origStatus || edit.oldValue === null) {
+          delete pendingEdits[edit.key];
+        } else {
+          pendingEdits[edit.key] = edit.oldValue;
+        }
+      }
+      renderCurrentView();
+    } else if (last.type === 'edit') {
       const sep = last.key.indexOf('|');
       const name = last.key.substring(0, sep);
       const dateKey = last.key.substring(sep + 1);
@@ -4464,6 +4476,7 @@
   function applyCopySchedule(sourcePerson, targetPeople, startDate, endDate) {
     const dates = getDateRange(startDate, endDate);
     let count = 0;
+    const batchEdits = [];
 
     for (const target of targetPeople) {
       if (target === sourcePerson) continue;
@@ -4480,9 +4493,28 @@
           : (currentDataMap[date] && currentDataMap[date][target]) || null;
         if (targetStatus === sourceStatus) continue;
 
-        stageEditForPerson(target, date, sourceStatus);
+        // Record for batch undo (capture previous value before overwriting)
+        const origStatus = (currentDataMap[date] && currentDataMap[date][target]) || null;
+        batchEdits.push({
+          key: targetPendingKey,
+          person: target,
+          dateKey: date,
+          oldValue: pendingEdits[targetPendingKey] !== undefined ? pendingEdits[targetPendingKey] : origStatus
+        });
+
+        // Stage directly — skip per-cell DOM update and individual undo push
+        if (sourceStatus === origStatus) {
+          delete pendingEdits[targetPendingKey];
+        } else {
+          pendingEdits[targetPendingKey] = sourceStatus;
+        }
         count++;
       }
+    }
+
+    // Single undo entry for the entire copy operation
+    if (batchEdits.length > 0) {
+      undoStack.push({ type: 'batch', edits: batchEdits });
     }
 
     return count;
