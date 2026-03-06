@@ -817,6 +817,41 @@
     background: var(--clr-shabbat);
   }
 
+  /* Weak day indicator for calendar */
+  .cal-cell--weak-col {
+    outline: 1.5px dashed rgba(220, 38, 38, 0.35);
+    outline-offset: -1.5px;
+  }
+  .cal-header--weak {
+    outline: 1.5px dashed rgba(220, 38, 38, 0.5);
+    outline-offset: -1.5px;
+  }
+
+  /* Calendar weak days controls */
+  .calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--clr-border);
+    font-size: 0.78rem;
+    color: var(--clr-text-secondary);
+    flex-wrap: wrap;
+  }
+  .calendar-controls label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .calendar-controls input[type="checkbox"] {
+    accent-color: #dc2626;
+  }
+  .calendar-controls input[type="range"] {
+    width: 80px;
+  }
+
   .cal-cell--shavuot {
     background: var(--clr-shavuot);
     box-shadow: inset 0 0 0 1.5px var(--clr-shavuot-border);
@@ -2931,7 +2966,7 @@
 
   const todayKey = formatDate(new Date());
 
-  function renderCell(day, dataMap, notesMap, selectedPerson) {
+  function renderCell(day, dataMap, notesMap, selectedPerson, isWeak) {
     const key = formatDate(day);
     const dow = day.getDay();
     const isShabbat = dow === 6;
@@ -2965,6 +3000,7 @@
     if (selectedPerson !== '__all__' && pendingEdits[selectedPerson + '|' + key]) {
       cellClass += ' cal-cell--pending';
     }
+    if (isWeak) cellClass += ' cal-cell--weak-col';
 
     let html = `<div class="${cellClass}" data-date="${key}">`;
 
@@ -3029,7 +3065,38 @@
       d.setDate(d.getDate() + 1);
     }
 
+    // Compute per-day base counts for weak days (only 'activity', not 'switch-base')
+    const filteredForCal = getFilteredNames();
+    const calDayBaseCounts = {};
+    allDays.forEach(day => {
+      const key = formatDate(day);
+      let count = 0;
+      filteredForCal.forEach(name => {
+        const dayData = dataMap[key] || {};
+        let status = dayData[name] || null;
+        const pendingKey = name + '|' + key;
+        if (pendingEdits[pendingKey]) status = pendingEdits[pendingKey];
+        if (status === 'activity') count++;
+      });
+      calDayBaseCounts[key] = count;
+    });
+
+    // Compute weak-day threshold
+    const calWeakEnabled = localStorage.getItem('calendar_weak_days') !== 'off';
+    const calWeakThreshold = parseInt(localStorage.getItem('calendar_weak_threshold') || '25', 10);
+    const calSortedCounts = Object.values(calDayBaseCounts).filter(c => c > 0).sort((a, b) => a - b);
+    const calPIdx = Math.floor(calSortedCounts.length * calWeakThreshold / 100);
+    const calWeakCutoff = calSortedCounts.length > 0 ? calSortedCounts[Math.min(calPIdx, calSortedCounts.length - 1)] : 0;
+
     let html = '<div class="calendar-wrap">';
+
+    // Controls bar for weak days
+    html += '<div class="calendar-controls">';
+    html += '<label><input type="checkbox" id="calWeakDaysToggle"' + (calWeakEnabled ? ' checked' : '') + '>';
+    html += 'הצג ימים חלשים</label>';
+    html += '<label>סף: <input type="range" id="calWeakDaysRange" min="5" max="50" value="' + calWeakThreshold + '"' + (!calWeakEnabled ? ' disabled' : '') + '>';
+    html += '<span id="calWeakDaysVal">' + calWeakThreshold + '%</span></label>';
+    html += '</div>';
 
     html += '<div class="cal-headers">';
     dayNames.forEach((name, i) => {
@@ -3045,7 +3112,9 @@
     }
 
     allDays.forEach(day => {
-      html += renderCell(day, dataMap, notesMap, selectedPerson);
+      const key = formatDate(day);
+      const isWeak = calWeakEnabled && calDayBaseCounts[key] > 0 && calDayBaseCounts[key] <= calWeakCutoff;
+      html += renderCell(day, dataMap, notesMap, selectedPerson, isWeak);
     });
 
     const lastDow = allDays[allDays.length - 1].getDay();
@@ -3083,6 +3152,26 @@
 
     // Re-attach sticky header shadow observer after innerHTML rebuild
     attachStickyHeaderObserver();
+
+    // Calendar weak days controls
+    const calWeakToggle = document.getElementById('calWeakDaysToggle');
+    const calWeakRange = document.getElementById('calWeakDaysRange');
+    const calWeakVal = document.getElementById('calWeakDaysVal');
+    if (calWeakToggle) {
+      calWeakToggle.addEventListener('change', () => {
+        localStorage.setItem('calendar_weak_days', calWeakToggle.checked ? 'on' : 'off');
+        renderCalendar(dataMap, notesMap, names, selectedPerson);
+      });
+    }
+    if (calWeakRange) {
+      calWeakRange.addEventListener('input', () => {
+        calWeakVal.textContent = calWeakRange.value + '%';
+      });
+      calWeakRange.addEventListener('change', () => {
+        localStorage.setItem('calendar_weak_threshold', calWeakRange.value);
+        renderCalendar(dataMap, notesMap, names, selectedPerson);
+      });
+    }
   }
 
   // ---- Sticky Header Observer ----
@@ -4311,7 +4400,8 @@
       });
       const totalDays = homeDays + baseDays + switchDays;
       const homePct = totalDays > 0 ? (homeDays / totalDays * 100) : 0;
-      results.push({ name, homeDays, baseDays, switchDays, totalDays, homePct });
+      const basePct = totalDays > 0 ? (baseDays / totalDays * 100) : 0;
+      results.push({ name, homeDays, baseDays, switchDays, totalDays, homePct, basePct });
     });
     results.sort((a, b) => a.homeDays - b.homeDays);
     return results;
@@ -4320,8 +4410,8 @@
   function showFairnessDashboard() {
     const data = computeFairnessData(currentDataMap, currentNames);
     const modalEl = document.getElementById('fairnessModal');
-    const avgHomePct = data.length > 0
-      ? (data.reduce((sum, d) => sum + d.homePct, 0) / data.length).toFixed(1)
+    const avgBasePct = data.length > 0
+      ? (data.reduce((sum, d) => sum + d.basePct, 0) / data.length).toFixed(1)
       : 0;
 
     let html = '<div class="fairness-overlay" id="fairnessOverlay">';
@@ -4333,7 +4423,7 @@
     html += '<div class="fairness-modal__body">';
     html += '<div class="fairness-modal__table-wrap">';
     html += '<table class="fairness-table"><thead><tr>';
-    html += '<th>#</th><th>שם</th><th>בבית</th><th>במוצב</th><th>מעבר</th><th>סה"כ</th><th>התפלגות</th><th>% בבית</th>';
+    html += '<th>#</th><th>שם</th><th>בבית</th><th>במוצב</th><th>מעבר</th><th>סה"כ</th><th>התפלגות</th><th>% במוצב</th>';
     html += '</tr></thead><tbody>';
 
     data.forEach((row, idx) => {
@@ -4342,7 +4432,7 @@
       const actPct = row.totalDays > 0 ? (row.baseDays / row.totalDays * 100).toFixed(1) : 0;
       const homePctBar = row.totalDays > 0 ? (row.homeDays / row.totalDays * 100).toFixed(1) : 0;
       const switchPctBar = row.totalDays > 0 ? (row.switchDays / row.totalDays * 100).toFixed(1) : 0;
-      const pctClass = row.homePct >= parseFloat(avgHomePct) ? 'fairness-table__pct--high' : 'fairness-table__pct--low';
+      const pctClass = row.basePct >= parseFloat(avgBasePct) ? 'fairness-table__pct--high' : 'fairness-table__pct--low';
 
       html += '<tr' + rowClass + '>';
       html += '<td style="text-align:center;color:var(--clr-text-tertiary);width:28px">' + (idx + 1) + '</td>';
@@ -4356,12 +4446,12 @@
       html += '<div class="fairness-table__bar-seg fairness-table__bar-seg--home" style="width:' + homePctBar + '%"></div>';
       html += '<div class="fairness-table__bar-seg fairness-table__bar-seg--switch" style="width:' + switchPctBar + '%"></div>';
       html += '</div></td>';
-      html += '<td class="fairness-table__pct ' + pctClass + '">' + row.homePct.toFixed(1) + '%</td>';
+      html += '<td class="fairness-table__pct ' + pctClass + '">' + row.basePct.toFixed(1) + '%</td>';
       html += '</tr>';
     });
 
     html += '</tbody></table></div>';
-    html += '<div class="fairness-avg"><span>ממוצע % בבית:</span><span class="fairness-avg__value">' + avgHomePct + '%</span></div>';
+    html += '<div class="fairness-avg"><span>ממוצע % במוצב:</span><span class="fairness-avg__value">' + avgBasePct + '%</span></div>';
     html += '</div></div></div>';
 
     modalEl.innerHTML = html;
@@ -4957,7 +5047,7 @@
         let status = dayData[name] || null;
         const pendingKey = name + '|' + key;
         if (pendingEdits[pendingKey]) status = pendingEdits[pendingKey];
-        if (status === 'activity' || status === 'switch-base') count++;
+        if (status === 'activity') count++;
       });
       dayBaseCounts[key] = count;
     });
