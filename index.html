@@ -2259,7 +2259,8 @@
 
   .timeline-scroll {
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: auto;
+    max-height: 80vh;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -2268,7 +2269,8 @@
   .timeline-corner {
     position: sticky;
     right: 0;
-    z-index: 12;
+    top: 0;
+    z-index: 13;
     background: var(--clr-surface);
     border-bottom: 2px solid var(--clr-border);
     border-inline-start: 2px solid var(--clr-border);
@@ -2283,6 +2285,10 @@
   }
 
   .timeline-date-header {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    background: var(--clr-surface);
     border-bottom: 2px solid var(--clr-border);
     border-inline-start: 1px solid var(--clr-border);
     padding: 0.2rem 0;
@@ -2299,9 +2305,9 @@
     user-select: none;
   }
 
-  .timeline-date-header--shabbat { background: var(--clr-shabbat); color: var(--clr-shabbat-text); }
-  .timeline-date-header--shavuot { background: var(--clr-shavuot); color: var(--clr-shavuot-text); }
-  .timeline-date-header--today { background: #d97706; color: #fff; font-weight: 700; }
+  .timeline-date-header--shabbat { background: var(--clr-shabbat) !important; color: var(--clr-shabbat-text); }
+  .timeline-date-header--shavuot { background: var(--clr-shavuot) !important; color: var(--clr-shavuot-text); }
+  .timeline-date-header--today { background: #d97706 !important; color: #fff; font-weight: 700; }
 
   .timeline-date-header__day { font-size: 0.68rem; font-weight: 700; }
   .timeline-date-header__dow { font-size: 0.52rem; opacity: 0.7; }
@@ -2361,6 +2367,88 @@
 
   .timeline-cell--today { box-shadow: inset 0 0 0 1.5px #d97706; }
   .timeline-cell--pending { outline: 1.5px dashed var(--clr-activity); outline-offset: -1.5px; }
+
+  /* Summary row */
+  .timeline-summary-corner {
+    position: sticky;
+    right: 0;
+    bottom: 0;
+    z-index: 12;
+    background: var(--clr-surface);
+    border-top: 2px solid var(--clr-border);
+    border-inline-start: 2px solid var(--clr-border);
+    padding: 0.3rem 0.6rem;
+    font-weight: 700;
+    font-size: 0.7rem;
+    color: var(--clr-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    min-height: 28px;
+  }
+
+  .timeline-summary-cell {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: var(--clr-surface);
+    border-top: 2px solid var(--clr-border);
+    border-inline-start: 1px solid var(--clr-border);
+    min-width: 22px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--clr-text-secondary);
+  }
+
+  /* Weak day indicator */
+  .timeline-date-header--weak {
+    outline: 1.5px dashed rgba(220, 38, 38, 0.5);
+    outline-offset: -1.5px;
+  }
+  .timeline-cell--weak-col {
+    outline: 1.5px dashed rgba(220, 38, 38, 0.25);
+    outline-offset: -1.5px;
+  }
+  .timeline-summary-cell--weak {
+    color: #dc2626;
+    font-weight: 700;
+  }
+
+  /* Weak days toggle controls */
+  .timeline-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--clr-border);
+    font-size: 0.78rem;
+    color: var(--clr-text-secondary);
+    flex-wrap: wrap;
+  }
+  .timeline-controls label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    user-select: none;
+  }
+  .timeline-controls input[type="checkbox"] {
+    accent-color: #dc2626;
+  }
+  .timeline-controls input[type="range"] {
+    width: 80px;
+    accent-color: #dc2626;
+  }
+  .timeline-controls__threshold-val {
+    font-weight: 600;
+    min-width: 1.5em;
+    text-align: center;
+  }
 
 
   .timeline-tooltip {
@@ -4225,7 +4313,7 @@
       const homePct = totalDays > 0 ? (homeDays / totalDays * 100) : 0;
       results.push({ name, homeDays, baseDays, switchDays, totalDays, homePct });
     });
-    results.sort((a, b) => b.homeDays - a.homeDays);
+    results.sort((a, b) => a.homeDays - b.homeDays);
     return results;
   }
 
@@ -4859,7 +4947,38 @@
 
     const colDef = 'minmax(90px, auto) repeat(' + allDays.length + ', auto)';
 
+    // Compute per-day base counts for summary row
+    const dayBaseCounts = {};
+    allDays.forEach(day => {
+      const key = formatDate(day);
+      let count = 0;
+      displayNames.forEach(name => {
+        const dayData = dataMap[key] || {};
+        let status = dayData[name] || null;
+        const pendingKey = name + '|' + key;
+        if (pendingEdits[pendingKey]) status = pendingEdits[pendingKey];
+        if (status === 'activity' || status === 'switch-base') count++;
+      });
+      dayBaseCounts[key] = count;
+    });
+
+    // Compute weak-day threshold (25th percentile by default)
+    const weakDaysEnabled = localStorage.getItem('timeline_weak_days') !== 'off';
+    const weakDaysThreshold = parseInt(localStorage.getItem('timeline_weak_threshold') || '25', 10);
+    const sortedCounts = Object.values(dayBaseCounts).filter(c => c > 0).sort((a, b) => a - b);
+    const pIdx = Math.floor(sortedCounts.length * weakDaysThreshold / 100);
+    const weakCutoff = sortedCounts.length > 0 ? sortedCounts[Math.min(pIdx, sortedCounts.length - 1)] : 0;
+
     let html = '<div class="timeline-wrap">';
+
+    // Controls bar for weak days
+    html += '<div class="timeline-controls">';
+    html += '<label><input type="checkbox" id="weakDaysToggle"' + (weakDaysEnabled ? ' checked' : '') + '>';
+    html += 'הצג ימים חלשים</label>';
+    html += '<label>סף: <input type="range" id="weakDaysRange" min="5" max="50" value="' + weakDaysThreshold + '"' + (!weakDaysEnabled ? ' disabled' : '') + '>';
+    html += '<span class="timeline-controls__threshold-val" id="weakDaysVal">' + weakDaysThreshold + '%</span></label>';
+    html += '</div>';
+
     html += '<div class="timeline-scroll">';
     html += '<div class="timeline-grid" style="grid-template-columns: ' + colDef + ';">';
 
@@ -4872,11 +4991,13 @@
       const isShabbat = dow === 6;
       const holiday = holidays[key] || null;
       const isToday = key === todayKey;
+      const isWeak = weakDaysEnabled && dayBaseCounts[key] > 0 && dayBaseCounts[key] <= weakCutoff;
 
       let hdrClass = 'timeline-date-header';
       if (isToday) hdrClass += ' timeline-date-header--today';
       else if (holiday) hdrClass += ' timeline-date-header--shavuot';
       else if (isShabbat) hdrClass += ' timeline-date-header--shabbat';
+      if (isWeak) hdrClass += ' timeline-date-header--weak';
 
       html += '<div class="' + hdrClass + '">';
       html += '<span class="timeline-date-header__day">' + day.getDate() + '</span>';
@@ -4893,6 +5014,7 @@
         const dow = day.getDay();
         const isShabbat = dow === 6;
         const isToday = key === todayKey;
+        const isWeak = weakDaysEnabled && dayBaseCounts[key] > 0 && dayBaseCounts[key] <= weakCutoff;
 
         const dayData = dataMap[key] || {};
         let status = dayData[name] || null;
@@ -4908,6 +5030,7 @@
 
         if (isToday) cellClass += ' timeline-cell--today';
         if (pendingEdits[pendingKey]) cellClass += ' timeline-cell--pending';
+        if (isWeak) cellClass += ' timeline-cell--weak-col';
 
         const dotClass = status && status.startsWith('switch')
           ? 'timeline-cell__dot--switch'
@@ -4917,6 +5040,17 @@
         if (status && dotClass) html += '<span class="timeline-cell__dot ' + dotClass + '"></span>';
         html += '</div>';
       });
+    });
+
+    // Summary row: total people at base per day
+    html += '<div class="timeline-summary-corner">במוצב</div>';
+    allDays.forEach(day => {
+      const key = formatDate(day);
+      const count = dayBaseCounts[key];
+      const isWeak = weakDaysEnabled && count > 0 && count <= weakCutoff;
+      let cls = 'timeline-summary-cell';
+      if (isWeak) cls += ' timeline-summary-cell--weak';
+      html += '<div class="' + cls + '">' + count + '</div>';
     });
 
     html += '</div></div></div>';
@@ -4939,6 +5073,26 @@
       setTimeout(() => {
         todayHeader.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }, 300);
+    }
+
+    // Weak days controls
+    const weakToggle = document.getElementById('weakDaysToggle');
+    const weakRange = document.getElementById('weakDaysRange');
+    const weakVal = document.getElementById('weakDaysVal');
+    if (weakToggle) {
+      weakToggle.addEventListener('change', () => {
+        localStorage.setItem('timeline_weak_days', weakToggle.checked ? 'on' : 'off');
+        renderTimeline(dataMap, notesMap, names, selectedPerson);
+      });
+    }
+    if (weakRange) {
+      weakRange.addEventListener('input', () => {
+        weakVal.textContent = weakRange.value + '%';
+      });
+      weakRange.addEventListener('change', () => {
+        localStorage.setItem('timeline_weak_threshold', weakRange.value);
+        renderTimeline(dataMap, notesMap, names, selectedPerson);
+      });
     }
   }
 
