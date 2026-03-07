@@ -1893,7 +1893,8 @@
     max-width: 620px;
     width: 100%;
     max-height: 85vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     animation: fadeInUp 0.25s ease-out;
   }
 
@@ -1903,10 +1904,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
     background: var(--clr-surface);
-    z-index: 1;
   }
 
   .fairness-modal__title {
@@ -1930,9 +1929,9 @@
 
   .fairness-modal__close:hover { background: #f0ece7; color: var(--clr-text); }
 
-  .fairness-modal__body { padding: 1rem 1.5rem 1.5rem; }
+  .fairness-modal__body { padding: 1rem 1.5rem 1.5rem; overflow: auto; flex: 1; min-height: 0; -webkit-overflow-scrolling: touch; }
 
-  .fairness-modal__table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .fairness-modal__table-wrap { }
 
   .fairness-table {
     width: 100%;
@@ -1946,6 +1945,10 @@
     color: var(--clr-text-secondary);
     padding: 0.5rem 0.5rem;
     border-bottom: 2px solid var(--clr-border);
+    position: sticky;
+    top: 0;
+    background: var(--clr-surface);
+    z-index: 1;
     white-space: nowrap;
     font-size: 0.75rem;
   }
@@ -4403,7 +4406,7 @@
       const basePct = totalDays > 0 ? (baseDays / totalDays * 100) : 0;
       results.push({ name, homeDays, baseDays, switchDays, totalDays, homePct, basePct });
     });
-    results.sort((a, b) => a.homeDays - b.homeDays);
+    results.sort((a, b) => b.basePct - a.basePct);
     return results;
   }
 
